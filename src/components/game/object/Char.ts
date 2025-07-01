@@ -79,7 +79,7 @@ export default class Char {
         } else if (idle === "left") {
           this.sprite.setFrame(11);
         } else if (idle === "right") {
-          this.sprite.setFrame(11);
+          this.sprite.setFrame(14);
         }
       },
     });
