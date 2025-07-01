@@ -2,7 +2,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Phaser from "phaser";
+
+import * as Phaser from "phaser";
+
 import MainScreen from "./screen/MainScreen";
 import HouseScreen from "./screen/HouseScreen";
 import BackpackScreen from "./screen/BackpackScreen";

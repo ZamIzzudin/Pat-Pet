@@ -15,6 +15,14 @@ export default class Map {
     const map = this.scene.add.image(0, 0, this.mapKey).setOrigin(0);
     this.scene.cameras.main.setBounds(0, 0, map.width, map.height);
 
+    this.doorTiles = [];
+    this.boundaries = {
+      minX: 0,
+      maxX: 0,
+      minY: 0,
+      maxY: 0,
+    };
+
     // Set boundaries and door tiles based on map
     this.setupMapBoundaries();
     this.setupDoorTiles();
@@ -45,7 +53,7 @@ export default class Map {
 
   setupDoorTiles() {
     this.doorTiles = [];
-    
+
     if (this.mapKey === "Island") {
       // Door tile to enter house (adjust coordinates based on your house position)
       this.doorTiles.push({ x: 10, y: 6, targetScene: "House_Screen" });
@@ -58,7 +66,7 @@ export default class Map {
   checkBoundaries(newX: number, newY: number): boolean {
     const gridX = Math.floor((newX + 8) / 16);
     const gridY = Math.floor((newY + 18) / 16);
-    
+
     return (
       gridX >= this.boundaries.minX &&
       gridX <= this.boundaries.maxX &&
@@ -70,7 +78,7 @@ export default class Map {
   checkDoorTile(x: number, y: number): string | null {
     const gridX = Math.floor((x + 8) / 16);
     const gridY = Math.floor((y + 18) / 16);
-    
+
     for (const door of this.doorTiles) {
       if (door.x === gridX && door.y === gridY) {
         return door.targetScene;

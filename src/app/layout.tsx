@@ -17,8 +17,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Next Phaser RPG",
-  description: "Next Phaser RPG Game",
+  title: "Pat-Pet [Keep Your Pet, Kep Your Goal]",
+  description: "Keep Your Pet, Keep Your Goal",
 };
 
 export default function RootLayout({
@@ -28,6 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <link rel="icon" href="/Backpack.png" />
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <Navbar />
         {children}
