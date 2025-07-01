@@ -16,6 +16,31 @@ export default class Preloader extends Phaser.Scene {
       frameWidth: 48,
       frameHeight: 48,
     });
+
+    // Create loading bar
+    const loadingBar = this.add.graphics();
+    const loadingBox = this.add.graphics();
+    
+    loadingBox.fillStyle(0x222222, 0.8);
+    loadingBox.fillRect(126, 86, 100, 20);
+    
+    const loadingText = this.add.text(176, 96, 'Loading...', {
+      fontSize: '12px',
+      color: '#ffffff'
+    });
+    loadingText.setOrigin(0.5, 0.5);
+
+    this.load.on('progress', (value: number) => {
+      loadingBar.clear();
+      loadingBar.fillStyle(0xffffff, 1);
+      loadingBar.fillRect(128, 88, 96 * value, 16);
+    });
+
+    this.load.on('complete', () => {
+      loadingBar.destroy();
+      loadingBox.destroy();
+      loadingText.destroy();
+    });
   }
 
   create() {
