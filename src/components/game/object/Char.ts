@@ -77,7 +77,7 @@ export default class Char {
         } else if (idle === "down") {
           this.sprite.setFrame(0);
         } else if (idle === "left") {
-          this.sprite.setFrame(11);
+          this.sprite.setFrame(8);
         } else if (idle === "right") {
           this.sprite.setFrame(14);
         }
@@ -88,8 +88,10 @@ export default class Char {
   centeredCamera() {
     if (this.isCentered) {
       this.scene.cameras.main.stopFollow(this.sprite);
+      this.isCentered = false;
     } else {
       this.scene.cameras.main.startFollow(this.sprite);
+      this.isCentered = true;
     }
   }
 }

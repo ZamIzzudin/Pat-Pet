@@ -4,6 +4,8 @@
 import { useEffect, useRef } from "react";
 import Phaser from "phaser";
 import MainScreen from "./screen/MainScreen";
+import HouseScreen from "./screen/HouseScreen";
+import BackpackScreen from "./screen/BackpackScreen";
 import Preloader from "./screen/Preloader";
 
 export default function GameScreen() {
@@ -18,7 +20,7 @@ export default function GameScreen() {
       height: 192,
       disableContextMenu: true,
       roundPixels: true,
-      scene: [Preloader, MainScreen],
+      scene: [Preloader, MainScreen, HouseScreen, BackpackScreen],
     };
 
     const game = new Phaser.Game(config);
