@@ -7,10 +7,13 @@ export default class Map {
   mapKey: string;
   boundaries: { minX: number; maxX: number; minY: number; maxY: number };
   doorTiles: Array<{ x: number; y: number; targetScene: string }>;
+  interactionPrompt: Phaser.GameObjects.Text | null;
+  spaceKey: Phaser.Input.Keyboard.Key;
 
   constructor(scene: Phaser.Scene, mapKey: string) {
     this.scene = scene;
     this.mapKey = mapKey;
+    this.interactionPrompt = null;
 
     const map = this.scene.add.image(0, 0, this.mapKey).setOrigin(0);
     this.scene.cameras.main.setBounds(0, 0, map.width, map.height);
@@ -29,6 +32,11 @@ export default class Map {
 
     this.player = new Char(this.scene, 5, 10, "player", 0);
     this.player.centeredCamera();
+
+    // Add space key for interactions
+    this.spaceKey = this.scene.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.SPACE
+    );
   }
 
   setupMapBoundaries() {
@@ -87,6 +95,44 @@ export default class Map {
     return null;
   }
 
+  checkNearDoorTile(x: number, y: number): boolean {
+    const gridX = Math.floor((x + 8) / 16);
+    const gridY = Math.floor((y + 18) / 16);
+
+    for (const door of this.doorTiles) {
+      const distance = Math.abs(door.x - gridX) + Math.abs(door.y - gridY);
+      if (distance <= 1) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  showInteractionPrompt() {
+    if (!this.interactionPrompt) {
+      this.interactionPrompt = this.scene.add.text(
+        this.player.coordinate.x,
+        this.player.coordinate.y - 30,
+        "Press SPACE to enter",
+        {
+          fontSize: "10px",
+          color: "#ffffff",
+          fontFamily: "Arial",
+          backgroundColor: "#000000",
+          padding: { x: 4, y: 2 }
+        }
+      );
+      this.interactionPrompt.setOrigin(0.5);
+    }
+  }
+
+  hideInteractionPrompt() {
+    if (this.interactionPrompt) {
+      this.interactionPrompt.destroy();
+      this.interactionPrompt = null;
+    }
+  }
+
   moveChar(cursors: Phaser.Types.Input.Keyboard.CursorKeys) {
     if (this.player.isMoving) return;
 
@@ -109,14 +155,6 @@ export default class Map {
     }
 
     if (direction && this.checkBoundaries(targetX, targetY)) {
-      // Check if moving to a door tile
-      const targetScene = this.checkDoorTile(targetX, targetY);
-      if (targetScene) {
-        // Transition to new scene
-        this.scene.scene.start(targetScene);
-        return;
-      }
-
       // Normal movement
       if (direction === "left") {
         this.player.moveToTile("x", -1, "left");
@@ -126,6 +164,22 @@ export default class Map {
         this.player.moveToTile("y", -1, "up");
       } else if (direction === "down") {
         this.player.moveToTile("y", 1, "down");
+      }
+    }
+
+    // Check if near door tile and show/hide prompt
+    if (this.checkNearDoorTile(this.player.coordinate.x, this.player.coordinate.y)) {
+      this.showInteractionPrompt();
+    } else {
+      this.hideInteractionPrompt();
+    }
+
+    // Handle space key for door interaction
+    if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
+      const targetScene = this.checkDoorTile(this.player.coordinate.x, this.player.coordinate.y);
+      if (targetScene) {
+        this.hideInteractionPrompt();
+        this.scene.scene.start(targetScene);
       }
     }
   }

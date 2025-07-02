@@ -3,12 +3,16 @@
 
 import * as Phaser from "phaser";
 import Map from "../object/Map";
+import StatusBars from "../ui/StatusBars";
 
 export default class MainScreen extends Phaser.Scene {
   cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   map: Map;
+  statusBars: StatusBars;
   actionButton: Phaser.GameObjects.Sprite;
+  goalsButton: Phaser.GameObjects.Sprite;
   backpackKey: Phaser.Input.Keyboard.Key;
+  goalsKey: Phaser.Input.Keyboard.Key;
 
   constructor() {
     super("Main_Screen");
@@ -19,52 +23,110 @@ export default class MainScreen extends Phaser.Scene {
     this.map = new Map(this, mapKey);
     this.cursors = this.input.keyboard.createCursorKeys();
 
-    // Create action button for backpack
-    this.createActionButton();
+    // Create status bars
+    this.statusBars = new StatusBars(this);
 
-    // Add backpack key (B key)
+    // Create action buttons
+    this.createActionButtons();
+
+    // Add keyboard shortcuts
     this.backpackKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.B
     );
+    this.goalsKey = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.G
+    );
   }
 
-  createActionButton() {
-    // Create a simple action button in the bottom right corner
-    this.actionButton = this.add.sprite(320, 160, "Button");
+  createActionButtons() {
+    // Goals button (above backpack button)
+    this.createGoalsButton();
+    
+    // Backpack button
+    this.createBackpackButton();
+  }
 
-    // Create button graphics
-    const graphics = this.add.graphics();
-    graphics.fillStyle(0x000000, 0);
-    graphics.fillRoundedRect(298, 137, 45, 45, 6);
-    graphics.lineStyle(2, 0xffffff, 1);
-    graphics.strokeRoundedRect(298, 137, 45, 45, 6);
+  createGoalsButton() {
+    // Create button graphics for goals
+    const goalsGraphics = this.add.graphics();
+    goalsGraphics.fillStyle(0x000000, 0);
+    goalsGraphics.fillRoundedRect(298, 85, 45, 45, 6);
+    goalsGraphics.lineStyle(2, 0xffffff, 1);
+    goalsGraphics.strokeRoundedRect(298, 85, 45, 45, 6);
 
-    // Add backpack icon (using text as placeholder)
+    // Add goals icon (using backpack sprite temporarily)
+    const goalsIcon = this.add.sprite(320, 108, "Backpack");
+    goalsIcon.setOrigin(0.5);
+    goalsIcon.setTint(0x4caf50); // Green tint to differentiate
+
+    // Add "G" text overlay
+    const goalsText = this.add.text(320, 108, "G", {
+      fontSize: "12px",
+      color: "#ffffff",
+      fontFamily: "Arial",
+      fontStyle: "bold"
+    });
+    goalsText.setOrigin(0.5);
+
+    // Make button interactive
+    const goalsButtonArea = this.add.rectangle(320, 108, 48, 48, 0x000000, 0);
+    goalsButtonArea.setInteractive();
+    goalsButtonArea.on("pointerdown", () => {
+      this.openGoals();
+    });
+
+    // Add hover effect
+    goalsButtonArea.on("pointerover", () => {
+      goalsGraphics.clear();
+      goalsGraphics.fillStyle(0x6a6a6a, 0);
+      goalsGraphics.fillRoundedRect(298, 85, 45, 45, 6);
+      goalsGraphics.lineStyle(2, 0x4caf50, 1);
+      goalsGraphics.strokeRoundedRect(298, 85, 45, 45, 6);
+    });
+
+    goalsButtonArea.on("pointerout", () => {
+      goalsGraphics.clear();
+      goalsGraphics.fillStyle(0x4a4a4a, 0);
+      goalsGraphics.fillRoundedRect(298, 85, 45, 45, 6);
+      goalsGraphics.lineStyle(2, 0xffffff, 1);
+      goalsGraphics.strokeRoundedRect(298, 85, 45, 45, 6);
+    });
+  }
+
+  createBackpackButton() {
+    // Create button graphics for backpack
+    const backpackGraphics = this.add.graphics();
+    backpackGraphics.fillStyle(0x000000, 0);
+    backpackGraphics.fillRoundedRect(298, 137, 45, 45, 6);
+    backpackGraphics.lineStyle(2, 0xffffff, 1);
+    backpackGraphics.strokeRoundedRect(298, 137, 45, 45, 6);
+
+    // Add backpack icon
     const backpackIcon = this.add.sprite(320, 160, "Backpack");
     backpackIcon.setOrigin(0.5);
 
     // Make button interactive
-    const buttonArea = this.add.rectangle(300, 145, 48, 48, 0x000000, 0);
-    buttonArea.setInteractive();
-    buttonArea.on("pointerdown", () => {
+    const backpackButtonArea = this.add.rectangle(320, 160, 48, 48, 0x000000, 0);
+    backpackButtonArea.setInteractive();
+    backpackButtonArea.on("pointerdown", () => {
       this.openBackpack();
     });
 
     // Add hover effect
-    buttonArea.on("pointerover", () => {
-      graphics.clear();
-      graphics.fillStyle(0x6a6a6a, 0);
-      graphics.fillRoundedRect(298, 137, 45, 45, 6);
-      graphics.lineStyle(2, 0xffff00, 1);
-      graphics.strokeRoundedRect(298, 137, 45, 45, 6);
+    backpackButtonArea.on("pointerover", () => {
+      backpackGraphics.clear();
+      backpackGraphics.fillStyle(0x6a6a6a, 0);
+      backpackGraphics.fillRoundedRect(298, 137, 45, 45, 6);
+      backpackGraphics.lineStyle(2, 0xffff00, 1);
+      backpackGraphics.strokeRoundedRect(298, 137, 45, 45, 6);
     });
 
-    buttonArea.on("pointerout", () => {
-      graphics.clear();
-      graphics.fillStyle(0x4a4a4a, 0);
-      graphics.fillRoundedRect(298, 137, 45, 45, 6);
-      graphics.lineStyle(2, 0xffffff, 1);
-      graphics.strokeRoundedRect(298, 137, 45, 45, 6);
+    backpackButtonArea.on("pointerout", () => {
+      backpackGraphics.clear();
+      backpackGraphics.fillStyle(0x4a4a4a, 0);
+      backpackGraphics.fillRoundedRect(298, 137, 45, 45, 6);
+      backpackGraphics.lineStyle(2, 0xffffff, 1);
+      backpackGraphics.strokeRoundedRect(298, 137, 45, 45, 6);
     });
   }
 
@@ -73,14 +135,28 @@ export default class MainScreen extends Phaser.Scene {
     this.scene.launch("Backpack_Screen", { previousScene: "Main_Screen" });
   }
 
+  openGoals() {
+    this.scene.pause();
+    this.scene.launch("Goals_Screen", { previousScene: "Main_Screen" });
+  }
+
   update() {
     if (this.cursors) {
       this.map.moveChar(this.cursors);
     }
 
-    // Handle backpack key press
+    // Update status bars
+    if (this.statusBars) {
+      this.statusBars.updateBars();
+    }
+
+    // Handle keyboard shortcuts
     if (Phaser.Input.Keyboard.JustDown(this.backpackKey)) {
       this.openBackpack();
+    }
+
+    if (Phaser.Input.Keyboard.JustDown(this.goalsKey)) {
+      this.openGoals();
     }
   }
 }
