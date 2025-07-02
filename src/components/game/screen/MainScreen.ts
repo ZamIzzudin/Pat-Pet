@@ -53,19 +53,23 @@ export default class MainScreen extends Phaser.Scene {
     goalsGraphics.fillRoundedRect(298, 85, 45, 45, 6);
     goalsGraphics.lineStyle(2, 0xffffff, 1);
     goalsGraphics.strokeRoundedRect(298, 85, 45, 45, 6);
+    goalsGraphics.setScrollFactor(0); // Fixed position
 
     // Add goals icon (using backpack sprite temporarily)
     const goalsIcon = this.add.sprite(320, 108, "Backpack");
     goalsIcon.setOrigin(0.5);
     goalsIcon.setTint(0x4caf50); // Green tint to differentiate
+    goalsIcon.setScrollFactor(0); // Fixed position
 
     // Add "G" text overlay
     const goalsText = this.add.sprite(320, 108, "Backpack");
     goalsText.setOrigin(0.5);
+    goalsText.setScrollFactor(0); // Fixed position
 
     // Make button interactive
     const goalsButtonArea = this.add.rectangle(320, 108, 48, 48, 0x000000, 0);
     goalsButtonArea.setInteractive();
+    goalsButtonArea.setScrollFactor(0); // Fixed position
     goalsButtonArea.on("pointerdown", () => {
       this.openGoals();
     });
@@ -95,10 +99,12 @@ export default class MainScreen extends Phaser.Scene {
     backpackGraphics.fillRoundedRect(298, 137, 45, 45, 6);
     backpackGraphics.lineStyle(2, 0xffffff, 1);
     backpackGraphics.strokeRoundedRect(298, 137, 45, 45, 6);
+    backpackGraphics.setScrollFactor(0); // Fixed position
 
     // Add backpack icon
     const backpackIcon = this.add.sprite(320, 160, "Backpack");
     backpackIcon.setOrigin(0.5);
+    backpackIcon.setScrollFactor(0); // Fixed position
 
     // Make button interactive
     const backpackButtonArea = this.add.rectangle(
@@ -110,6 +116,7 @@ export default class MainScreen extends Phaser.Scene {
       0
     );
     backpackButtonArea.setInteractive();
+    backpackButtonArea.setScrollFactor(0); // Fixed position
     backpackButtonArea.on("pointerdown", () => {
       this.openBackpack();
     });
