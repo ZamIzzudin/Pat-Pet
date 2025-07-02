@@ -60,7 +60,6 @@ export default class MainScreen extends Phaser.Scene {
 
     // Add goals icon (using backpack sprite temporarily)
     const goalsIcon = this.add.sprite(320, 108, "Backpack");
-    // goalsIcon.setOrigin(0.5);
     goalsIcon.setScrollFactor(0); // Fixed position
 
     // Make button interactive

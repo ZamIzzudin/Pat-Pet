@@ -35,15 +35,15 @@ export default class BackpackScreen extends Phaser.Scene {
     // Create dark background
     this.add.rectangle(176, 96, 352, 192, 0x000000, 0.8);
 
-    // Create backpack UI background
-    const bg = this.add.rectangle(176, 96, 320, 160, 0x2a2a2a);
+    // Create backpack UI background with better spacing
+    const bg = this.add.rectangle(176, 96, 330, 170, 0x2a2a2a);
     bg.setStrokeStyle(2, 0xffffff);
 
-    // Title
-    this.titleText = this.add.text(176, 30, "BACKPACK", {
-      fontSize: "16px",
+    // Title with custom font and better positioning
+    this.titleText = this.add.text(176, 25, "BACKPACK", {
+      fontSize: "14px",
       color: "#ffffff",
-      fontFamily: "Arial",
+      fontFamily: "CustomFont, Arial",
       fontStyle: "bold",
     });
     this.titleText.setOrigin(0.5);
@@ -51,18 +51,18 @@ export default class BackpackScreen extends Phaser.Scene {
     // Create scrollable container
     this.scrollContainer = this.add.container(0, 0);
 
-    // Create item slots
+    // Create item slots with improved spacing
     this.createItemSlots();
 
-    // Instructions
+    // Instructions with custom font and better positioning
     this.instructionText = this.add.text(
       176,
-      170,
+      175,
       "Arrow Keys: Navigate | Enter: Use Item | ESC: Close",
       {
-        fontSize: "10px",
+        fontSize: "9px",
         color: "#cccccc",
-        fontFamily: "Arial",
+        fontFamily: "CustomFont, Arial",
       }
     );
     this.instructionText.setOrigin(0.5);
@@ -76,22 +76,22 @@ export default class BackpackScreen extends Phaser.Scene {
       Phaser.Input.Keyboard.KeyCodes.ESC
     );
 
-    // Calculate max scroll
-    const itemsPerRow = 6;
+    // Calculate max scroll with improved spacing
+    const itemsPerRow = 5;
     const rows = Math.ceil(this.gameState.inventory.length / itemsPerRow);
-    this.maxScroll = Math.max(0, rows * 40 - 100);
+    this.maxScroll = Math.max(0, rows * 45 - 110);
 
     // Update selection visual
     this.updateSelection();
   }
 
   createItemSlots() {
-    const startX = 80;
-    const startY = 60;
-    const slotSize = 32;
-    const spacingX = 40;
-    const spacingY = 40;
-    const itemsPerRow = 6;
+    const startX = 90;
+    const startY = 55;
+    const slotSize = 30;
+    const spacingX = 45; // Increased spacing
+    const spacingY = 45; // Increased spacing
+    const itemsPerRow = 5; // Reduced items per row for better spacing
 
     this.gameState.inventory.forEach((item, i) => {
       const row = Math.floor(i / itemsPerRow);
@@ -102,23 +102,24 @@ export default class BackpackScreen extends Phaser.Scene {
       // Create item container
       const itemContainer = this.add.container(x, y);
 
-      // Create slot background
+      // Create slot background with better styling
       const slot = this.add.graphics();
       slot.fillStyle(0x444444, 1);
-      slot.fillRoundedRect(-16, -16, slotSize, slotSize, 4);
+      slot.fillRoundedRect(-15, -15, slotSize, slotSize, 4);
       slot.lineStyle(1, 0x666666);
-      slot.strokeRoundedRect(-16, -16, slotSize, slotSize, 4);
+      slot.strokeRoundedRect(-15, -15, slotSize, slotSize, 4);
 
       // Create item icon
       const itemIcon = this.add.sprite(0, 0, item.icon);
       itemIcon.setOrigin(0.5);
-      itemIcon.setScale(0.6);
+      itemIcon.setScale(0.5);
 
-      // Item name text
-      const itemName = this.add.text(0, 20, item.name, {
-        fontSize: "8px",
+      // Item name text with custom font and better positioning
+      const itemName = this.add.text(0, 22, item.name, {
+        fontSize: "7px",
         color: "#ffffff",
-        fontFamily: "Arial",
+        fontFamily: "CustomFont, Arial",
+        wordWrap: { width: 40 },
       });
       itemName.setOrigin(0.5, 0);
 
@@ -126,7 +127,7 @@ export default class BackpackScreen extends Phaser.Scene {
       const typeColor = this.getTypeColor(item.type);
       const typeIndicator = this.add.graphics();
       typeIndicator.fillStyle(typeColor, 0.8);
-      typeIndicator.fillCircle(12, -12, 4);
+      typeIndicator.fillCircle(10, -10, 3);
 
       // Add elements to container
       itemContainer.add([slot, itemIcon, itemName, typeIndicator]);
@@ -164,27 +165,27 @@ export default class BackpackScreen extends Phaser.Scene {
       if (index === this.selectedItem) {
         element.slot.clear();
         element.slot.fillStyle(0x555555, 1);
-        element.slot.fillRoundedRect(-16, -16, 32, 32, 4);
+        element.slot.fillRoundedRect(-15, -15, 30, 30, 4);
         element.slot.lineStyle(2, 0xffff00); // Yellow highlight for selected
-        element.slot.strokeRoundedRect(-16, -16, 32, 32, 4);
+        element.slot.strokeRoundedRect(-15, -15, 30, 30, 4);
       } else {
         element.slot.clear();
         element.slot.fillStyle(0x444444, 1);
-        element.slot.fillRoundedRect(-16, -16, 32, 32, 4);
+        element.slot.fillRoundedRect(-15, -15, 30, 30, 4);
         element.slot.lineStyle(1, 0x666666);
-        element.slot.strokeRoundedRect(-16, -16, 32, 32, 4);
+        element.slot.strokeRoundedRect(-15, -15, 30, 30, 4);
       }
     });
 
     // Auto-scroll to keep selected item visible
-    const itemsPerRow = 6;
+    const itemsPerRow = 5;
     const selectedRow = Math.floor(this.selectedItem / itemsPerRow);
-    const targetScrollY = selectedRow * 40;
+    const targetScrollY = selectedRow * 45;
 
     if (targetScrollY < this.scrollY) {
       this.scrollY = targetScrollY;
-    } else if (targetScrollY > this.scrollY + 60) {
-      this.scrollY = Math.min(this.maxScroll, targetScrollY - 60);
+    } else if (targetScrollY > this.scrollY + 65) {
+      this.scrollY = Math.min(this.maxScroll, targetScrollY - 65);
     }
 
     this.updateScroll();
@@ -201,7 +202,7 @@ export default class BackpackScreen extends Phaser.Scene {
     }
 
     // Handle navigation
-    const itemsPerRow = 6;
+    const itemsPerRow = 5;
 
     if (Phaser.Input.Keyboard.JustDown(this.cursors.left)) {
       this.selectedItem = Math.max(0, this.selectedItem - 1);
@@ -250,10 +251,10 @@ export default class BackpackScreen extends Phaser.Scene {
   }
 
   showItemUsedFeedback(item: GameItem) {
-    const feedbackText = this.add.text(176, 50, `Used ${item.name}!`, {
-      fontSize: "12px",
+    const feedbackText = this.add.text(176, 45, `Used ${item.name}!`, {
+      fontSize: "10px",
       color: "#4caf50",
-      fontFamily: "Arial",
+      fontFamily: "CustomFont, Arial",
       fontStyle: "bold",
     });
     feedbackText.setOrigin(0.5);
@@ -262,7 +263,7 @@ export default class BackpackScreen extends Phaser.Scene {
     this.tweens.add({
       targets: feedbackText,
       alpha: 0,
-      y: 30,
+      y: 25,
       duration: 1500,
       onComplete: () => {
         feedbackText.destroy();
@@ -284,9 +285,9 @@ export default class BackpackScreen extends Phaser.Scene {
     }
 
     // Recalculate max scroll
-    const itemsPerRow = 6;
+    const itemsPerRow = 5;
     const rows = Math.ceil(this.gameState.inventory.length / itemsPerRow);
-    this.maxScroll = Math.max(0, rows * 40 - 100);
+    this.maxScroll = Math.max(0, rows * 45 - 110);
 
     // Update selection
     this.updateSelection();

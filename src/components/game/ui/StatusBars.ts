@@ -8,6 +8,7 @@ export default class StatusBars {
   gameState: GameState;
 
   // UI Elements
+  barLayoutSprite: Phaser.GameObjects.Sprite;
   profileSprite: Phaser.GameObjects.Sprite;
   happinessBar: Phaser.GameObjects.Graphics;
   hungerBar: Phaser.GameObjects.Graphics;
@@ -31,24 +32,21 @@ export default class StatusBars {
     this.uiContainer = this.scene.add.container(0, 0);
     this.uiContainer.setScrollFactor(0); // This makes it fixed to camera
 
-    // Profile picture
-    this.profileSprite = this.scene.add.sprite(38, 28, "Profile");
+    // Use BarLayout asset as background
+    this.barLayoutSprite = this.scene.add.sprite(176, 30, "BarLayout");
+    this.barLayoutSprite.setOrigin(0.5);
+    this.barLayoutSprite.setScrollFactor(0);
+
+    // Profile picture - positioned to fit within the BarLayout
+    this.profileSprite = this.scene.add.sprite(38, 30, "Profile");
     this.profileSprite.setOrigin(0.5);
-    this.profileSprite.setScale(1);
+    this.profileSprite.setScale(0.8);
     this.profileSprite.setScrollFactor(0);
 
-    // Background for status bars
-    const bgGraphics = this.scene.add.graphics();
-    bgGraphics.fillStyle(0x000000, 0.7);
-    bgGraphics.fillRoundedRect(60, 10, 280, 40, 8);
-    bgGraphics.lineStyle(2, 0xffffff, 0.8);
-    bgGraphics.strokeRoundedRect(60, 10, 280, 40, 8);
-    bgGraphics.setScrollFactor(0);
-
-    // Create status bars
-    this.createStatusBar("happiness", 70, 18, 0xff6b6b); // Red for happiness
-    this.createStatusBar("hunger", 70, 28, 0x4ecdc4); // Teal for hunger
-    this.createStatusBar("thirst", 70, 38, 0x45b7d1); // Blue for thirst
+    // Create status bars positioned to align with BarLayout
+    this.createStatusBar("happiness", 75, 20, 0xff6b6b); // Red for happiness
+    this.createStatusBar("hunger", 75, 30, 0x4ecdc4); // Teal for hunger
+    this.createStatusBar("thirst", 75, 40, 0x45b7d1); // Blue for thirst
 
     // Update bars initially
     this.updateBars();
@@ -57,28 +55,30 @@ export default class StatusBars {
   createStatusBar(type: string, x: number, y: number, color: number) {
     // Bar background
     const barBg = this.scene.add.graphics();
-    barBg.fillStyle(0x333333, 1);
-    barBg.fillRoundedRect(x, y, 80, 6, 3);
+    barBg.fillStyle(0x333333, 0.8);
+    barBg.fillRoundedRect(x, y, 70, 5, 2);
     barBg.setScrollFactor(0);
 
     // Bar fill
     const bar = this.scene.add.graphics();
     bar.setScrollFactor(0);
 
-    // Label
-    const label = this.scene.add.text(x + 85, y + 3, type.toUpperCase(), {
-      fontSize: "8px",
+    // Label with custom font
+    const label = this.scene.add.text(x + 75, y + 2.5, type.toUpperCase(), {
+      fontSize: "7px",
       color: "#ffffff",
-      fontFamily: "Arial",
+      fontFamily: "CustomFont, Arial",
+      fontStyle: "bold",
     });
     label.setOrigin(0, 0.5);
     label.setScrollFactor(0);
 
-    // Value text
-    const valueText = this.scene.add.text(x + 130, y + 3, "100%", {
-      fontSize: "8px",
+    // Value text with custom font
+    const valueText = this.scene.add.text(x + 115, y + 2.5, "100%", {
+      fontSize: "7px",
       color: "#ffffff",
-      fontFamily: "Arial",
+      fontFamily: "CustomFont, Arial",
+      fontStyle: "bold",
     });
     valueText.setOrigin(0, 0.5);
     valueText.setScrollFactor(0);
@@ -104,8 +104,8 @@ export default class StatusBars {
       this.happinessBar,
       this.happinessText,
       stats.happiness,
-      70,
-      18,
+      75,
+      20,
       0xff6b6b
     );
 
@@ -114,8 +114,8 @@ export default class StatusBars {
       this.hungerBar,
       this.hungerText,
       stats.hunger,
-      70,
-      28,
+      75,
+      30,
       0x4ecdc4
     );
 
@@ -124,8 +124,8 @@ export default class StatusBars {
       this.thirstBar,
       this.thirstText,
       stats.thirst,
-      70,
-      38,
+      75,
+      40,
       0x45b7d1
     );
 
@@ -144,7 +144,7 @@ export default class StatusBars {
     bar.clear();
 
     // Calculate bar width based on value
-    const barWidth = (value / 100) * 80;
+    const barWidth = (value / 100) * 70;
 
     // Choose color based on value
     let fillColor = color;
@@ -155,7 +155,7 @@ export default class StatusBars {
     }
 
     bar.fillStyle(fillColor, 1);
-    bar.fillRoundedRect(x, y, barWidth, 6, 3);
+    bar.fillRoundedRect(x, y, barWidth, 5, 2);
 
     // Update text
     text.setText(`${Math.round(value)}%`);
@@ -163,6 +163,7 @@ export default class StatusBars {
 
   destroy() {
     if (this.uiContainer) this.uiContainer.destroy();
+    if (this.barLayoutSprite) this.barLayoutSprite.destroy();
     if (this.profileSprite) this.profileSprite.destroy();
     if (this.happinessBar) this.happinessBar.destroy();
     if (this.hungerBar) this.hungerBar.destroy();

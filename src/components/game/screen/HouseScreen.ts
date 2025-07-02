@@ -66,11 +66,11 @@ export default class HouseScreen extends Phaser.Scene {
     goalsIcon.setTint(0x4caf50); // Green tint to differentiate
     goalsIcon.setScrollFactor(0); // Fixed position
 
-    // Add "G" text overlay
+    // Add "G" text overlay with custom font
     const goalsText = this.add.text(320, 108, "G", {
-      fontSize: "12px",
+      fontSize: "10px",
       color: "#ffffff",
-      fontFamily: "Arial",
+      fontFamily: "CustomFont, Arial",
       fontStyle: "bold"
     });
     goalsText.setOrigin(0.5);

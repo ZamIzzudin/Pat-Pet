@@ -30,15 +30,15 @@ export default class GoalsScreen extends Phaser.Scene {
     // Create dark background
     this.add.rectangle(176, 96, 352, 192, 0x000000, 0.8);
 
-    // Create goals panel background
-    const bg = this.add.rectangle(176, 96, 320, 170, 0x2a2a2a);
+    // Create goals panel background with better spacing
+    const bg = this.add.rectangle(176, 96, 330, 175, 0x2a2a2a);
     bg.setStrokeStyle(2, 0xffffff);
 
-    // Title
-    const titleText = this.add.text(176, 25, "GOALS & OBJECTIVES", {
-      fontSize: "16px",
+    // Title with custom font
+    const titleText = this.add.text(176, 22, "GOALS & OBJECTIVES", {
+      fontSize: "14px",
       color: "#ffffff",
-      fontFamily: "Arial",
+      fontFamily: "CustomFont, Arial",
       fontStyle: "bold",
     });
     titleText.setOrigin(0.5);
@@ -46,18 +46,18 @@ export default class GoalsScreen extends Phaser.Scene {
     // Create scrollable container
     this.scrollContainer = this.add.container(0, 0);
 
-    // Create goal items
+    // Create goal items with improved spacing
     this.createGoalItems();
 
-    // Instructions
+    // Instructions with custom font
     const instructionText = this.add.text(
       176,
-      175,
+      178,
       "Arrow Keys: Scroll | ESC: Close",
       {
-        fontSize: "10px",
+        fontSize: "9px",
         color: "#cccccc",
-        fontFamily: "Arial",
+        fontFamily: "CustomFont, Arial",
       }
     );
     instructionText.setOrigin(0.5);
@@ -68,13 +68,13 @@ export default class GoalsScreen extends Phaser.Scene {
       Phaser.Input.Keyboard.KeyCodes.ESC
     );
 
-    // Calculate max scroll
-    this.maxScroll = Math.max(0, this.gameState.goals.length * 25 - 120);
+    // Calculate max scroll with improved spacing
+    this.maxScroll = Math.max(0, this.gameState.goals.length * 32 - 125);
   }
 
   createGoalItems() {
-    const startY = 50;
-    const itemHeight = 25;
+    const startY = 45;
+    const itemHeight = 32; // Increased height for better spacing
 
     this.gameState.goals.forEach((goal, index) => {
       const y = startY + index * itemHeight;
@@ -82,61 +82,70 @@ export default class GoalsScreen extends Phaser.Scene {
       // Goal container
       const goalContainer = this.add.container(176, y);
 
-      // Background for goal item
+      // Background for goal item with better spacing
       const itemBg = this.add.graphics();
       const bgColor = goal.completed ? 0x2d5a2d : 0x3a3a3a;
       itemBg.fillStyle(bgColor, 0.8);
-      itemBg.fillRoundedRect(-150, -10, 300, 20, 4);
+      itemBg.fillRoundedRect(-155, -12, 310, 24, 4); // Increased height
       itemBg.lineStyle(1, goal.completed ? 0x4caf50 : 0x666666);
-      itemBg.strokeRoundedRect(-150, -10, 300, 20, 4);
+      itemBg.strokeRoundedRect(-155, -12, 310, 24, 4);
 
-      // Goal title
+      // Goal title with custom font and better positioning
       const titleColor = goal.completed ? "#4caf50" : "#ffffff";
-      const titleText = this.add.text(-145, -6, goal.title, {
-        fontSize: "10px",
+      const titleText = this.add.text(-150, -8, goal.title, {
+        fontSize: "9px",
         color: titleColor,
-        fontFamily: "Arial",
+        fontFamily: "CustomFont, Arial",
         fontStyle: goal.completed ? "bold" : "normal",
       });
       titleText.setOrigin(0, 0);
 
-      // Progress bar background
+      // Goal description with custom font
+      const descText = this.add.text(-150, 2, goal.description, {
+        fontSize: "7px",
+        color: "#cccccc",
+        fontFamily: "CustomFont, Arial",
+      });
+      descText.setOrigin(0, 0);
+
+      // Progress bar background with better positioning
       const progressBg = this.add.graphics();
       progressBg.fillStyle(0x555555, 1);
-      progressBg.fillRoundedRect(-145, 2, 100, 4, 2);
+      progressBg.fillRoundedRect(50, -2, 80, 4, 2); // Moved right for better spacing
 
       // Progress bar fill
       const progressFill = this.add.graphics();
-      const progressWidth = (goal.progress / goal.maxProgress) * 100;
+      const progressWidth = (goal.progress / goal.maxProgress) * 80;
       const progressColor = goal.completed ? 0x4caf50 : 0x2196f3;
       progressFill.fillStyle(progressColor, 1);
-      progressFill.fillRoundedRect(-145, 2, progressWidth, 4, 2);
+      progressFill.fillRoundedRect(50, -2, progressWidth, 4, 2);
 
-      // Progress text
+      // Progress text with custom font and better positioning
       const progressText = this.add.text(
-        -40,
-        -2,
+        135,
+        0,
         `${goal.progress}/${goal.maxProgress}`,
         {
-          fontSize: "8px",
+          fontSize: "7px",
           color: "#cccccc",
-          fontFamily: "Arial",
+          fontFamily: "CustomFont, Arial",
         }
       );
-      progressText.setOrigin(0, 0);
+      progressText.setOrigin(0, 0.5);
 
-      // Status icon
-      const statusText = this.add.text(140, -2, goal.completed ? "✓" : "○", {
-        fontSize: "12px",
+      // Status icon with better positioning
+      const statusText = this.add.text(145, 0, goal.completed ? "✓" : "○", {
+        fontSize: "10px",
         color: goal.completed ? "#4caf50" : "#666666",
-        fontFamily: "Arial",
+        fontFamily: "CustomFont, Arial",
       });
-      statusText.setOrigin(0.5, 0);
+      statusText.setOrigin(0.5, 0.5);
 
       // Add elements to container
       goalContainer.add([
         itemBg,
         titleText,
+        descText,
         progressBg,
         progressFill,
         progressText,
@@ -151,12 +160,12 @@ export default class GoalsScreen extends Phaser.Scene {
   }
 
   update() {
-    // Handle scrolling
+    // Handle scrolling with improved step size
     if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
-      this.scrollY = Math.max(0, this.scrollY - 25);
+      this.scrollY = Math.max(0, this.scrollY - 32);
       this.updateScroll();
     } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
-      this.scrollY = Math.min(this.maxScroll, this.scrollY + 25);
+      this.scrollY = Math.min(this.maxScroll, this.scrollY + 32);
       this.updateScroll();
     }
 
