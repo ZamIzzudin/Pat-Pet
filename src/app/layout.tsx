@@ -17,7 +17,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Pat-Pet [Keep Your Pet, Kep Your Goal]",
+  title: "Pat-Pet [Keep Your Pet, Keep Your Goal]",
   description: "Keep Your Pet, Keep Your Goal",
 };
 

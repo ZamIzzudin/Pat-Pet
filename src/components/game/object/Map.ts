@@ -1,4 +1,6 @@
 /** @format */
+// @ts-nocheck: Object is possibly 'null'.
+
 import Char from "./Char";
 
 export default class Map {
@@ -119,7 +121,7 @@ export default class Map {
           color: "#ffffff",
           fontFamily: "Arial",
           backgroundColor: "#000000",
-          padding: { x: 4, y: 2 }
+          padding: { x: 4, y: 2 },
         }
       );
       this.interactionPrompt.setOrigin(0.5);
@@ -168,7 +170,9 @@ export default class Map {
     }
 
     // Check if near door tile and show/hide prompt
-    if (this.checkNearDoorTile(this.player.coordinate.x, this.player.coordinate.y)) {
+    if (
+      this.checkNearDoorTile(this.player.coordinate.x, this.player.coordinate.y)
+    ) {
       this.showInteractionPrompt();
     } else {
       this.hideInteractionPrompt();
@@ -176,7 +180,10 @@ export default class Map {
 
     // Handle space key for door interaction
     if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
-      const targetScene = this.checkDoorTile(this.player.coordinate.x, this.player.coordinate.y);
+      const targetScene = this.checkDoorTile(
+        this.player.coordinate.x,
+        this.player.coordinate.y
+      );
       if (targetScene) {
         this.hideInteractionPrompt();
         this.scene.scene.start(targetScene);

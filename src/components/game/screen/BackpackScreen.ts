@@ -2,7 +2,7 @@
 // @ts-nocheck: Object is possibly 'null'.
 
 import * as Phaser from "phaser";
-import GameState, { GameItem } from "../object/GameState";
+import GameState, { GameItem } from "../logic/GameState";
 
 export default class BackpackScreen extends Phaser.Scene {
   previousScene: string;
@@ -44,7 +44,7 @@ export default class BackpackScreen extends Phaser.Scene {
       fontSize: "16px",
       color: "#ffffff",
       fontFamily: "Arial",
-      fontStyle: "bold"
+      fontStyle: "bold",
     });
     this.titleText.setOrigin(0.5);
 
@@ -79,7 +79,7 @@ export default class BackpackScreen extends Phaser.Scene {
     // Calculate max scroll
     const itemsPerRow = 6;
     const rows = Math.ceil(this.gameState.inventory.length / itemsPerRow);
-    this.maxScroll = Math.max(0, (rows * 40) - 100);
+    this.maxScroll = Math.max(0, rows * 40 - 100);
 
     // Update selection visual
     this.updateSelection();
@@ -118,7 +118,7 @@ export default class BackpackScreen extends Phaser.Scene {
       const itemName = this.add.text(0, 20, item.name, {
         fontSize: "8px",
         color: "#ffffff",
-        fontFamily: "Arial"
+        fontFamily: "Arial",
       });
       itemName.setOrigin(0.5, 0);
 
@@ -130,22 +130,31 @@ export default class BackpackScreen extends Phaser.Scene {
 
       // Add elements to container
       itemContainer.add([slot, itemIcon, itemName, typeIndicator]);
-      
+
       // Add to scroll container
       this.scrollContainer.add(itemContainer);
-      
+
       // Store reference for selection highlighting
-      this.itemElements.push({ container: itemContainer, slot: slot, item: item });
+      this.itemElements.push({
+        container: itemContainer,
+        slot: slot,
+        item: item,
+      });
     });
   }
 
   getTypeColor(type: string): number {
     switch (type) {
-      case 'food': return 0x4caf50; // Green
-      case 'drink': return 0x2196f3; // Blue
-      case 'toy': return 0xff9800; // Orange
-      case 'tool': return 0x9c27b0; // Purple
-      default: return 0x666666; // Gray
+      case "food":
+        return 0x4caf50; // Green
+      case "drink":
+        return 0x2196f3; // Blue
+      case "toy":
+        return 0xff9800; // Orange
+      case "tool":
+        return 0x9c27b0; // Purple
+      default:
+        return 0x666666; // Gray
     }
   }
 
@@ -171,13 +180,13 @@ export default class BackpackScreen extends Phaser.Scene {
     const itemsPerRow = 6;
     const selectedRow = Math.floor(this.selectedItem / itemsPerRow);
     const targetScrollY = selectedRow * 40;
-    
+
     if (targetScrollY < this.scrollY) {
       this.scrollY = targetScrollY;
     } else if (targetScrollY > this.scrollY + 60) {
       this.scrollY = Math.min(this.maxScroll, targetScrollY - 60);
     }
-    
+
     this.updateScroll();
   }
 
@@ -193,7 +202,7 @@ export default class BackpackScreen extends Phaser.Scene {
 
     // Handle navigation
     const itemsPerRow = 6;
-    
+
     if (Phaser.Input.Keyboard.JustDown(this.cursors.left)) {
       this.selectedItem = Math.max(0, this.selectedItem - 1);
       this.updateSelection();
@@ -218,16 +227,16 @@ export default class BackpackScreen extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(this.enterKey)) {
       if (this.selectedItem < this.gameState.inventory.length) {
         const selectedItemData = this.gameState.inventory[this.selectedItem];
-        
+
         // Use the item
         const success = this.gameState.useItem(selectedItemData.id);
-        
+
         if (success) {
           console.log("Used item:", selectedItemData.name);
-          
+
           // Refresh the backpack display
           this.refreshBackpack();
-          
+
           // Show feedback
           this.showItemUsedFeedback(selectedItemData);
         }
@@ -245,7 +254,7 @@ export default class BackpackScreen extends Phaser.Scene {
       fontSize: "12px",
       color: "#4caf50",
       fontFamily: "Arial",
-      fontStyle: "bold"
+      fontStyle: "bold",
     });
     feedbackText.setOrigin(0.5);
 
@@ -257,7 +266,7 @@ export default class BackpackScreen extends Phaser.Scene {
       duration: 1500,
       onComplete: () => {
         feedbackText.destroy();
-      }
+      },
     });
   }
 
@@ -265,20 +274,20 @@ export default class BackpackScreen extends Phaser.Scene {
     // Clear existing items
     this.scrollContainer.removeAll(true);
     this.itemElements = [];
-    
+
     // Recreate item slots
     this.createItemSlots();
-    
+
     // Adjust selected item if necessary
     if (this.selectedItem >= this.gameState.inventory.length) {
       this.selectedItem = Math.max(0, this.gameState.inventory.length - 1);
     }
-    
+
     // Recalculate max scroll
     const itemsPerRow = 6;
     const rows = Math.ceil(this.gameState.inventory.length / itemsPerRow);
-    this.maxScroll = Math.max(0, (rows * 40) - 100);
-    
+    this.maxScroll = Math.max(0, rows * 40 - 100);
+
     // Update selection
     this.updateSelection();
   }

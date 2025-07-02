@@ -1,18 +1,18 @@
 /** @format */
 
 import * as Phaser from "phaser";
-import GameState from "../object/GameState";
+import GameState from "../logic/GameState";
 
 export default class StatusBars {
   scene: Phaser.Scene;
   gameState: GameState;
-  
+
   // UI Elements
   profileSprite: Phaser.GameObjects.Sprite;
   happinessBar: Phaser.GameObjects.Graphics;
   hungerBar: Phaser.GameObjects.Graphics;
   thirstBar: Phaser.GameObjects.Graphics;
-  
+
   happinessText: Phaser.GameObjects.Text;
   hungerText: Phaser.GameObjects.Text;
   thirstText: Phaser.GameObjects.Text;
@@ -38,7 +38,7 @@ export default class StatusBars {
 
     // Create status bars
     this.createStatusBar("happiness", 70, 18, 0xff6b6b); // Red for happiness
-    this.createStatusBar("hunger", 70, 28, 0x4ecdc4); // Teal for hunger  
+    this.createStatusBar("hunger", 70, 28, 0x4ecdc4); // Teal for hunger
     this.createStatusBar("thirst", 70, 38, 0x45b7d1); // Blue for thirst
 
     // Update bars initially
@@ -53,12 +53,12 @@ export default class StatusBars {
 
     // Bar fill
     const bar = this.scene.add.graphics();
-    
+
     // Label
     const label = this.scene.add.text(x + 85, y + 3, type.toUpperCase(), {
       fontSize: "8px",
       color: "#ffffff",
-      fontFamily: "Arial"
+      fontFamily: "Arial",
     });
     label.setOrigin(0, 0.5);
 
@@ -66,7 +66,7 @@ export default class StatusBars {
     const valueText = this.scene.add.text(x + 130, y + 3, "100%", {
       fontSize: "8px",
       color: "#ffffff",
-      fontFamily: "Arial"
+      fontFamily: "Arial",
     });
     valueText.setOrigin(0, 0.5);
 
@@ -87,24 +87,52 @@ export default class StatusBars {
     const stats = this.gameState.playerStats;
 
     // Update happiness bar
-    this.updateBar(this.happinessBar, this.happinessText, stats.happiness, 70, 18, 0xff6b6b);
-    
+    this.updateBar(
+      this.happinessBar,
+      this.happinessText,
+      stats.happiness,
+      70,
+      18,
+      0xff6b6b
+    );
+
     // Update hunger bar
-    this.updateBar(this.hungerBar, this.hungerText, stats.hunger, 70, 28, 0x4ecdc4);
-    
+    this.updateBar(
+      this.hungerBar,
+      this.hungerText,
+      stats.hunger,
+      70,
+      28,
+      0x4ecdc4
+    );
+
     // Update thirst bar
-    this.updateBar(this.thirstBar, this.thirstText, stats.thirst, 70, 38, 0x45b7d1);
+    this.updateBar(
+      this.thirstBar,
+      this.thirstText,
+      stats.thirst,
+      70,
+      38,
+      0x45b7d1
+    );
 
     // Update goals
     this.gameState.updateGoalProgress();
   }
 
-  updateBar(bar: Phaser.GameObjects.Graphics, text: Phaser.GameObjects.Text, value: number, x: number, y: number, color: number) {
+  updateBar(
+    bar: Phaser.GameObjects.Graphics,
+    text: Phaser.GameObjects.Text,
+    value: number,
+    x: number,
+    y: number,
+    color: number
+  ) {
     bar.clear();
-    
+
     // Calculate bar width based on value
     const barWidth = (value / 100) * 80;
-    
+
     // Choose color based on value
     let fillColor = color;
     if (value < 30) {
@@ -112,10 +140,10 @@ export default class StatusBars {
     } else if (value < 60) {
       fillColor = 0xffa502; // Orange for medium values
     }
-    
+
     bar.fillStyle(fillColor, 1);
     bar.fillRoundedRect(x, y, barWidth, 6, 3);
-    
+
     // Update text
     text.setText(`${Math.round(value)}%`);
   }

@@ -41,7 +41,7 @@ export default class MainScreen extends Phaser.Scene {
   createActionButtons() {
     // Goals button (above backpack button)
     this.createGoalsButton();
-    
+
     // Backpack button
     this.createBackpackButton();
   }
@@ -60,12 +60,7 @@ export default class MainScreen extends Phaser.Scene {
     goalsIcon.setTint(0x4caf50); // Green tint to differentiate
 
     // Add "G" text overlay
-    const goalsText = this.add.text(320, 108, "G", {
-      fontSize: "12px",
-      color: "#ffffff",
-      fontFamily: "Arial",
-      fontStyle: "bold"
-    });
+    const goalsText = this.add.sprite(320, 108, "Backpack");
     goalsText.setOrigin(0.5);
 
     // Make button interactive
@@ -106,7 +101,14 @@ export default class MainScreen extends Phaser.Scene {
     backpackIcon.setOrigin(0.5);
 
     // Make button interactive
-    const backpackButtonArea = this.add.rectangle(320, 160, 48, 48, 0x000000, 0);
+    const backpackButtonArea = this.add.rectangle(
+      320,
+      160,
+      48,
+      48,
+      0x000000,
+      0
+    );
     backpackButtonArea.setInteractive();
     backpackButtonArea.on("pointerdown", () => {
       this.openBackpack();

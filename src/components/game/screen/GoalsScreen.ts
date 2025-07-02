@@ -2,7 +2,7 @@
 // @ts-nocheck: Object is possibly 'null'.
 
 import * as Phaser from "phaser";
-import GameState from "../object/GameState";
+import GameState from "../logic/GameState";
 
 export default class GoalsScreen extends Phaser.Scene {
   previousScene: string;
@@ -39,7 +39,7 @@ export default class GoalsScreen extends Phaser.Scene {
       fontSize: "16px",
       color: "#ffffff",
       fontFamily: "Arial",
-      fontStyle: "bold"
+      fontStyle: "bold",
     });
     titleText.setOrigin(0.5);
 
@@ -69,7 +69,7 @@ export default class GoalsScreen extends Phaser.Scene {
     );
 
     // Calculate max scroll
-    this.maxScroll = Math.max(0, (this.gameState.goals.length * 25) - 120);
+    this.maxScroll = Math.max(0, this.gameState.goals.length * 25 - 120);
   }
 
   createGoalItems() {
@@ -77,8 +77,8 @@ export default class GoalsScreen extends Phaser.Scene {
     const itemHeight = 25;
 
     this.gameState.goals.forEach((goal, index) => {
-      const y = startY + (index * itemHeight);
-      
+      const y = startY + index * itemHeight;
+
       // Goal container
       const goalContainer = this.add.container(176, y);
 
@@ -96,7 +96,7 @@ export default class GoalsScreen extends Phaser.Scene {
         fontSize: "10px",
         color: titleColor,
         fontFamily: "Arial",
-        fontStyle: goal.completed ? "bold" : "normal"
+        fontStyle: goal.completed ? "bold" : "normal",
       });
       titleText.setOrigin(0, 0);
 
@@ -113,27 +113,39 @@ export default class GoalsScreen extends Phaser.Scene {
       progressFill.fillRoundedRect(-145, 2, progressWidth, 4, 2);
 
       // Progress text
-      const progressText = this.add.text(-40, -2, `${goal.progress}/${goal.maxProgress}`, {
-        fontSize: "8px",
-        color: "#cccccc",
-        fontFamily: "Arial"
-      });
+      const progressText = this.add.text(
+        -40,
+        -2,
+        `${goal.progress}/${goal.maxProgress}`,
+        {
+          fontSize: "8px",
+          color: "#cccccc",
+          fontFamily: "Arial",
+        }
+      );
       progressText.setOrigin(0, 0);
 
       // Status icon
       const statusText = this.add.text(140, -2, goal.completed ? "✓" : "○", {
         fontSize: "12px",
         color: goal.completed ? "#4caf50" : "#666666",
-        fontFamily: "Arial"
+        fontFamily: "Arial",
       });
       statusText.setOrigin(0.5, 0);
 
       // Add elements to container
-      goalContainer.add([itemBg, titleText, progressBg, progressFill, progressText, statusText]);
-      
+      goalContainer.add([
+        itemBg,
+        titleText,
+        progressBg,
+        progressFill,
+        progressText,
+        statusText,
+      ]);
+
       // Add to scroll container
       this.scrollContainer.add(goalContainer);
-      
+
       this.goalElements.push(goalContainer);
     });
   }
