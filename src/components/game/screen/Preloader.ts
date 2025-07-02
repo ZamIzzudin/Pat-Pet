@@ -17,6 +17,9 @@ export default class Preloader extends Phaser.Scene {
     this.load.image("Button", "/Button.png");
     this.load.image("Inventory", "/Inventory.png");
     this.load.image("Backpack", "/Backpack.png");
+    this.load.image("Task", "/Task.png");
+    this.load.image("Profile", "/Profile.png");
+    this.load.image("BarLayout", "/BarLayout.png");
 
     this.load.spritesheet("player", "/Char.png", {
       frameWidth: 48,

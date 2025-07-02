@@ -9,7 +9,7 @@ export default class MainScreen extends Phaser.Scene {
   cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   map: Map;
   statusBars: StatusBars;
-  actionButton: Phaser.GameObjects.Sprite;
+  backpackButton: Phaser.GameObjects.Sprite;
   goalsButton: Phaser.GameObjects.Sprite;
   backpackKey: Phaser.Input.Keyboard.Key;
   goalsKey: Phaser.Input.Keyboard.Key;
@@ -47,6 +47,9 @@ export default class MainScreen extends Phaser.Scene {
   }
 
   createGoalsButton() {
+    this.goalsButton = this.add.sprite(320, 108, "Button");
+    this.goalsButton.setScrollFactor(0); // Fixed position
+
     // Create button graphics for goals
     const goalsGraphics = this.add.graphics();
     goalsGraphics.fillStyle(0x000000, 0);
@@ -57,14 +60,8 @@ export default class MainScreen extends Phaser.Scene {
 
     // Add goals icon (using backpack sprite temporarily)
     const goalsIcon = this.add.sprite(320, 108, "Backpack");
-    goalsIcon.setOrigin(0.5);
-    goalsIcon.setTint(0x4caf50); // Green tint to differentiate
+    // goalsIcon.setOrigin(0.5);
     goalsIcon.setScrollFactor(0); // Fixed position
-
-    // Add "G" text overlay
-    const goalsText = this.add.sprite(320, 108, "Backpack");
-    goalsText.setOrigin(0.5);
-    goalsText.setScrollFactor(0); // Fixed position
 
     // Make button interactive
     const goalsButtonArea = this.add.rectangle(320, 108, 48, 48, 0x000000, 0);
@@ -93,6 +90,9 @@ export default class MainScreen extends Phaser.Scene {
   }
 
   createBackpackButton() {
+    this.backpackButton = this.add.sprite(320, 160, "Button");
+    this.backpackButton.setScrollFactor(0);
+
     // Create button graphics for backpack
     const backpackGraphics = this.add.graphics();
     backpackGraphics.fillStyle(0x000000, 0);
@@ -103,7 +103,6 @@ export default class MainScreen extends Phaser.Scene {
 
     // Add backpack icon
     const backpackIcon = this.add.sprite(320, 160, "Backpack");
-    backpackIcon.setOrigin(0.5);
     backpackIcon.setScrollFactor(0); // Fixed position
 
     // Make button interactive

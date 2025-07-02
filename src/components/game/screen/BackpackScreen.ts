@@ -2,7 +2,7 @@
 // @ts-nocheck: Object is possibly 'null'.
 
 import * as Phaser from "phaser";
-import GameState, { GameItem } from "../logic/GameState";
+import GameState, { GameItem } from "../object/GameState";
 
 export default class BackpackScreen extends Phaser.Scene {
   previousScene: string;

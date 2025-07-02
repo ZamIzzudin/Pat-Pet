@@ -2,7 +2,7 @@
 // @ts-nocheck: Object is possibly 'null'.
 
 import * as Phaser from "phaser";
-import GameState from "../logic/GameState";
+import GameState from "../object/GameState";
 
 export default class GoalsScreen extends Phaser.Scene {
   previousScene: string;
@@ -28,7 +28,7 @@ export default class GoalsScreen extends Phaser.Scene {
     this.goalElements = [];
 
     // Create dark background
-    this.add.rectangle(176, 96, 352, 192, 0x000000, 0.9);
+    this.add.rectangle(176, 96, 352, 192, 0x000000, 0.8);
 
     // Create goals panel background
     const bg = this.add.rectangle(176, 96, 320, 170, 0x2a2a2a);

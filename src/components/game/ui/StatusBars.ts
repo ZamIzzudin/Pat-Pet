@@ -1,7 +1,7 @@
 /** @format */
 
 import * as Phaser from "phaser";
-import GameState from "../logic/GameState";
+import GameState from "../object/GameState";
 
 export default class StatusBars {
   scene: Phaser.Scene;
@@ -32,9 +32,9 @@ export default class StatusBars {
     this.uiContainer.setScrollFactor(0); // This makes it fixed to camera
 
     // Profile picture
-    this.profileSprite = this.scene.add.sprite(30, 30, "Backpack");
+    this.profileSprite = this.scene.add.sprite(38, 28, "Profile");
     this.profileSprite.setOrigin(0.5);
-    this.profileSprite.setScale(0.8);
+    this.profileSprite.setScale(1);
     this.profileSprite.setScrollFactor(0);
 
     // Background for status bars
