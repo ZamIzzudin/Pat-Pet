@@ -36,10 +36,12 @@ export default class GoalsScreen extends Phaser.Scene {
 
     // Title with custom font
     const titleText = this.add.text(176, 22, "GOALS & OBJECTIVES", {
-      fontSize: "14px",
+      fontSize: "16px",
       color: "#ffffff",
       fontFamily: "CustomFont, Arial",
       fontStyle: "bold",
+      resolution: 2,
+      padding: { x: 2, y: 2 },
     });
     titleText.setOrigin(0.5);
 
@@ -55,9 +57,11 @@ export default class GoalsScreen extends Phaser.Scene {
       178,
       "Arrow Keys: Scroll | ESC: Close",
       {
-        fontSize: "9px",
+        fontSize: "10px",
         color: "#cccccc",
         fontFamily: "CustomFont, Arial",
+        resolution: 2,
+        padding: { x: 1, y: 1 },
       }
     );
     instructionText.setOrigin(0.5);
@@ -93,18 +97,22 @@ export default class GoalsScreen extends Phaser.Scene {
       // Goal title with custom font and better positioning
       const titleColor = goal.completed ? "#4caf50" : "#ffffff";
       const titleText = this.add.text(-150, -8, goal.title, {
-        fontSize: "9px",
+        fontSize: "10px",
         color: titleColor,
         fontFamily: "CustomFont, Arial",
         fontStyle: goal.completed ? "bold" : "normal",
+        resolution: 2,
+        padding: { x: 1, y: 1 },
       });
       titleText.setOrigin(0, 0);
 
       // Goal description with custom font
       const descText = this.add.text(-150, 2, goal.description, {
-        fontSize: "7px",
+        fontSize: "8px",
         color: "#cccccc",
         fontFamily: "CustomFont, Arial",
+        resolution: 2,
+        padding: { x: 1, y: 1 },
       });
       descText.setOrigin(0, 0);
 
@@ -126,18 +134,22 @@ export default class GoalsScreen extends Phaser.Scene {
         0,
         `${goal.progress}/${goal.maxProgress}`,
         {
-          fontSize: "7px",
+          fontSize: "8px",
           color: "#cccccc",
           fontFamily: "CustomFont, Arial",
+          resolution: 2,
+          padding: { x: 1, y: 1 },
         }
       );
       progressText.setOrigin(0, 0.5);
 
       // Status icon with better positioning
       const statusText = this.add.text(145, 0, goal.completed ? "✓" : "○", {
-        fontSize: "10px",
+        fontSize: "12px",
         color: goal.completed ? "#4caf50" : "#666666",
         fontFamily: "CustomFont, Arial",
+        resolution: 2,
+        padding: { x: 1, y: 1 },
       });
       statusText.setOrigin(0.5, 0.5);
 

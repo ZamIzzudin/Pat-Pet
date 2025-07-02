@@ -23,6 +23,22 @@ export default function GameScreen() {
       height: 192,
       disableContextMenu: true,
       roundPixels: true,
+      resolution: window.devicePixelRatio,
+      antialias: false,
+      powerPreference: "high-performance",
+      render: {
+        antialias: false,
+        pixelArt: true,
+        roundPixels: true,
+        transparent: false,
+        clearBeforeRender: true,
+        preserveDrawingBuffer: false,
+        failIfMajorPerformanceCaveat: false,
+        powerPreference: "high-performance",
+      },
+      scale: {
+        mode: Phaser.Scale.NONE,
+      },
       scene: [Preloader, MainScreen, HouseScreen, BackpackScreen, GoalsScreen],
     };
 

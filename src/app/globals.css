@@ -5,8 +5,8 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: 'CustomFont';
-  src: url('/Font.ttf') format('truetype');
+  font-family: "CustomFont";
+  src: url("/Font.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
@@ -26,7 +26,7 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: 'CustomFont', Arial, Helvetica, sans-serif;
+  font-family: "CustomFont", Arial, Helvetica, sans-serif;
 }
 
 @layer utilities {

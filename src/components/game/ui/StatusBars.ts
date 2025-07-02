@@ -33,14 +33,15 @@ export default class StatusBars {
     this.uiContainer.setScrollFactor(0); // This makes it fixed to camera
 
     // Use BarLayout asset as background
-    this.barLayoutSprite = this.scene.add.sprite(176, 30, "BarLayout");
+    this.barLayoutSprite = this.scene.add.sprite(170, 33, "BarLayout");
+    this.barLayoutSprite.setScale(0.6);
     this.barLayoutSprite.setOrigin(0.5);
     this.barLayoutSprite.setScrollFactor(0);
 
     // Profile picture - positioned to fit within the BarLayout
-    this.profileSprite = this.scene.add.sprite(38, 30, "Profile");
+    this.profileSprite = this.scene.add.sprite(43, 31, "Profile");
     this.profileSprite.setOrigin(0.5);
-    this.profileSprite.setScale(0.8);
+    this.profileSprite.setScale(1);
     this.profileSprite.setScrollFactor(0);
 
     // Create status bars positioned to align with BarLayout
@@ -65,20 +66,24 @@ export default class StatusBars {
 
     // Label with custom font
     const label = this.scene.add.text(x + 75, y + 2.5, type.toUpperCase(), {
-      fontSize: "7px",
+      fontSize: "8px",
       color: "#ffffff",
       fontFamily: "CustomFont, Arial",
-      fontStyle: "bold",
+      // fontStyle: "bold",
+      resolution: 2, // Higher resolution for crisp text
+      padding: { x: 1, y: 1 },
     });
     label.setOrigin(0, 0.5);
     label.setScrollFactor(0);
 
     // Value text with custom font
-    const valueText = this.scene.add.text(x + 115, y + 2.5, "100%", {
-      fontSize: "7px",
+    const valueText = this.scene.add.text(x + 135, y + 2.5, "100%", {
+      fontSize: "8px",
       color: "#ffffff",
       fontFamily: "CustomFont, Arial",
-      fontStyle: "bold",
+      // fontStyle: "bold",
+      resolution: 2, // Higher resolution for crisp text
+      padding: { x: 1, y: 1 },
     });
     valueText.setOrigin(0, 0.5);
     valueText.setScrollFactor(0);

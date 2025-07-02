@@ -46,7 +46,7 @@ export default class HouseScreen extends Phaser.Scene {
   createActionButtons() {
     // Goals button (above backpack button)
     this.createGoalsButton();
-    
+
     // Backpack button
     this.createBackpackButton();
   }
@@ -68,10 +68,12 @@ export default class HouseScreen extends Phaser.Scene {
 
     // Add "G" text overlay with custom font
     const goalsText = this.add.text(320, 108, "G", {
-      fontSize: "10px",
+      fontSize: "12px",
       color: "#ffffff",
       fontFamily: "CustomFont, Arial",
-      fontStyle: "bold"
+      fontStyle: "bold",
+      resolution: 2,
+      padding: { x: 1, y: 1 },
     });
     goalsText.setOrigin(0.5);
     goalsText.setScrollFactor(0); // Fixed position
@@ -117,7 +119,14 @@ export default class HouseScreen extends Phaser.Scene {
     backpackIcon.setScrollFactor(0); // Fixed position
 
     // Make button interactive
-    const backpackButtonArea = this.add.rectangle(320, 160, 48, 48, 0x000000, 0);
+    const backpackButtonArea = this.add.rectangle(
+      320,
+      160,
+      48,
+      48,
+      0x000000,
+      0
+    );
     backpackButtonArea.setInteractive();
     backpackButtonArea.setScrollFactor(0); // Fixed position
     backpackButtonArea.on("pointerdown", () => {

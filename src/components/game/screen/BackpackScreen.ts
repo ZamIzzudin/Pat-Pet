@@ -41,10 +41,12 @@ export default class BackpackScreen extends Phaser.Scene {
 
     // Title with custom font and better positioning
     this.titleText = this.add.text(176, 25, "BACKPACK", {
-      fontSize: "14px",
+      fontSize: "16px",
       color: "#ffffff",
       fontFamily: "CustomFont, Arial",
       fontStyle: "bold",
+      resolution: 2,
+      padding: { x: 2, y: 2 },
     });
     this.titleText.setOrigin(0.5);
 
@@ -60,9 +62,11 @@ export default class BackpackScreen extends Phaser.Scene {
       175,
       "Arrow Keys: Navigate | Enter: Use Item | ESC: Close",
       {
-        fontSize: "9px",
+        fontSize: "10px",
         color: "#cccccc",
         fontFamily: "CustomFont, Arial",
+        resolution: 2,
+        padding: { x: 1, y: 1 },
       }
     );
     this.instructionText.setOrigin(0.5);
@@ -116,10 +120,13 @@ export default class BackpackScreen extends Phaser.Scene {
 
       // Item name text with custom font and better positioning
       const itemName = this.add.text(0, 22, item.name, {
-        fontSize: "7px",
+        fontSize: "8px",
         color: "#ffffff",
         fontFamily: "CustomFont, Arial",
+        resolution: 2,
+        padding: { x: 1, y: 1 },
         wordWrap: { width: 40 },
+        align: "center",
       });
       itemName.setOrigin(0.5, 0);
 
@@ -252,10 +259,12 @@ export default class BackpackScreen extends Phaser.Scene {
 
   showItemUsedFeedback(item: GameItem) {
     const feedbackText = this.add.text(176, 45, `Used ${item.name}!`, {
-      fontSize: "10px",
+      fontSize: "12px",
       color: "#4caf50",
       fontFamily: "CustomFont, Arial",
       fontStyle: "bold",
+      resolution: 2,
+      padding: { x: 2, y: 2 },
     });
     feedbackText.setOrigin(0.5);
 
