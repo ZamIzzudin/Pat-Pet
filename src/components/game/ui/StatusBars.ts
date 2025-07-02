@@ -17,6 +17,9 @@ export default class StatusBars {
   hungerText: Phaser.GameObjects.Text;
   thirstText: Phaser.GameObjects.Text;
 
+  // UI Container for fixed positioning
+  uiContainer: Phaser.GameObjects.Container;
+
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
     this.gameState = GameState.getInstance();
@@ -24,10 +27,15 @@ export default class StatusBars {
   }
 
   create() {
+    // Create UI container that won't move with camera
+    this.uiContainer = this.scene.add.container(0, 0);
+    this.uiContainer.setScrollFactor(0); // This makes it fixed to camera
+
     // Profile picture
     this.profileSprite = this.scene.add.sprite(30, 30, "Backpack");
     this.profileSprite.setOrigin(0.5);
     this.profileSprite.setScale(0.8);
+    this.profileSprite.setScrollFactor(0);
 
     // Background for status bars
     const bgGraphics = this.scene.add.graphics();
@@ -35,6 +43,7 @@ export default class StatusBars {
     bgGraphics.fillRoundedRect(60, 10, 280, 40, 8);
     bgGraphics.lineStyle(2, 0xffffff, 0.8);
     bgGraphics.strokeRoundedRect(60, 10, 280, 40, 8);
+    bgGraphics.setScrollFactor(0);
 
     // Create status bars
     this.createStatusBar("happiness", 70, 18, 0xff6b6b); // Red for happiness
@@ -50,9 +59,11 @@ export default class StatusBars {
     const barBg = this.scene.add.graphics();
     barBg.fillStyle(0x333333, 1);
     barBg.fillRoundedRect(x, y, 80, 6, 3);
+    barBg.setScrollFactor(0);
 
     // Bar fill
     const bar = this.scene.add.graphics();
+    bar.setScrollFactor(0);
     
     // Label
     const label = this.scene.add.text(x + 85, y + 3, type.toUpperCase(), {
@@ -61,6 +72,7 @@ export default class StatusBars {
       fontFamily: "Arial"
     });
     label.setOrigin(0, 0.5);
+    label.setScrollFactor(0);
 
     // Value text
     const valueText = this.scene.add.text(x + 130, y + 3, "100%", {
@@ -69,6 +81,7 @@ export default class StatusBars {
       fontFamily: "Arial"
     });
     valueText.setOrigin(0, 0.5);
+    valueText.setScrollFactor(0);
 
     // Store references
     if (type === "happiness") {
@@ -121,6 +134,7 @@ export default class StatusBars {
   }
 
   destroy() {
+    if (this.uiContainer) this.uiContainer.destroy();
     if (this.profileSprite) this.profileSprite.destroy();
     if (this.happinessBar) this.happinessBar.destroy();
     if (this.hungerBar) this.hungerBar.destroy();
