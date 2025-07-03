@@ -6,30 +6,30 @@ export default class Pet {
   x: number;
   y: number;
   isAnimating: boolean;
+  petStage: 'egg' | 'adult'; // Track pet stage
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     this.scene = scene;
     this.x = x;
     this.y = y;
     this.isAnimating = false;
+    this.petStage = 'egg'; // Start as egg
 
     // Create pet sprite
-    // this.sprite = this.scene.add.sprite(x, y, "cat");
     this.sprite = this.scene.add.sprite(x, y, "Egg");
-
     this.sprite.setOrigin(0.5);
     this.sprite.setScale(2); // Scale up the 32x32 sprite
 
-    // Start idle animation
-    this.startIdleAnimation("Egg");
+    // Start idle animation based on stage
+    this.startIdleAnimation();
   }
 
   playHatchAnimation() {
-    if (this.isAnimating) return;
+    if (this.isAnimating || this.petStage === 'adult') return;
 
     this.isAnimating = true;
 
-    // Create idle animation if it doesn't exist
+    // Create hatch animation if it doesn't exist
     if (!this.scene.anims.exists("egg-hatch")) {
       this.scene.anims.create({
         key: "egg-hatch",
@@ -38,7 +38,7 @@ export default class Pet {
           end: 23,
         }),
         frameRate: 4,
-        repeat: -1,
+        repeat: 2, // Play a few times for hatching effect
       });
     }
 
@@ -50,18 +50,24 @@ export default class Pet {
       scaleY: 2.2,
       duration: 200,
       yoyo: true,
-      repeat: 1,
+      repeat: 2,
       onComplete: () => {
-        // Return to idle animation
+        // Change to adult stage after hatching
+        this.petStage = 'adult';
+        
+        // Create adult idle animation if it doesn't exist
+        this.createAdultAnimations();
+        
+        // Start adult idle animation
         this.sprite.anims.play("cat-idle", true);
         this.isAnimating = false;
       },
     });
   }
 
-  startIdleAnimation(type: string) {
-    // Create idle animation if it doesn't exist
-    if (!this.scene.anims.exists("cat-idle") && type === "ADULT") {
+  createAdultAnimations() {
+    // Create adult idle animation if it doesn't exist
+    if (!this.scene.anims.exists("cat-idle")) {
       this.scene.anims.create({
         key: "cat-idle",
         frames: this.scene.anims.generateFrameNumbers("Egg", {
@@ -73,21 +79,64 @@ export default class Pet {
       });
     }
 
-    if (!this.scene.anims.exists("egg-idle") && type === "EGG") {
+    // Create feed animation if it doesn't exist
+    if (!this.scene.anims.exists("cat-feed")) {
       this.scene.anims.create({
-        key: "egg-idle",
+        key: "cat-feed",
         frames: this.scene.anims.generateFrameNumbers("Egg", {
-          start: 0,
-          end: 11,
+          start: 36,
+          end: 39, // Adjust based on your sprite sheet
         }),
-        frameRate: 4,
-        repeat: -1,
+        frameRate: 8,
+        repeat: 2,
       });
     }
 
-    if (type === "EGG") {
+    // Create drink animation if it doesn't exist
+    if (!this.scene.anims.exists("cat-drink")) {
+      this.scene.anims.create({
+        key: "cat-drink",
+        frames: this.scene.anims.generateFrameNumbers("Egg", {
+          start: 40,
+          end: 43, // Adjust based on your sprite sheet
+        }),
+        frameRate: 6,
+        repeat: 2,
+      });
+    }
+
+    // Create happy animation if it doesn't exist
+    if (!this.scene.anims.exists("cat-happy")) {
+      this.scene.anims.create({
+        key: "cat-happy",
+        frames: this.scene.anims.generateFrameNumbers("Egg", {
+          start: 44,
+          end: 47, // Adjust based on your sprite sheet
+        }),
+        frameRate: 10,
+        repeat: 3,
+      });
+    }
+  }
+
+  startIdleAnimation() {
+    if (this.petStage === 'egg') {
+      // Create egg idle animation if it doesn't exist
+      if (!this.scene.anims.exists("egg-idle")) {
+        this.scene.anims.create({
+          key: "egg-idle",
+          frames: this.scene.anims.generateFrameNumbers("Egg", {
+            start: 0,
+            end: 11,
+          }),
+          frameRate: 4,
+          repeat: -1,
+        });
+      }
       this.sprite.anims.play("egg-idle", true);
     } else {
+      // Create adult animations if they don't exist
+      this.createAdultAnimations();
       this.sprite.anims.play("cat-idle", true);
     }
   }
@@ -95,20 +144,13 @@ export default class Pet {
   playFeedAnimation() {
     if (this.isAnimating) return;
 
-    this.isAnimating = true;
-
-    // Create feed animation if it doesn't exist
-    if (!this.scene.anims.exists("cat-feed")) {
-      this.scene.anims.create({
-        key: "cat-feed",
-        frames: this.scene.anims.generateFrameNumbers("cat", {
-          start: 4,
-          end: 7,
-        }),
-        frameRate: 8,
-        repeat: 2,
-      });
+    // If still an egg, trigger hatch instead
+    if (this.petStage === 'egg') {
+      this.playHatchAnimation();
+      return;
     }
+
+    this.isAnimating = true;
 
     // Play feed animation
     this.sprite.anims.play("cat-feed", true);
@@ -135,20 +177,13 @@ export default class Pet {
   playDrinkAnimation() {
     if (this.isAnimating) return;
 
-    this.isAnimating = true;
-
-    // Create drink animation if it doesn't exist
-    if (!this.scene.anims.exists("cat-drink")) {
-      this.scene.anims.create({
-        key: "cat-drink",
-        frames: this.scene.anims.generateFrameNumbers("cat", {
-          start: 8,
-          end: 11,
-        }),
-        frameRate: 6,
-        repeat: 2,
-      });
+    // If still an egg, trigger hatch instead
+    if (this.petStage === 'egg') {
+      this.playHatchAnimation();
+      return;
     }
+
+    this.isAnimating = true;
 
     // Play drink animation
     this.sprite.anims.play("cat-drink", true);
@@ -174,20 +209,13 @@ export default class Pet {
   playHappyAnimation() {
     if (this.isAnimating) return;
 
-    this.isAnimating = true;
-
-    // Create happy animation if it doesn't exist
-    if (!this.scene.anims.exists("cat-happy")) {
-      this.scene.anims.create({
-        key: "cat-happy",
-        frames: this.scene.anims.generateFrameNumbers("cat", {
-          start: 12,
-          end: 15,
-        }),
-        frameRate: 10,
-        repeat: 3,
-      });
+    // If still an egg, trigger hatch instead
+    if (this.petStage === 'egg') {
+      this.playHatchAnimation();
+      return;
     }
+
+    this.isAnimating = true;
 
     // Play happy animation
     this.sprite.anims.play("cat-happy", true);

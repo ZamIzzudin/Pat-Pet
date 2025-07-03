@@ -28,12 +28,12 @@ export default class FeedingUI {
     // Create container for feeding UI
     this.container = this.scene.add.container(176, 160);
 
-    // Create background panel
+    // Create background panel with better sizing for 5 items
     const bg = this.scene.add.graphics();
     bg.fillStyle(0x2a2a2a, 0.9);
-    bg.fillRoundedRect(-150, -25, 300, 50, 8);
+    bg.fillRoundedRect(-170, -25, 340, 50, 8); // Increased width for 5 items
     bg.lineStyle(2, 0xffffff, 0.8);
-    bg.strokeRoundedRect(-150, -25, 300, 50, 8);
+    bg.strokeRoundedRect(-170, -25, 340, 50, 8);
     this.container.add(bg);
 
     // Create action buttons
@@ -53,10 +53,10 @@ export default class FeedingUI {
     const actions = [
       {
         name: "Hatch",
-        icon: "🍎",
-        color: 0x4caf50,
+        icon: "🥚",
+        color: 0xffa502,
         type: "hatch",
-        effects: { hunger: 20, happiness: 10 },
+        effects: { happiness: 20 },
       },
       {
         name: "Feed",
@@ -88,33 +88,36 @@ export default class FeedingUI {
       },
     ];
 
-    const startX = -120;
-    const spacing = 80;
+    // Calculate spacing for 5 items to fit properly
+    const totalWidth = 320; // Available width inside the background
+    const buttonWidth = 50;
+    const spacing = (totalWidth - (5 * buttonWidth)) / 6; // Space between buttons
+    const startX = -160 + spacing + (buttonWidth / 2); // Starting position
 
     actions.forEach((action, index) => {
-      const x = startX + index * spacing;
+      const x = startX + index * (buttonWidth + spacing);
       const y = 0;
 
       // Create button container
       const buttonContainer = this.scene.add.container(x, y);
 
-      // Create button background
+      // Create button background with responsive sizing
       const buttonBg = this.scene.add.graphics();
       buttonBg.fillStyle(0x444444, 1);
-      buttonBg.fillRoundedRect(-25, -20, 50, 40, 6);
+      buttonBg.fillRoundedRect(-22, -20, 44, 40, 6); // Slightly smaller for better fit
       buttonBg.lineStyle(1, 0x666666);
-      buttonBg.strokeRoundedRect(-25, -20, 50, 40, 6);
+      buttonBg.strokeRoundedRect(-22, -20, 44, 40, 6);
 
-      // Create icon
+      // Create icon with adjusted size
       const icon = this.scene.add.text(0, -5, action.icon, {
-        fontSize: "16px",
+        fontSize: "14px", // Slightly smaller icon
         fontFamily: "CustomFont, Arial",
       });
       icon.setOrigin(0.5);
 
-      // Create label
+      // Create label with adjusted font size
       const label = this.scene.add.text(0, 10, action.name, {
-        fontSize: "8px",
+        fontSize: "7px", // Smaller font for better fit
         color: "#ffffff",
         fontFamily: "CustomFont, Arial",
         resolution: 2,
@@ -135,11 +138,11 @@ export default class FeedingUI {
         index: index,
       });
 
-      // Make interactive
+      // Make interactive with adjusted hit area
       const interactiveArea = this.scene.add.rectangle(
         x,
         y,
-        50,
+        44, // Match button size
         40,
         0x000000,
         0
@@ -159,15 +162,15 @@ export default class FeedingUI {
       if (index === this.selectedAction) {
         button.background.clear();
         button.background.fillStyle(0x555555, 1);
-        button.background.fillRoundedRect(-25, -20, 50, 40, 6);
+        button.background.fillRoundedRect(-22, -20, 44, 40, 6);
         button.background.lineStyle(2, button.action.color);
-        button.background.strokeRoundedRect(-25, -20, 50, 40, 6);
+        button.background.strokeRoundedRect(-22, -20, 44, 40, 6);
       } else {
         button.background.clear();
         button.background.fillStyle(0x444444, 1);
-        button.background.fillRoundedRect(-25, -20, 50, 40, 6);
+        button.background.fillRoundedRect(-22, -20, 44, 40, 6);
         button.background.lineStyle(1, 0x666666);
-        button.background.strokeRoundedRect(-25, -20, 50, 40, 6);
+        button.background.strokeRoundedRect(-22, -20, 44, 40, 6);
       }
     });
   }
@@ -178,11 +181,11 @@ export default class FeedingUI {
 
     // Play appropriate pet animation
     switch (action.type) {
-      case "food":
-        this.pet.playFeedAnimation();
-        break;
       case "hatch":
         this.pet.playHatchAnimation();
+        break;
+      case "food":
+        this.pet.playFeedAnimation();
         break;
       case "drink":
         this.pet.playDrinkAnimation();
@@ -201,7 +204,7 @@ export default class FeedingUI {
     const feedbackText = this.scene.add.text(
       176,
       120,
-      `${action.name} given!`,
+      `${action.name} action performed!`,
       {
         fontSize: "12px",
         color: "#4caf50",
