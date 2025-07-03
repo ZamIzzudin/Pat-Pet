@@ -1,5 +1,7 @@
 /** @format */
 
+import { gameEventBus } from '@/lib/gameEventBus';
+
 export interface PlayerStats {
   happiness: number;
   hunger: number;
@@ -16,6 +18,9 @@ export interface GameItem {
     hunger?: number;
     thirst?: number;
   };
+  isNFT?: boolean;
+  tokenId?: string;
+  contractAddress?: string;
 }
 
 export interface Goal {
@@ -25,6 +30,20 @@ export interface Goal {
   completed: boolean;
   progress: number;
   maxProgress: number;
+}
+
+export interface NFTPet {
+  tokenId: string;
+  contractAddress: string;
+  name: string;
+  image: string;
+  attributes: {
+    happiness: number;
+    hunger: number;
+    thirst: number;
+    level: number;
+    experience: number;
+  };
 }
 
 export default class GameState {
@@ -55,6 +74,9 @@ export default class GameState {
     { id: 5, title: "Explorer", description: "Visit both Island and House", completed: true, progress: 2, maxProgress: 2 },
   ];
 
+  public currentNFTPet: NFTPet | null = null;
+  public ownedNFTs: NFTPet[] = [];
+
   public static getInstance(): GameState {
     if (!GameState.instance) {
       GameState.instance = new GameState();
@@ -72,6 +94,16 @@ export default class GameState {
     if (effects.thirst) {
       this.playerStats.thirst = Math.min(100, Math.max(0, this.playerStats.thirst + effects.thirst));
     }
+
+    // Emit event to React components
+    gameEventBus.emit('STATS_UPDATED', this.playerStats);
+
+    // Update NFT pet attributes if one is equipped
+    if (this.currentNFTPet) {
+      this.currentNFTPet.attributes.happiness = this.playerStats.happiness;
+      this.currentNFTPet.attributes.hunger = this.playerStats.hunger;
+      this.currentNFTPet.attributes.thirst = this.playerStats.thirst;
+    }
   }
 
   public useItem(itemId: number): boolean {
@@ -81,14 +113,50 @@ export default class GameState {
     const item = this.inventory[itemIndex];
     this.updateStats(item.effects);
     
-    // Remove item from inventory after use
-    this.inventory.splice(itemIndex, 1);
+    // Remove item from inventory after use (unless it's an NFT)
+    if (!item.isNFT) {
+      this.inventory.splice(itemIndex, 1);
+    }
+    
+    // Emit inventory update event
+    gameEventBus.emit('INVENTORY_UPDATED', this.inventory);
     
     return true;
   }
 
   public addItem(item: GameItem) {
     this.inventory.push(item);
+    gameEventBus.emit('INVENTORY_UPDATED', this.inventory);
+  }
+
+  public addNFTItem(nftData: any) {
+    const nftItem: GameItem = {
+      id: Date.now(), // Temporary ID
+      name: nftData.name || 'NFT Item',
+      icon: "Backpack",
+      type: nftData.type || 'toy',
+      effects: nftData.effects || { happiness: 30 },
+      isNFT: true,
+      tokenId: nftData.tokenId,
+      contractAddress: nftData.contractAddress
+    };
+    
+    this.addItem(nftItem);
+    gameEventBus.emit('NFT_EQUIPPED', nftItem);
+  }
+
+  public setCurrentNFTPet(nftPet: NFTPet) {
+    this.currentNFTPet = nftPet;
+    
+    // Update player stats based on NFT pet attributes
+    this.playerStats = {
+      happiness: nftPet.attributes.happiness,
+      hunger: nftPet.attributes.hunger,
+      thirst: nftPet.attributes.thirst
+    };
+    
+    gameEventBus.emit('STATS_UPDATED', this.playerStats);
+    gameEventBus.emit('NFT_EQUIPPED', nftPet);
   }
 
   public updateGoalProgress() {
@@ -109,5 +177,23 @@ export default class GameState {
           break;
       }
     });
+
+    gameEventBus.emit('GOALS_UPDATED', this.goals);
+  }
+
+  // Methods to handle external events from React
+  public handleExternalFeed() {
+    this.updateStats({ hunger: 20, happiness: 10 });
+    gameEventBus.emit('FEED_PET');
+  }
+
+  public handleExternalPlay() {
+    this.updateStats({ happiness: 25, hunger: -5 });
+    gameEventBus.emit('PLAY_WITH_PET');
+  }
+
+  public handleExternalHatch() {
+    this.updateStats({ happiness: 30 });
+    gameEventBus.emit('HATCH_EGG');
   }
 }

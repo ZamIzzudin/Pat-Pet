@@ -6,6 +6,8 @@ import Pet from "../object/Pet";
 import StatusBars from "../ui/StatusBars";
 import FeedingUI from "../ui/FeedingUI";
 import Button from "../ui/Button";
+import GameState from "../object/GameState";
+import { gameEventBus } from "@/lib/gameEventBus";
 
 export default class PetScreen extends Phaser.Scene {
   previousScene: string;
@@ -17,6 +19,7 @@ export default class PetScreen extends Phaser.Scene {
   backpackKey: Phaser.Input.Keyboard.Key;
   goalsKey: Phaser.Input.Keyboard.Key;
   escapeKey: Phaser.Input.Keyboard.Key;
+  gameState: GameState;
 
   constructor() {
     super("Pet_Screen");
@@ -45,6 +48,8 @@ export default class PetScreen extends Phaser.Scene {
   }
 
   create() {
+    this.gameState = GameState.getInstance();
+
     // Create background
     const bg = this.add.image(176, 96, "bg");
     bg.setOrigin(0.5);
@@ -73,6 +78,89 @@ export default class PetScreen extends Phaser.Scene {
     this.escapeKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.ESC
     );
+
+    // Set up event listeners for external events from React
+    this.setupExternalEventListeners();
+  }
+
+  setupExternalEventListeners() {
+    // Listen for external feed events from React
+    gameEventBus.on('FEED_PET', () => {
+      if (this.pet) {
+        this.pet.playFeedAnimation();
+      }
+    });
+
+    // Listen for external play events from React
+    gameEventBus.on('PLAY_WITH_PET', () => {
+      if (this.pet) {
+        this.pet.playHappyAnimation();
+      }
+    });
+
+    // Listen for external hatch events from React
+    gameEventBus.on('HATCH_EGG', () => {
+      if (this.pet) {
+        this.pet.playHatchAnimation();
+      }
+    });
+
+    // Listen for NFT equipped events
+    gameEventBus.on('NFT_EQUIPPED', (nftData) => {
+      console.log('NFT equipped in game:', nftData);
+      // You can add visual effects or pet appearance changes here
+      this.showNFTEquippedEffect();
+    });
+
+    // Listen for wallet connection events
+    gameEventBus.on('WALLET_CONNECTED', (walletData) => {
+      console.log('Wallet connected in game:', walletData);
+      this.showWalletConnectedEffect();
+    });
+  }
+
+  showNFTEquippedEffect() {
+    // Create sparkle effect when NFT is equipped
+    const sparkleText = this.add.text(176, 50, "✨ NFT Equipped! ✨", {
+      fontSize: "14px",
+      color: "#ffd700",
+      fontFamily: "CustomFont, Arial",
+      fontStyle: "bold",
+    });
+    sparkleText.setOrigin(0.5);
+
+    // Animate the text
+    this.tweens.add({
+      targets: sparkleText,
+      y: 30,
+      alpha: 0,
+      duration: 2000,
+      onComplete: () => {
+        sparkleText.destroy();
+      },
+    });
+  }
+
+  showWalletConnectedEffect() {
+    // Create wallet connected effect
+    const walletText = this.add.text(176, 60, "🔗 Wallet Connected!", {
+      fontSize: "12px",
+      color: "#4caf50",
+      fontFamily: "CustomFont, Arial",
+      fontStyle: "bold",
+    });
+    walletText.setOrigin(0.5);
+
+    // Animate the text
+    this.tweens.add({
+      targets: walletText,
+      y: 40,
+      alpha: 0,
+      duration: 1500,
+      onComplete: () => {
+        walletText.destroy();
+      },
+    });
   }
 
   update() {
@@ -100,5 +188,14 @@ export default class PetScreen extends Phaser.Scene {
       this.scene.stop();
       this.scene.start(this.previousScene);
     }
+  }
+
+  destroy() {
+    // Clean up event listeners when scene is destroyed
+    gameEventBus.off('FEED_PET');
+    gameEventBus.off('PLAY_WITH_PET');
+    gameEventBus.off('HATCH_EGG');
+    gameEventBus.off('NFT_EQUIPPED');
+    gameEventBus.off('WALLET_CONNECTED');
   }
 }

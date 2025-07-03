@@ -3,6 +3,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import Navbar from "@/components/Navbar";
+import { WalletProvider } from "@/components/web3/WalletProvider";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -30,8 +31,10 @@ export default function RootLayout({
     <html lang="en">
       <link rel="icon" href="/Backpack.png" />
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <Navbar />
-        {children}
+        <WalletProvider>
+          <Navbar />
+          {children}
+        </WalletProvider>
       </body>
     </html>
   );

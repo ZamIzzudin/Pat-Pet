@@ -19,8 +19,9 @@ export default function Navbar() {
     { id: 1, text: "Home", redirect: "/" },
     { id: 2, text: "Community", redirect: "/community" },
     { id: 3, text: "Play", redirect: "/play" },
-    { id: 4, text: "Market", redirect: "/market" },
-    { id: 5, text: "News", redirect: "/news" },
+    { id: 4, text: "NFT", redirect: "/nft" },
+    { id: 5, text: "Market", redirect: "/market" },
+    { id: 6, text: "News", redirect: "/news" },
   ];
   return (
     <nav className="bg-black fixed justify-end items-center max-w-[100vw] text-white md:justify-center z-30 left-0 right-0">
