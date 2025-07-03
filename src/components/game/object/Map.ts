@@ -32,7 +32,7 @@ export default class Map {
     this.setupMapBoundaries();
     this.setupDoorTiles();
 
-    this.player = new Char(this.scene, 5, 10, "player", 0);
+    this.player = new Char(this.scene, 9, 8, "player", 0);
     this.player.centeredCamera();
 
     // Add space key for interactions
@@ -45,18 +45,18 @@ export default class Map {
     if (this.mapKey === "Island") {
       // Island boundaries (adjust based on your island image size)
       this.boundaries = {
-        minX: 1,
-        maxX: 20, // Adjust based on island width
-        minY: 1,
-        maxY: 10, // Adjust based on island height
+        minX: 5,
+        maxX: 12, // Adjust based on island width
+        minY: 7,
+        maxY: 12, // Adjust based on island height
       };
     } else if (this.mapKey === "House") {
       // House/Room boundaries
       this.boundaries = {
         minX: 1,
-        maxX: 10, // Adjust based on room width
-        minY: 1,
-        maxY: 8, // Adjust based on room height
+        maxX: 7, // Adjust based on room width
+        minY: 2,
+        maxY: 9, // Adjust based on room height
       };
     }
   }
@@ -66,10 +66,10 @@ export default class Map {
 
     if (this.mapKey === "Island") {
       // Door tile to enter house (adjust coordinates based on your house position)
-      this.doorTiles.push({ x: 10, y: 6, targetScene: "House_Screen" });
+      this.doorTiles.push({ x: 9, y: 7, targetScene: "House_Screen" });
     } else if (this.mapKey === "House") {
       // Door tile to exit house back to island
-      this.doorTiles.push({ x: 5, y: 7, targetScene: "Main_Screen" });
+      this.doorTiles.push({ x: 4, y: 9, targetScene: "Main_Screen" });
     }
   }
 
@@ -103,7 +103,7 @@ export default class Map {
 
     for (const door of this.doorTiles) {
       const distance = Math.abs(door.x - gridX) + Math.abs(door.y - gridY);
-      if (distance <= 1) {
+      if (distance <= 0.5) {
         return true;
       }
     }
@@ -113,8 +113,8 @@ export default class Map {
   showInteractionPrompt() {
     if (!this.interactionPrompt) {
       this.interactionPrompt = this.scene.add.text(
-        this.player.coordinate.x,
-        this.player.coordinate.y - 30,
+        175,
+        180,
         "Press SPACE to enter",
         {
           fontSize: "10px",
@@ -125,6 +125,7 @@ export default class Map {
         }
       );
       this.interactionPrompt.setOrigin(0.5);
+      this.interactionPrompt.setScrollFactor(0);
     }
   }
 

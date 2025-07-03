@@ -94,4 +94,8 @@ export default class Char {
       this.isCentered = true;
     }
   }
+
+  changeFrame(frame: value) {
+    this.sprite.setFrame(frame);
+  }
 }

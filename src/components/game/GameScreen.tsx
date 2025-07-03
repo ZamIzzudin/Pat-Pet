@@ -43,8 +43,8 @@ export default function GameScreen() {
       scene: [
         Preloader,
         MainScreen,
-        PetScreen,
         HouseScreen,
+        PetScreen,
         BackpackScreen,
         GoalsScreen,
       ],
