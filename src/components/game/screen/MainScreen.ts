@@ -9,10 +9,7 @@ export default class MainScreen extends Phaser.Scene {
   cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   map: Map;
   statusBars: StatusBars;
-  backpackButton: Phaser.GameObjects.Sprite;
-  goalsButton: Phaser.GameObjects.Sprite;
-  backpackKey: Phaser.Input.Keyboard.Key;
-  goalsKey: Phaser.Input.Keyboard.Key;
+  petKey: Phaser.Input.Keyboard.Key;
 
   constructor() {
     super("Main_Screen");
@@ -26,125 +23,71 @@ export default class MainScreen extends Phaser.Scene {
     // Create status bars
     this.statusBars = new StatusBars(this);
 
-    // Create action buttons
-    this.createActionButtons();
+    // Create pet button (replaces backpack and goals buttons)
+    this.createPetButton();
 
-    // Add keyboard shortcuts
-    this.backpackKey = this.input.keyboard.addKey(
-      Phaser.Input.Keyboard.KeyCodes.B
-    );
-    this.goalsKey = this.input.keyboard.addKey(
-      Phaser.Input.Keyboard.KeyCodes.G
+    // Add keyboard shortcut
+    this.petKey = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.P
     );
   }
 
-  createActionButtons() {
-    // Goals button (above backpack button)
-    this.createGoalsButton();
+  createPetButton() {
+    // Create button graphics for pet screen
+    const petGraphics = this.add.graphics();
+    petGraphics.fillStyle(0x000000, 0);
+    petGraphics.fillRoundedRect(298, 137, 45, 45, 6);
+    petGraphics.lineStyle(2, 0xffffff, 1);
+    petGraphics.strokeRoundedRect(298, 137, 45, 45, 6);
+    petGraphics.setScrollFactor(0); // Fixed position
 
-    // Backpack button
-    this.createBackpackButton();
-  }
+    // Add pet icon (using cat sprite)
+    const petIcon = this.add.sprite(320, 160, "cat");
+    petIcon.setOrigin(0.5);
+    petIcon.setScale(1.5);
+    petIcon.setScrollFactor(0); // Fixed position
 
-  createGoalsButton() {
-    this.goalsButton = this.add.sprite(320, 108, "Button");
-    this.goalsButton.setScrollFactor(0); // Fixed position
-
-    // Create button graphics for goals
-    const goalsGraphics = this.add.graphics();
-    goalsGraphics.fillStyle(0x000000, 0);
-    goalsGraphics.fillRoundedRect(298, 85, 45, 45, 6);
-    goalsGraphics.lineStyle(2, 0xffffff, 1);
-    goalsGraphics.strokeRoundedRect(298, 85, 45, 45, 6);
-    goalsGraphics.setScrollFactor(0); // Fixed position
-
-    // Add goals icon (using backpack sprite temporarily)
-    const goalsIcon = this.add.sprite(320, 108, "Backpack");
-    goalsIcon.setScrollFactor(0); // Fixed position
+    // Add "P" text overlay with custom font
+    const petText = this.add.text(320, 175, "PET", {
+      fontSize: "8px",
+      color: "#ffffff",
+      fontFamily: "CustomFont, Arial",
+      fontStyle: "bold",
+      resolution: 2,
+      padding: { x: 1, y: 1 },
+    });
+    petText.setOrigin(0.5);
+    petText.setScrollFactor(0); // Fixed position
 
     // Make button interactive
-    const goalsButtonArea = this.add.rectangle(320, 108, 48, 48, 0x000000, 0);
-    goalsButtonArea.setInteractive();
-    goalsButtonArea.setScrollFactor(0); // Fixed position
-    goalsButtonArea.on("pointerdown", () => {
-      this.openGoals();
+    const petButtonArea = this.add.rectangle(320, 160, 48, 48, 0x000000, 0);
+    petButtonArea.setInteractive();
+    petButtonArea.setScrollFactor(0); // Fixed position
+    petButtonArea.on("pointerdown", () => {
+      this.openPetScreen();
     });
 
     // Add hover effect
-    goalsButtonArea.on("pointerover", () => {
-      goalsGraphics.clear();
-      goalsGraphics.fillStyle(0x6a6a6a, 0);
-      goalsGraphics.fillRoundedRect(298, 85, 45, 45, 6);
-      goalsGraphics.lineStyle(2, 0x4caf50, 1);
-      goalsGraphics.strokeRoundedRect(298, 85, 45, 45, 6);
+    petButtonArea.on("pointerover", () => {
+      petGraphics.clear();
+      petGraphics.fillStyle(0x6a6a6a, 0);
+      petGraphics.fillRoundedRect(298, 137, 45, 45, 6);
+      petGraphics.lineStyle(2, 0xff6b6b, 1); // Pink/red tint for pet
+      petGraphics.strokeRoundedRect(298, 137, 45, 45, 6);
     });
 
-    goalsButtonArea.on("pointerout", () => {
-      goalsGraphics.clear();
-      goalsGraphics.fillStyle(0x4a4a4a, 0);
-      goalsGraphics.fillRoundedRect(298, 85, 45, 45, 6);
-      goalsGraphics.lineStyle(2, 0xffffff, 1);
-      goalsGraphics.strokeRoundedRect(298, 85, 45, 45, 6);
-    });
-  }
-
-  createBackpackButton() {
-    this.backpackButton = this.add.sprite(320, 160, "Button");
-    this.backpackButton.setScrollFactor(0);
-
-    // Create button graphics for backpack
-    const backpackGraphics = this.add.graphics();
-    backpackGraphics.fillStyle(0x000000, 0);
-    backpackGraphics.fillRoundedRect(298, 137, 45, 45, 6);
-    backpackGraphics.lineStyle(2, 0xffffff, 1);
-    backpackGraphics.strokeRoundedRect(298, 137, 45, 45, 6);
-    backpackGraphics.setScrollFactor(0); // Fixed position
-
-    // Add backpack icon
-    const backpackIcon = this.add.sprite(320, 160, "Backpack");
-    backpackIcon.setScrollFactor(0); // Fixed position
-
-    // Make button interactive
-    const backpackButtonArea = this.add.rectangle(
-      320,
-      160,
-      48,
-      48,
-      0x000000,
-      0
-    );
-    backpackButtonArea.setInteractive();
-    backpackButtonArea.setScrollFactor(0); // Fixed position
-    backpackButtonArea.on("pointerdown", () => {
-      this.openBackpack();
-    });
-
-    // Add hover effect
-    backpackButtonArea.on("pointerover", () => {
-      backpackGraphics.clear();
-      backpackGraphics.fillStyle(0x6a6a6a, 0);
-      backpackGraphics.fillRoundedRect(298, 137, 45, 45, 6);
-      backpackGraphics.lineStyle(2, 0xffff00, 1);
-      backpackGraphics.strokeRoundedRect(298, 137, 45, 45, 6);
-    });
-
-    backpackButtonArea.on("pointerout", () => {
-      backpackGraphics.clear();
-      backpackGraphics.fillStyle(0x4a4a4a, 0);
-      backpackGraphics.fillRoundedRect(298, 137, 45, 45, 6);
-      backpackGraphics.lineStyle(2, 0xffffff, 1);
-      backpackGraphics.strokeRoundedRect(298, 137, 45, 45, 6);
+    petButtonArea.on("pointerout", () => {
+      petGraphics.clear();
+      petGraphics.fillStyle(0x4a4a4a, 0);
+      petGraphics.fillRoundedRect(298, 137, 45, 45, 6);
+      petGraphics.lineStyle(2, 0xffffff, 1);
+      petGraphics.strokeRoundedRect(298, 137, 45, 45, 6);
     });
   }
 
-  openBackpack() {
+  openPetScreen() {
     this.scene.pause();
-    this.scene.launch("Backpack_Screen", { previousScene: "Main_Screen" });
-  }
-
-  openGoals() {
-    this.scene.pause();
-    this.scene.launch("Goals_Screen", { previousScene: "Main_Screen" });
+    this.scene.launch("Pet_Screen", { previousScene: "Main_Screen" });
   }
 
   update() {
@@ -157,13 +100,9 @@ export default class MainScreen extends Phaser.Scene {
       this.statusBars.updateBars();
     }
 
-    // Handle keyboard shortcuts
-    if (Phaser.Input.Keyboard.JustDown(this.backpackKey)) {
-      this.openBackpack();
-    }
-
-    if (Phaser.Input.Keyboard.JustDown(this.goalsKey)) {
-      this.openGoals();
+    // Handle keyboard shortcut
+    if (Phaser.Input.Keyboard.JustDown(this.petKey)) {
+      this.openPetScreen();
     }
   }
 }

@@ -12,6 +12,7 @@ export default class Preloader extends Phaser.Scene {
     // Load Assets
     this.load.image("House", "/Room.png");
     this.load.image("Island", "/Island.png");
+    this.load.image("bg", "/bg.png");
 
     // UI
     this.load.image("Button", "/Button.png");
@@ -20,6 +21,12 @@ export default class Preloader extends Phaser.Scene {
     this.load.image("Task", "/Task.png");
     this.load.image("Profile", "/Profile.png");
     this.load.image("BarLayout", "/BarLayout.png");
+
+    // Pet sprite sheet (32x32 frames)
+    this.load.spritesheet("cat", "/cat.png", {
+      frameWidth: 32,
+      frameHeight: 32,
+    });
 
     this.load.spritesheet("player", "/Char.png", {
       frameWidth: 48,

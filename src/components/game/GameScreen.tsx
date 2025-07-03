@@ -9,6 +9,7 @@ import MainScreen from "./screen/MainScreen";
 import HouseScreen from "./screen/HouseScreen";
 import BackpackScreen from "./screen/BackpackScreen";
 import GoalsScreen from "./screen/GoalsScreen";
+import PetScreen from "./screen/PetScreen";
 import Preloader from "./screen/Preloader";
 
 export default function GameScreen() {
@@ -39,7 +40,7 @@ export default function GameScreen() {
       scale: {
         mode: Phaser.Scale.NONE,
       },
-      scene: [Preloader, MainScreen, HouseScreen, BackpackScreen, GoalsScreen],
+      scene: [Preloader, MainScreen, HouseScreen, BackpackScreen, GoalsScreen, PetScreen],
     };
 
     const game = new Phaser.Game(config);
