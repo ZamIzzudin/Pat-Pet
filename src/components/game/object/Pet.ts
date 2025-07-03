@@ -14,29 +14,82 @@ export default class Pet {
     this.isAnimating = false;
 
     // Create pet sprite
-    this.sprite = this.scene.add.sprite(x, y, "cat");
+    // this.sprite = this.scene.add.sprite(x, y, "cat");
+    this.sprite = this.scene.add.sprite(x, y, "Egg");
+
     this.sprite.setOrigin(0.5);
     this.sprite.setScale(2); // Scale up the 32x32 sprite
 
     // Start idle animation
-    this.startIdleAnimation();
+    this.startIdleAnimation("Egg");
   }
 
-  startIdleAnimation() {
+  playHatchAnimation() {
+    if (this.isAnimating) return;
+
+    this.isAnimating = true;
+
     // Create idle animation if it doesn't exist
-    if (!this.scene.anims.exists("cat-idle")) {
+    if (!this.scene.anims.exists("egg-hatch")) {
       this.scene.anims.create({
-        key: "cat-idle",
-        frames: this.scene.anims.generateFrameNumbers("cat", {
-          start: 0,
-          end: 3,
+        key: "egg-hatch",
+        frames: this.scene.anims.generateFrameNumbers("Egg", {
+          start: 12,
+          end: 23,
         }),
         frameRate: 4,
         repeat: -1,
       });
     }
 
-    this.sprite.anims.play("cat-idle", true);
+    this.sprite.anims.play("egg-hatch", true);
+
+    this.scene.tweens.add({
+      targets: this.sprite,
+      scaleX: 2.2,
+      scaleY: 2.2,
+      duration: 200,
+      yoyo: true,
+      repeat: 1,
+      onComplete: () => {
+        // Return to idle animation
+        this.sprite.anims.play("cat-idle", true);
+        this.isAnimating = false;
+      },
+    });
+  }
+
+  startIdleAnimation(type: string) {
+    // Create idle animation if it doesn't exist
+    if (!this.scene.anims.exists("cat-idle") && type === "ADULT") {
+      this.scene.anims.create({
+        key: "cat-idle",
+        frames: this.scene.anims.generateFrameNumbers("Egg", {
+          start: 24,
+          end: 35,
+        }),
+        frameRate: 4,
+        repeat: -1,
+      });
+    }
+
+    if (!this.scene.anims.exists("egg-idle") && type === "EGG") {
+      this.scene.anims.create({
+        key: "egg-idle",
+        frames: this.scene.anims.generateFrameNumbers("Egg", {
+          start: 0,
+          end: 11,
+        }),
+        frameRate: 4,
+        repeat: -1,
+      });
+    }
+
+    if (type === "EGG") {
+      this.sprite.anims.play("egg-idle", true);
+    } else {
+      this.sprite.anims.play("cat-idle", true);
+    }
   }
 
   playFeedAnimation() {

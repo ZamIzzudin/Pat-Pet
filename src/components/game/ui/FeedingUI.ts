@@ -52,6 +52,13 @@ export default class FeedingUI {
   createActionButtons() {
     const actions = [
       {
+        name: "Hatch",
+        icon: "🍎",
+        color: 0x4caf50,
+        type: "hatch",
+        effects: { hunger: 20, happiness: 10 },
+      },
+      {
         name: "Feed",
         icon: "🍎",
         color: 0x4caf50,
@@ -173,6 +180,9 @@ export default class FeedingUI {
     switch (action.type) {
       case "food":
         this.pet.playFeedAnimation();
+        break;
+      case "hatch":
+        this.pet.playHatchAnimation();
         break;
       case "drink":
         this.pet.playDrinkAnimation();
