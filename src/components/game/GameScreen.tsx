@@ -40,7 +40,14 @@ export default function GameScreen() {
       scale: {
         mode: Phaser.Scale.NONE,
       },
-      scene: [Preloader, MainScreen, HouseScreen, BackpackScreen, GoalsScreen, PetScreen],
+      scene: [
+        Preloader,
+        MainScreen,
+        PetScreen,
+        HouseScreen,
+        BackpackScreen,
+        GoalsScreen,
+      ],
     };
 
     const game = new Phaser.Game(config);

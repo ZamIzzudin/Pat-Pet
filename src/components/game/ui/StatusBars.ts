@@ -39,9 +39,9 @@ export default class StatusBars {
     this.barLayoutSprite.setScrollFactor(0);
 
     // Profile picture - positioned to fit within the BarLayout
-    this.profileSprite = this.scene.add.sprite(43, 31, "Profile");
+    this.profileSprite = this.scene.add.sprite(35, 31, "Profile");
     this.profileSprite.setOrigin(0.5);
-    this.profileSprite.setScale(1);
+    this.profileSprite.setScale(1.5);
     this.profileSprite.setScrollFactor(0);
 
     // Create status bars positioned to align with BarLayout
