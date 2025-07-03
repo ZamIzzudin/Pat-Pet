@@ -32,7 +32,7 @@ export default class Map {
     this.setupMapBoundaries();
     this.setupDoorTiles();
 
-    this.player = new Char(this.scene, 9, 8, "player", 0);
+    this.player = new Char(this.scene, 12, 10, "player", 0);
     this.player.centeredCamera();
 
     // Add space key for interactions
@@ -45,10 +45,10 @@ export default class Map {
     if (this.mapKey === "Island") {
       // Island boundaries (adjust based on your island image size)
       this.boundaries = {
-        minX: 5,
-        maxX: 12, // Adjust based on island width
-        minY: 7,
-        maxY: 12, // Adjust based on island height
+        minX: 8,
+        maxX: 15, // Adjust based on island width
+        minY: 10,
+        maxY: 14, // Adjust based on island height
       };
     } else if (this.mapKey === "House") {
       // House/Room boundaries
@@ -66,7 +66,7 @@ export default class Map {
 
     if (this.mapKey === "Island") {
       // Door tile to enter house (adjust coordinates based on your house position)
-      this.doorTiles.push({ x: 9, y: 7, targetScene: "House_Screen" });
+      this.doorTiles.push({ x: 12, y: 10, targetScene: "House_Screen" });
     } else if (this.mapKey === "House") {
       // Door tile to exit house back to island
       this.doorTiles.push({ x: 4, y: 9, targetScene: "Main_Screen" });

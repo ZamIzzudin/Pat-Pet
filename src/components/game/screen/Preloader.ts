@@ -11,7 +11,7 @@ export default class Preloader extends Phaser.Scene {
   preload() {
     // Load Assets
     this.load.image("House", "/Room.png");
-    this.load.image("Island", "/Island.png");
+    this.load.image("Island", "/Island3.png");
     this.load.image("bg", "/bg.png");
 
     // UI
