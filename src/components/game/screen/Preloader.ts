@@ -32,6 +32,10 @@ export default class Preloader extends Phaser.Scene {
       frameWidth: 32,
       frameHeight: 32,
     });
+    this.load.spritesheet("Egg2", "/egg3.png", {
+      frameWidth: 32,
+      frameHeight: 32,
+    });
 
     this.load.spritesheet("player", "/Char.png", {
       frameWidth: 48,
