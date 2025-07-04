@@ -39,7 +39,8 @@ export interface PetData {
 export default class GameState {
   private static instance: GameState;
   
-  public currentPetId: number = 1;
+  // State untuk pet yang sedang dipilih/ditampilkan
+  public selectedPetId: number = 1;
   
   public pets: PetData[] = [
     {
@@ -86,45 +87,67 @@ export default class GameState {
     return GameState.instance;
   }
 
-  public getCurrentPet(): PetData {
-    return this.pets.find(pet => pet.id === this.currentPetId) || this.pets[0];
+  // Methods untuk mengelola selected pet
+  public getSelectedPet(): PetData {
+    return this.pets.find(pet => pet.id === this.selectedPetId) || this.pets[0];
   }
 
-  public getCurrentStats(): PlayerStats {
-    return this.getCurrentPet().stats;
-  }
-
-  public switchPet(petId: number) {
+  public setSelectedPet(petId: number): boolean {
     const pet = this.pets.find(p => p.id === petId);
     if (pet && pet.unlocked) {
-      this.currentPetId = petId;
+      this.selectedPetId = petId;
+      return true;
     }
+    return false;
   }
 
-  public updateCurrentPetStats(effects: { happiness?: number; hunger?: number; thirst?: number }) {
-    const currentPet = this.getCurrentPet();
+  public getSelectedPetStats(): PlayerStats {
+    return this.getSelectedPet().stats;
+  }
+
+  public updateSelectedPetStats(effects: { happiness?: number; hunger?: number; thirst?: number }) {
+    const selectedPet = this.getSelectedPet();
     if (effects.happiness) {
-      currentPet.stats.happiness = Math.min(100, Math.max(0, currentPet.stats.happiness + effects.happiness));
+      selectedPet.stats.happiness = Math.min(100, Math.max(0, selectedPet.stats.happiness + effects.happiness));
     }
     if (effects.hunger) {
-      currentPet.stats.hunger = Math.min(100, Math.max(0, currentPet.stats.hunger + effects.hunger));
+      selectedPet.stats.hunger = Math.min(100, Math.max(0, selectedPet.stats.hunger + effects.hunger));
     }
     if (effects.thirst) {
-      currentPet.stats.thirst = Math.min(100, Math.max(0, currentPet.stats.thirst + effects.thirst));
+      selectedPet.stats.thirst = Math.min(100, Math.max(0, selectedPet.stats.thirst + effects.thirst));
     }
   }
 
-  public updateCurrentPetStage(stage: 'egg' | 'adult') {
-    const currentPet = this.getCurrentPet();
-    currentPet.stage = stage;
+  public updateSelectedPetStage(stage: 'egg' | 'adult') {
+    const selectedPet = this.getSelectedPet();
+    selectedPet.stage = stage;
   }
 
+  // Methods untuk mengelola pets secara umum
+  public getAllPets(): PetData[] {
+    return this.pets;
+  }
+
+  public getPetById(petId: number): PetData | undefined {
+    return this.pets.find(pet => pet.id === petId);
+  }
+
+  public unlockPet(petId: number): boolean {
+    const pet = this.getPetById(petId);
+    if (pet) {
+      pet.unlocked = true;
+      return true;
+    }
+    return false;
+  }
+
+  // Inventory methods
   public useItem(itemId: number): boolean {
     const itemIndex = this.inventory.findIndex(item => item.id === itemId);
     if (itemIndex === -1) return false;
 
     const item = this.inventory[itemIndex];
-    this.updateCurrentPetStats(item.effects);
+    this.updateSelectedPetStats(item.effects);
     
     // Remove item from inventory after use
     this.inventory.splice(itemIndex, 1);
@@ -136,33 +159,61 @@ export default class GameState {
     this.inventory.push(item);
   }
 
+  // Goals methods
   public updateGoalProgress() {
-    const currentStats = this.getCurrentStats();
-    // Update goals based on current pet stats
+    const selectedStats = this.getSelectedPetStats();
+    // Update goals based on selected pet stats
     this.goals.forEach(goal => {
       switch (goal.id) {
         case 1: // Feed Your Pet
-          goal.progress = currentStats.hunger;
-          goal.completed = currentStats.hunger >= goal.maxProgress;
+          goal.progress = selectedStats.hunger;
+          goal.completed = selectedStats.hunger >= goal.maxProgress;
           break;
         case 2: // Happy Pet
-          goal.progress = currentStats.happiness;
-          goal.completed = currentStats.happiness >= goal.maxProgress;
+          goal.progress = selectedStats.happiness;
+          goal.completed = selectedStats.happiness >= goal.maxProgress;
           break;
         case 3: // Stay Hydrated
-          goal.progress = currentStats.thirst;
-          goal.completed = currentStats.thirst >= goal.maxProgress;
+          goal.progress = selectedStats.thirst;
+          goal.completed = selectedStats.thirst >= goal.maxProgress;
           break;
       }
     });
   }
 
-  // Legacy methods for backward compatibility
+  // Legacy methods untuk backward compatibility (deprecated)
+  public getCurrentPet(): PetData {
+    console.warn('getCurrentPet() is deprecated, use getSelectedPet() instead');
+    return this.getSelectedPet();
+  }
+
+  public switchPet(petId: number) {
+    console.warn('switchPet() is deprecated, use setSelectedPet() instead');
+    this.setSelectedPet(petId);
+  }
+
+  public getCurrentStats(): PlayerStats {
+    console.warn('getCurrentStats() is deprecated, use getSelectedPetStats() instead');
+    return this.getSelectedPetStats();
+  }
+
+  public updateCurrentPetStats(effects: { happiness?: number; hunger?: number; thirst?: number }) {
+    console.warn('updateCurrentPetStats() is deprecated, use updateSelectedPetStats() instead');
+    this.updateSelectedPetStats(effects);
+  }
+
+  public updateCurrentPetStage(stage: 'egg' | 'adult') {
+    console.warn('updateCurrentPetStage() is deprecated, use updateSelectedPetStage() instead');
+    this.updateSelectedPetStage(stage);
+  }
+
   public get playerStats(): PlayerStats {
-    return this.getCurrentStats();
+    console.warn('playerStats getter is deprecated, use getSelectedPetStats() instead');
+    return this.getSelectedPetStats();
   }
 
   public updateStats(effects: { happiness?: number; hunger?: number; thirst?: number }) {
-    this.updateCurrentPetStats(effects);
+    console.warn('updateStats() is deprecated, use updateSelectedPetStats() instead');
+    this.updateSelectedPetStats(effects);
   }
 }

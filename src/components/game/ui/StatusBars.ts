@@ -113,11 +113,11 @@ export default class StatusBars {
   }
 
   updateBars() {
-    const currentPet = this.gameState.getCurrentPet();
-    const stats = currentPet.stats;
+    const selectedPet = this.gameState.getSelectedPet();
+    const stats = selectedPet.stats;
 
     // Update pet name
-    this.petNameText.setText(currentPet.name);
+    this.petNameText.setText(selectedPet.name);
 
     // Update happiness bar
     this.updateBar(

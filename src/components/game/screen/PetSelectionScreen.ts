@@ -88,7 +88,7 @@ export default class PetSelectionScreen extends Phaser.Scene {
     const slotHeight = 100;
     const spacingX = 120;
 
-    this.gameState.pets.forEach((pet, i) => {
+    this.gameState.getAllPets().forEach((pet, i) => {
       const x = startX + i * spacingX;
       const y = startY;
 
@@ -128,14 +128,14 @@ export default class PetSelectionScreen extends Phaser.Scene {
       });
       stageText.setOrigin(0.5);
 
-      // Current pet indicator
-      const currentIndicator = this.add.text(0, -35, "★", {
+      // Selected pet indicator (using selectedPetId instead of currentPetId)
+      const selectedIndicator = this.add.text(0, -35, "★", {
         fontSize: "16px",
         color: "#ffff00",
         fontFamily: "CustomFont, Arial",
       });
-      currentIndicator.setOrigin(0.5);
-      currentIndicator.setVisible(pet.id === this.gameState.currentPetId);
+      selectedIndicator.setOrigin(0.5);
+      selectedIndicator.setVisible(pet.id === this.gameState.selectedPetId);
 
       // Status bars (mini version)
       this.createMiniStatusBars(petContainer, pet, 0, 40);
@@ -156,7 +156,7 @@ export default class PetSelectionScreen extends Phaser.Scene {
       }
 
       // Add elements to container
-      petContainer.add([slot, petSprite, petName, stageText, currentIndicator]);
+      petContainer.add([slot, petSprite, petName, stageText, selectedIndicator]);
 
       // Add to main container
       this.container.add(petContainer);
@@ -166,7 +166,7 @@ export default class PetSelectionScreen extends Phaser.Scene {
         container: petContainer,
         slot: slot,
         pet: pet,
-        currentIndicator: currentIndicator,
+        selectedIndicator: selectedIndicator,
       });
     });
   }
@@ -228,8 +228,8 @@ export default class PetSelectionScreen extends Phaser.Scene {
         element.slot.strokeRoundedRect(-40, -50, 80, 100, 8);
       }
 
-      // Update current pet indicator
-      element.currentIndicator.setVisible(pet.id === this.gameState.currentPetId);
+      // Update selected pet indicator (using selectedPetId)
+      element.selectedIndicator.setVisible(pet.id === this.gameState.selectedPetId);
     });
   }
 
@@ -239,22 +239,25 @@ export default class PetSelectionScreen extends Phaser.Scene {
       this.selectedPet = Math.max(0, this.selectedPet - 1);
       this.updateSelection();
     } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
-      this.selectedPet = Math.min(this.gameState.pets.length - 1, this.selectedPet + 1);
+      this.selectedPet = Math.min(this.gameState.getAllPets().length - 1, this.selectedPet + 1);
       this.updateSelection();
     }
 
     // Handle pet selection
     if (Phaser.Input.Keyboard.JustDown(this.enterKey)) {
-      const selectedPetData = this.gameState.pets[this.selectedPet];
+      const selectedPetData = this.gameState.getAllPets()[this.selectedPet];
       
       if (selectedPetData && selectedPetData.unlocked) {
-        this.gameState.switchPet(selectedPetData.id);
+        // Use the new setSelectedPet method
+        const success = this.gameState.setSelectedPet(selectedPetData.id);
         
-        // Show feedback
-        this.showPetSelectedFeedback(selectedPetData);
-        
-        // Update selection to show new current pet
-        this.updateSelection();
+        if (success) {
+          // Show feedback
+          this.showPetSelectedFeedback(selectedPetData);
+          
+          // Update selection to show new selected pet
+          this.updateSelection();
+        }
       }
     }
 

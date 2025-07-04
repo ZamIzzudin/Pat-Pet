@@ -19,7 +19,7 @@ export default class Pet {
     this.gameState = GameState.getInstance();
     this.currentSpriteKey = "";
 
-    // Create pet sprite based on current pet
+    // Create pet sprite based on selected pet
     this.createPetSprite();
 
     // Start idle animation based on stage
@@ -27,24 +27,24 @@ export default class Pet {
   }
 
   createPetSprite() {
-    const currentPet = this.gameState.getCurrentPet();
+    const selectedPet = this.gameState.getSelectedPet();
     
     // Destroy existing sprite if it exists
     if (this.sprite) {
       this.sprite.destroy();
     }
 
-    // Create new sprite with current pet's sprite
-    this.sprite = this.scene.add.sprite(this.x, this.y, currentPet.sprite);
+    // Create new sprite with selected pet's sprite
+    this.sprite = this.scene.add.sprite(this.x, this.y, selectedPet.sprite);
     this.sprite.setOrigin(0.5);
     this.sprite.setScale(2);
     
     // Update current sprite key
-    this.currentSpriteKey = currentPet.sprite;
+    this.currentSpriteKey = selectedPet.sprite;
   }
 
   updatePetSprite() {
-    const newSpriteKey = this.gameState.getCurrentPet().sprite;
+    const newSpriteKey = this.gameState.getSelectedPet().sprite;
     
     // Only update if sprite actually changed
     if (this.currentSpriteKey !== newSpriteKey) {
@@ -64,16 +64,16 @@ export default class Pet {
     }
   }
 
-  getCurrentPetStage(): 'egg' | 'adult' {
-    return this.gameState.getCurrentPet().stage;
+  getSelectedPetStage(): 'egg' | 'adult' {
+    return this.gameState.getSelectedPet().stage;
   }
 
-  getCurrentPetSprite(): string {
-    return this.gameState.getCurrentPet().sprite;
+  getSelectedPetSprite(): string {
+    return this.gameState.getSelectedPet().sprite;
   }
 
   createAllAnimations() {
-    const spriteKey = this.getCurrentPetSprite();
+    const spriteKey = this.getSelectedPetSprite();
     
     // Create egg idle animation
     if (!this.scene.anims.exists(`${spriteKey}-egg-idle`)) {
@@ -106,10 +106,10 @@ export default class Pet {
   }
 
   playHatchAnimation() {
-    if (this.isAnimating || this.getCurrentPetStage() === 'adult') return;
+    if (this.isAnimating || this.getSelectedPetStage() === 'adult') return;
 
     this.isAnimating = true;
-    const spriteKey = this.getCurrentPetSprite();
+    const spriteKey = this.getSelectedPetSprite();
 
     // Ensure hatch animation exists
     this.createAllAnimations();
@@ -125,7 +125,7 @@ export default class Pet {
       repeat: 2,
       onComplete: () => {
         // Change to adult stage after hatching
-        this.gameState.updateCurrentPetStage('adult');
+        this.gameState.updateSelectedPetStage('adult');
         
         // Create adult idle animation if it doesn't exist
         this.createAdultAnimations();
@@ -138,7 +138,7 @@ export default class Pet {
   }
 
   createAdultAnimations() {
-    const spriteKey = this.getCurrentPetSprite();
+    const spriteKey = this.getSelectedPetSprite();
 
     // Create adult idle animation if it doesn't exist
     if (!this.scene.anims.exists(`${spriteKey}-idle`)) {
@@ -194,8 +194,8 @@ export default class Pet {
   }
 
   startIdleAnimation() {
-    const spriteKey = this.getCurrentPetSprite();
-    const stage = this.getCurrentPetStage();
+    const spriteKey = this.getSelectedPetSprite();
+    const stage = this.getSelectedPetStage();
 
     // Ensure all animations are created
     this.createAllAnimations();
@@ -210,10 +210,10 @@ export default class Pet {
   playFeedAnimation() {
     if (this.isAnimating) return;
 
-    const spriteKey = this.getCurrentPetSprite();
+    const spriteKey = this.getSelectedPetSprite();
 
     // If still an egg, trigger hatch instead
-    if (this.getCurrentPetStage() === 'egg') {
+    if (this.getSelectedPetStage() === 'egg') {
       this.playHatchAnimation();
       return;
     }
@@ -248,10 +248,10 @@ export default class Pet {
   playDrinkAnimation() {
     if (this.isAnimating) return;
 
-    const spriteKey = this.getCurrentPetSprite();
+    const spriteKey = this.getSelectedPetSprite();
 
     // If still an egg, trigger hatch instead
-    if (this.getCurrentPetStage() === 'egg') {
+    if (this.getSelectedPetStage() === 'egg') {
       this.playHatchAnimation();
       return;
     }
@@ -285,10 +285,10 @@ export default class Pet {
   playHappyAnimation() {
     if (this.isAnimating) return;
 
-    const spriteKey = this.getCurrentPetSprite();
+    const spriteKey = this.getSelectedPetSprite();
 
     // If still an egg, trigger hatch instead
-    if (this.getCurrentPetStage() === 'egg') {
+    if (this.getSelectedPetStage() === 'egg') {
       this.playHatchAnimation();
       return;
     }
