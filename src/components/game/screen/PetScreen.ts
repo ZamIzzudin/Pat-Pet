@@ -6,26 +6,28 @@ import Pet from "../object/Pet";
 import StatusBars from "../ui/StatusBars";
 import FeedingUI from "../ui/FeedingUI";
 import Button from "../ui/Button";
+import GameState from "../object/GameState";
 
 export default class PetScreen extends Phaser.Scene {
   previousScene: string;
   pet: Pet;
-  backpackButton: Button;
+  petSelectionButton: Button;
   goalsButton: Button;
   statusBars: StatusBars;
   feedingUI: FeedingUI;
-  backpackKey: Phaser.Input.Keyboard.Key;
+  gameState: GameState;
+  petSelectionKey: Phaser.Input.Keyboard.Key;
   goalsKey: Phaser.Input.Keyboard.Key;
   escapeKey: Phaser.Input.Keyboard.Key;
 
   constructor() {
     super("Pet_Screen");
-    this.backpackButton = new Button(
+    this.petSelectionButton = new Button(
       this,
       [320, 33],
       [45, 45],
-      "BACKPACK",
-      "Backpack_Screen",
+      "PETS",
+      "Pet_Selection_Screen",
       "Pet_Screen",
       "Backpack"
     );
@@ -45,6 +47,8 @@ export default class PetScreen extends Phaser.Scene {
   }
 
   create() {
+    this.gameState = GameState.getInstance();
+
     // Create background
     const bg = this.add.image(176, 96, "bg");
     bg.setOrigin(0.5);
@@ -59,12 +63,12 @@ export default class PetScreen extends Phaser.Scene {
     // Create feeding UI at the bottom
     this.feedingUI = new FeedingUI(this, this.pet);
 
-    // Create action buttons (moved from other screens)
-    this.backpackButton.create();
+    // Create action buttons
+    this.petSelectionButton.create();
     this.goalsButton.create();
 
     // Add keyboard shortcuts
-    this.backpackKey = this.input.keyboard.addKey(
+    this.petSelectionKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.B
     );
     this.goalsKey = this.input.keyboard.addKey(
@@ -73,6 +77,21 @@ export default class PetScreen extends Phaser.Scene {
     this.escapeKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.ESC
     );
+
+    // Listen for pet changes
+    this.events.on('wake', this.onWake, this);
+  }
+
+  onWake() {
+    // Update pet sprite when returning from pet selection
+    if (this.pet) {
+      this.pet.updatePetSprite();
+    }
+    
+    // Update status bars to show current pet
+    if (this.statusBars) {
+      this.statusBars.updateBars();
+    }
   }
 
   update() {
@@ -87,8 +106,8 @@ export default class PetScreen extends Phaser.Scene {
     }
 
     // Handle keyboard shortcuts
-    if (Phaser.Input.Keyboard.JustDown(this.backpackKey)) {
-      this.backpackButton.handler();
+    if (Phaser.Input.Keyboard.JustDown(this.petSelectionKey)) {
+      this.petSelectionButton.handler();
     }
 
     if (Phaser.Input.Keyboard.JustDown(this.goalsKey)) {

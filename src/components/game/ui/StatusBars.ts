@@ -17,6 +17,7 @@ export default class StatusBars {
   happinessText: Phaser.GameObjects.Text;
   hungerText: Phaser.GameObjects.Text;
   thirstText: Phaser.GameObjects.Text;
+  petNameText: Phaser.GameObjects.Text;
 
   // UI Container for fixed positioning
   uiContainer: Phaser.GameObjects.Container;
@@ -44,6 +45,18 @@ export default class StatusBars {
     this.profileSprite.setScale(1.5);
     this.profileSprite.setScrollFactor(0);
 
+    // Pet name display
+    this.petNameText = this.scene.add.text(35, 50, "", {
+      fontSize: "8px",
+      color: "#ffffff",
+      fontFamily: "CustomFont, Arial",
+      fontStyle: "bold",
+      resolution: 2,
+      padding: { x: 1, y: 1 },
+    });
+    this.petNameText.setOrigin(0.5);
+    this.petNameText.setScrollFactor(0);
+
     // Create status bars positioned to align with BarLayout
     this.createStatusBar("happiness", 75, 20, 0xff6b6b); // Red for happiness
     this.createStatusBar("hunger", 75, 30, 0x4ecdc4); // Teal for hunger
@@ -69,8 +82,7 @@ export default class StatusBars {
       fontSize: "8px",
       color: "#ffffff",
       fontFamily: "CustomFont, Arial",
-      // fontStyle: "bold",
-      resolution: 2, // Higher resolution for crisp text
+      resolution: 2,
       padding: { x: 1, y: 1 },
     });
     label.setOrigin(0, 0.5);
@@ -81,8 +93,7 @@ export default class StatusBars {
       fontSize: "8px",
       color: "#ffffff",
       fontFamily: "CustomFont, Arial",
-      // fontStyle: "bold",
-      resolution: 2, // Higher resolution for crisp text
+      resolution: 2,
       padding: { x: 1, y: 1 },
     });
     valueText.setOrigin(0, 0.5);
@@ -102,7 +113,11 @@ export default class StatusBars {
   }
 
   updateBars() {
-    const stats = this.gameState.playerStats;
+    const currentPet = this.gameState.getCurrentPet();
+    const stats = currentPet.stats;
+
+    // Update pet name
+    this.petNameText.setText(currentPet.name);
 
     // Update happiness bar
     this.updateBar(
@@ -170,6 +185,7 @@ export default class StatusBars {
     if (this.uiContainer) this.uiContainer.destroy();
     if (this.barLayoutSprite) this.barLayoutSprite.destroy();
     if (this.profileSprite) this.profileSprite.destroy();
+    if (this.petNameText) this.petNameText.destroy();
     if (this.happinessBar) this.happinessBar.destroy();
     if (this.hungerBar) this.hungerBar.destroy();
     if (this.thirstBar) this.thirstBar.destroy();

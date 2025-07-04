@@ -27,14 +27,38 @@ export interface Goal {
   maxProgress: number;
 }
 
+export interface PetData {
+  id: number;
+  name: string;
+  sprite: string;
+  stage: 'egg' | 'adult';
+  stats: PlayerStats;
+  unlocked: boolean;
+}
+
 export default class GameState {
   private static instance: GameState;
   
-  public playerStats: PlayerStats = {
-    happiness: 80,
-    hunger: 60,
-    thirst: 70
-  };
+  public currentPetId: number = 1;
+  
+  public pets: PetData[] = [
+    {
+      id: 1,
+      name: "Fluffy",
+      sprite: "Egg",
+      stage: 'egg',
+      stats: { happiness: 80, hunger: 60, thirst: 70 },
+      unlocked: true
+    },
+    {
+      id: 2,
+      name: "Shadow",
+      sprite: "Egg2",
+      stage: 'egg',
+      stats: { happiness: 75, hunger: 55, thirst: 65 },
+      unlocked: true
+    }
+  ];
 
   public inventory: GameItem[] = [
     { id: 1, name: "Apple", icon: "Backpack", type: "food", effects: { hunger: 20, happiness: 5 } },
@@ -62,16 +86,37 @@ export default class GameState {
     return GameState.instance;
   }
 
-  public updateStats(effects: { happiness?: number; hunger?: number; thirst?: number }) {
+  public getCurrentPet(): PetData {
+    return this.pets.find(pet => pet.id === this.currentPetId) || this.pets[0];
+  }
+
+  public getCurrentStats(): PlayerStats {
+    return this.getCurrentPet().stats;
+  }
+
+  public switchPet(petId: number) {
+    const pet = this.pets.find(p => p.id === petId);
+    if (pet && pet.unlocked) {
+      this.currentPetId = petId;
+    }
+  }
+
+  public updateCurrentPetStats(effects: { happiness?: number; hunger?: number; thirst?: number }) {
+    const currentPet = this.getCurrentPet();
     if (effects.happiness) {
-      this.playerStats.happiness = Math.min(100, Math.max(0, this.playerStats.happiness + effects.happiness));
+      currentPet.stats.happiness = Math.min(100, Math.max(0, currentPet.stats.happiness + effects.happiness));
     }
     if (effects.hunger) {
-      this.playerStats.hunger = Math.min(100, Math.max(0, this.playerStats.hunger + effects.hunger));
+      currentPet.stats.hunger = Math.min(100, Math.max(0, currentPet.stats.hunger + effects.hunger));
     }
     if (effects.thirst) {
-      this.playerStats.thirst = Math.min(100, Math.max(0, this.playerStats.thirst + effects.thirst));
+      currentPet.stats.thirst = Math.min(100, Math.max(0, currentPet.stats.thirst + effects.thirst));
     }
+  }
+
+  public updateCurrentPetStage(stage: 'egg' | 'adult') {
+    const currentPet = this.getCurrentPet();
+    currentPet.stage = stage;
   }
 
   public useItem(itemId: number): boolean {
@@ -79,7 +124,7 @@ export default class GameState {
     if (itemIndex === -1) return false;
 
     const item = this.inventory[itemIndex];
-    this.updateStats(item.effects);
+    this.updateCurrentPetStats(item.effects);
     
     // Remove item from inventory after use
     this.inventory.splice(itemIndex, 1);
@@ -92,22 +137,32 @@ export default class GameState {
   }
 
   public updateGoalProgress() {
-    // Update goals based on current stats
+    const currentStats = this.getCurrentStats();
+    // Update goals based on current pet stats
     this.goals.forEach(goal => {
       switch (goal.id) {
         case 1: // Feed Your Pet
-          goal.progress = this.playerStats.hunger;
-          goal.completed = this.playerStats.hunger >= goal.maxProgress;
+          goal.progress = currentStats.hunger;
+          goal.completed = currentStats.hunger >= goal.maxProgress;
           break;
         case 2: // Happy Pet
-          goal.progress = this.playerStats.happiness;
-          goal.completed = this.playerStats.happiness >= goal.maxProgress;
+          goal.progress = currentStats.happiness;
+          goal.completed = currentStats.happiness >= goal.maxProgress;
           break;
         case 3: // Stay Hydrated
-          goal.progress = this.playerStats.thirst;
-          goal.completed = this.playerStats.thirst >= goal.maxProgress;
+          goal.progress = currentStats.thirst;
+          goal.completed = currentStats.thirst >= goal.maxProgress;
           break;
       }
     });
+  }
+
+  // Legacy methods for backward compatibility
+  public get playerStats(): PlayerStats {
+    return this.getCurrentStats();
+  }
+
+  public updateStats(effects: { happiness?: number; hunger?: number; thirst?: number }) {
+    this.updateCurrentPetStats(effects);
   }
 }

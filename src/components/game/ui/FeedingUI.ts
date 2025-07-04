@@ -176,8 +176,8 @@ export default class FeedingUI {
   }
 
   performAction(action: any) {
-    // Update game state
-    this.gameState.updateStats(action.effects);
+    // Update current pet's stats
+    this.gameState.updateCurrentPetStats(action.effects);
 
     // Play appropriate pet animation
     switch (action.type) {
@@ -201,10 +201,11 @@ export default class FeedingUI {
   }
 
   showActionFeedback(action: any) {
+    const currentPet = this.gameState.getCurrentPet();
     const feedbackText = this.scene.add.text(
       176,
       120,
-      `${action.name} action performed!`,
+      `${currentPet.name}: ${action.name} action performed!`,
       {
         fontSize: "12px",
         color: "#4caf50",
