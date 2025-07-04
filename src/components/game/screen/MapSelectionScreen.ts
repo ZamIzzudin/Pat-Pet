@@ -65,7 +65,7 @@ export default class MapSelectionScreen extends Phaser.Scene {
     // Instructions
     this.instructionText = this.add.text(
       176,
-      175,
+      165,
       "Arrow Keys: Navigate | Enter: Join Map | ESC: Exit",
       {
         fontSize: "10px",
@@ -98,7 +98,7 @@ export default class MapSelectionScreen extends Phaser.Scene {
       delay: 5000, // Refresh every 5 seconds
       callback: this.refreshRoomData,
       callbackScope: this,
-      loop: true
+      loop: true,
     });
   }
 
@@ -123,18 +123,18 @@ export default class MapSelectionScreen extends Phaser.Scene {
   async refreshRoomData() {
     try {
       // Fetch room data from server
-      const response = await fetch('http://localhost:3001/api/rooms');
+      const response = await fetch("http://localhost:3001/api/rooms");
       if (response.ok) {
         const roomsData = await response.json();
         this.updateRoomPlayerCounts(roomsData);
       }
     } catch (error) {
-      console.error('Failed to fetch room data:', error);
+      console.error("Failed to fetch room data:", error);
     }
   }
 
   updateRoomPlayerCounts(roomsData: any[]) {
-    roomsData.forEach(room => {
+    roomsData.forEach((room) => {
       this.updatePlayerCount(room.roomId, room.playerCount);
     });
   }
@@ -144,23 +144,21 @@ export default class MapSelectionScreen extends Phaser.Scene {
       {
         id: "Main_Screen",
         name: "Island",
-        description: "Explore the tropical island",
         preview: "Island",
         playerCount: 0,
       },
       {
         id: "House_Screen",
         name: "House",
-        description: "Visit the cozy house",
         preview: "House",
         playerCount: 0,
       },
     ];
 
-    const startX = -120;
-    const startY = -20;
-    const slotWidth = 100;
-    const slotHeight = 120;
+    const startX = -70;
+    const startY = 0;
+    const slotWidth = 20;
+    const slotHeight = 20;
     const spacingX = 140;
 
     maps.forEach((map, i) => {
@@ -189,13 +187,8 @@ export default class MapSelectionScreen extends Phaser.Scene {
         8
       );
 
-      // Map preview image
-      const mapPreview = this.add.image(0, -20, map.preview);
-      mapPreview.setOrigin(0.5);
-      mapPreview.setDisplaySize(80, 60);
-
       // Map name
-      const mapName = this.add.text(0, 15, map.name, {
+      const mapName = this.add.text(0, -10, map.name, {
         fontSize: "12px",
         color: "#ffffff",
         fontFamily: "CustomFont, Arial",
@@ -205,28 +198,23 @@ export default class MapSelectionScreen extends Phaser.Scene {
       });
       mapName.setOrigin(0.5);
 
-      // Map description
-      const mapDesc = this.add.text(0, 28, map.description, {
-        fontSize: "8px",
-        color: "#cccccc",
-        fontFamily: "CustomFont, Arial",
-        resolution: 2,
-        padding: { x: 1, y: 1 },
-      });
-      mapDesc.setOrigin(0.5);
-
       // Player count
-      const playerCountText = this.add.text(0, 40, `Players: ${map.playerCount}`, {
-        fontSize: "8px",
-        color: "#4caf50",
-        fontFamily: "CustomFont, Arial",
-        resolution: 2,
-        padding: { x: 1, y: 1 },
-      });
+      const playerCountText = this.add.text(
+        0,
+        10,
+        `Players: ${map.playerCount}`,
+        {
+          fontSize: "8px",
+          color: "#4caf50",
+          fontFamily: "CustomFont, Arial",
+          resolution: 2,
+          padding: { x: 1, y: 1 },
+        }
+      );
       playerCountText.setOrigin(0.5);
 
       // Add elements to container
-      mapContainer.add([slot, mapPreview, mapName, mapDesc, playerCountText]);
+      mapContainer.add([slot, mapName, playerCountText]);
 
       // Add to main container
       this.container.add(mapContainer);
@@ -245,20 +233,44 @@ export default class MapSelectionScreen extends Phaser.Scene {
     // Reset all slots
     this.mapElements.forEach((element, index) => {
       const slotWidth = 100;
-      const slotHeight = 120;
+      const slotHeight = 50;
 
       if (index === this.selectedMap) {
         element.slot.clear();
         element.slot.fillStyle(0x555555, 1);
-        element.slot.fillRoundedRect(-slotWidth / 2, -slotHeight / 2, slotWidth, slotHeight, 8);
+        element.slot.fillRoundedRect(
+          -slotWidth / 2,
+          -slotHeight / 2,
+          slotWidth,
+          slotHeight,
+          8
+        );
         element.slot.lineStyle(3, 0x4caf50); // Green highlight for selected
-        element.slot.strokeRoundedRect(-slotWidth / 2, -slotHeight / 2, slotWidth, slotHeight, 8);
+        element.slot.strokeRoundedRect(
+          -slotWidth / 2,
+          -slotHeight / 2,
+          slotWidth,
+          slotHeight,
+          8
+        );
       } else {
         element.slot.clear();
         element.slot.fillStyle(0x444444, 1);
-        element.slot.fillRoundedRect(-slotWidth / 2, -slotHeight / 2, slotWidth, slotHeight, 8);
+        element.slot.fillRoundedRect(
+          -slotWidth / 2,
+          -slotHeight / 2,
+          slotWidth,
+          slotHeight,
+          8
+        );
         element.slot.lineStyle(2, 0x666666);
-        element.slot.strokeRoundedRect(-slotWidth / 2, -slotHeight / 2, slotWidth, slotHeight, 8);
+        element.slot.strokeRoundedRect(
+          -slotWidth / 2,
+          -slotHeight / 2,
+          slotWidth,
+          slotHeight,
+          8
+        );
       }
     });
   }
@@ -282,7 +294,10 @@ export default class MapSelectionScreen extends Phaser.Scene {
       this.selectedMap = Math.max(0, this.selectedMap - 1);
       this.updateSelection();
     } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
-      this.selectedMap = Math.min(this.mapElements.length - 1, this.selectedMap + 1);
+      this.selectedMap = Math.min(
+        this.mapElements.length - 1,
+        this.selectedMap + 1
+      );
       this.updateSelection();
     }
 
@@ -336,7 +351,9 @@ export default class MapSelectionScreen extends Phaser.Scene {
 
   // Method to update player counts (can be called from multiplayer events)
   updatePlayerCount(mapId: string, count: number) {
-    const mapElement = this.mapElements.find(element => element.map.id === mapId);
+    const mapElement = this.mapElements.find(
+      (element) => element.map.id === mapId
+    );
     if (mapElement) {
       mapElement.map.playerCount = count;
       mapElement.playerCountText.setText(`Players: ${count}`);

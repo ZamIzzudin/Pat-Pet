@@ -6,7 +6,7 @@ export default (() => {
   }
 
   function CharCoordinate(x: number, y: number) {
-    return { x: GridParse(x) - 8, y: GridParse(y) - 18 };
+    return { x: GridParse(x), y: GridParse(y) };
   }
 
   return {

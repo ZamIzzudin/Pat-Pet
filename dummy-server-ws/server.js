@@ -19,11 +19,14 @@ app.use(express.static("public")); // Serve static files if needed
 
 // CORS middleware for API routes
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  
-  if (req.method === 'OPTIONS') {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+
+  if (req.method === "OPTIONS") {
     res.sendStatus(200);
   } else {
     next();
@@ -83,7 +86,7 @@ app.get("/api/rooms", (req, res) => {
   const roomsData = Array.from(rooms.entries()).map(([roomId, room]) => ({
     roomId,
     playerCount: room.size,
-    players: Array.from(room.values()).map(player => ({
+    players: Array.from(room.values()).map((player) => ({
       id: player.id,
       username: player.username,
       position: player.position,
@@ -97,7 +100,7 @@ app.get("/api/rooms", (req, res) => {
 app.get("/api/rooms/:roomId", (req, res) => {
   const { roomId } = req.params;
   const room = rooms.get(roomId);
-  
+
   if (!room) {
     return res.status(404).json({ error: "Room not found" });
   }
@@ -114,7 +117,9 @@ app.get("/api/rooms/:roomId", (req, res) => {
 io.on("connection", (socket) => {
   const clientId = uuidv4();
   const shortId = clientId.substring(0, 8);
-  console.log(`🎮 Client connected: Player_${shortId} (Socket ID: ${socket.id})`);
+  console.log(
+    `🎮 Client connected: Player_${shortId} (Socket ID: ${socket.id})`
+  );
 
   // Initialize client data
   clients.set(clientId, {
@@ -152,7 +157,7 @@ io.on("connection", (socket) => {
   // Handle player movement
   socket.on("player_move", (data) => {
     handlePlayerMove(clientId, data.position, data.frame);
-    
+
     // Update last activity
     const client = clients.get(clientId);
     if (client) {
@@ -219,7 +224,9 @@ function handleJoinRoom(clientId, roomId, position) {
     joinedAt: client.joinedAt,
   });
 
-  console.log(`✅ ${client.username} joined room ${roomId} (${room.size} players total)`);
+  console.log(
+    `✅ ${client.username} joined room ${roomId} (${room.size} players total)`
+  );
 
   // Send current room state to joining client
   const roomPlayers = Array.from(room.values());
@@ -266,7 +273,9 @@ function handleLeaveRoom(clientId) {
       playerId: clientId,
     });
 
-    console.log(`🚪 ${client.username} left room ${roomId} (${room.size} players remaining)`);
+    console.log(
+      `🚪 ${client.username} left room ${roomId} (${room.size} players remaining)`
+    );
 
     // Broadcast updated room info to all clients
     io.emit("room_update", {
@@ -294,7 +303,8 @@ function handlePlayerMove(clientId, position, frame) {
     playerData.frame = frame;
 
     // Broadcast movement to other players in room (throttled logging)
-    if (Math.random() < 0.1) { // Only log 10% of movements to reduce spam
+    if (Math.random() < 0.1) {
+      // Only log 10% of movements to reduce spam
       console.log(`🏃 ${client.username} moved in ${client.currentRoom}`);
     }
 
@@ -389,10 +399,10 @@ server.listen(PORT, () => {
 // Cleanup function for graceful shutdown
 process.on("SIGINT", () => {
   console.log("\n🛑 Shutting down server...");
-  
+
   // Notify all clients about server shutdown
   io.emit("server_shutdown", { message: "Server is shutting down" });
-  
+
   io.close(() => {
     console.log("📡 Socket.IO server closed");
     server.close(() => {

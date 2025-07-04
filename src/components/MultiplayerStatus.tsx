@@ -100,19 +100,6 @@ export default function MultiplayerStatus() {
           {isConnected ? "Connected" : "Disconnected"}
         </span>
       </div>
-
-      {isConnected && (
-        <>
-          <div className="text-xs text-gray-300">
-            Players in room: {playerCount}
-          </div>
-          {currentRoom && (
-            <div className="text-xs text-gray-300">
-              Room: {currentRoom.replace("_Screen", "")}
-            </div>
-          )}
-        </>
-      )}
     </div>
   );
 }

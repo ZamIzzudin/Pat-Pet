@@ -2,12 +2,12 @@
 // @ts-nocheck: Object is possibly 'null'.
 
 import * as Phaser from "phaser";
-import Map from "../object/Map";
+import MapObj from "../object/Map";
 import Button from "../ui/Button";
 
 export default class HouseScreen extends Phaser.Scene {
   cursors: Phaser.Types.Input.Keyboard.CursorKeys;
-  map: Map;
+  map: MapObj;
   petButton: Button;
   petKey: Phaser.Input.Keyboard.Key;
 
@@ -27,7 +27,7 @@ export default class HouseScreen extends Phaser.Scene {
 
   create() {
     const mapKey = "House";
-    this.map = new Map(this, mapKey);
+    this.map = new MapObj(this, mapKey);
     this.cursors = this.input.keyboard.createCursorKeys();
 
     // Create status bars

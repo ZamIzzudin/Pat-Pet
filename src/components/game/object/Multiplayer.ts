@@ -1,8 +1,11 @@
 /** @format */
+// @ts-nocheck: Object is possibly 'null'.
+
+import GridParse from "../utils/GridParse";
 
 export default class MultiplayerChar {
-  scene: Phaser.Scene;
-  sprite: Phaser.GameObjects.Sprite;
+  scene: Phaser.Scene | null;
+  sprite: Phaser.GameObjects.Sprite | null;
   nameText: Phaser.GameObjects.Text;
   coordinate: { x: number; y: number };
   isMoving: boolean;
@@ -51,7 +54,7 @@ export default class MultiplayerChar {
 
   private generatePlayerColor(playerId: string): number {
     if (!playerId) return 0xffffff;
-    
+
     // Generate a consistent color based on player ID
     let hash = 0;
     for (let i = 0; i < playerId.length; i++) {
@@ -75,18 +78,33 @@ export default class MultiplayerChar {
 
     try {
       this.isMoving = true;
-      this.coordinate = { x, y };
+      this.coordinate = GridParse.CharCoordinate(x, y);
 
       // Smooth movement to new position
       this.scene.tweens.add({
-        targets: [this.sprite, this.nameText],
-        x: [this.sprite.x, x, this.nameText.x, x + 24],
-        y: [this.sprite.y, y, this.nameText.y, y - 10],
+        targets: [this.sprite],
+        x: x,
+        y: y,
         duration: 250,
         onComplete: () => {
           if (!this.isDestroyed) {
             this.isMoving = false;
-            if (this.sprite && typeof frame !== 'undefined') {
+            if (this.sprite && typeof frame !== "undefined") {
+              this.sprite.setFrame(frame);
+            }
+          }
+        },
+      });
+
+      this.scene.tweens.add({
+        targets: this.nameText,
+        x: x + 24,
+        y: y - 10,
+        duration: 250,
+        onComplete: () => {
+          if (!this.isDestroyed) {
+            this.isMoving = false;
+            if (this.sprite && typeof frame !== "undefined") {
               this.sprite.setFrame(frame);
             }
           }
@@ -100,7 +118,7 @@ export default class MultiplayerChar {
 
   playAnimation(animationKey: string) {
     if (this.isDestroyed || !this.sprite) return;
-    
+
     try {
       if (this.sprite.anims && this.sprite.anims.exists(animationKey)) {
         this.sprite.anims.play(animationKey, true);
@@ -112,7 +130,7 @@ export default class MultiplayerChar {
 
   setFrame(frame: number) {
     if (this.isDestroyed || !this.sprite) return;
-    
+
     try {
       this.sprite.setFrame(frame);
     } catch (error) {
@@ -120,28 +138,17 @@ export default class MultiplayerChar {
     }
   }
 
-  updateUsername(newUsername: string) {
-    if (this.isDestroyed || !this.nameText) return;
-    
-    try {
-      this.username = newUsername;
-      this.nameText.setText(newUsername);
-    } catch (error) {
-      console.error("Failed to update username:", error);
-    }
-  }
-
   destroy() {
     if (this.isDestroyed) return;
-    
+
     try {
       this.isDestroyed = true;
-      
+
       if (this.sprite) {
         this.sprite.destroy();
         this.sprite = null;
       }
-      
+
       if (this.nameText) {
         this.nameText.destroy();
         this.nameText = null;

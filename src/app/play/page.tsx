@@ -6,9 +6,12 @@ import dynamic from "next/dynamic";
 
 import MultiplayerStatus from "@/components/MultiplayerStatus";
 
-const GameScreen = dynamic(() => import("../../components/game/GameScreen"), {
-  ssr: false,
-});
+const GameScreen = dynamic(
+  () => import("../../components/game/screen/GameScreen"),
+  {
+    ssr: false,
+  }
+);
 
 export default function Play() {
   const [mounted, setMounted] = useState(false);

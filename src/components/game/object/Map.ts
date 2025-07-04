@@ -5,7 +5,7 @@ import Char from "./Char";
 import MultiplayerChar from "./Multiplayer";
 import { getSocketIOClient, Player } from "@/lib/ws";
 
-export default class Map {
+export default class MapObj {
   scene: Phaser.Scene;
   player: Char;
   mapKey: string;
@@ -160,7 +160,7 @@ export default class Map {
 
   clearOtherPlayers() {
     this.otherPlayers.forEach((player) => {
-      if (player && typeof player.destroy === 'function') {
+      if (player && typeof player.destroy === "function") {
         player.destroy();
       }
     });
@@ -169,7 +169,7 @@ export default class Map {
 
   addOtherPlayer(player: Player) {
     if (!player || !player.id) return;
-    
+
     // Don't add if already exists
     if (this.otherPlayers.has(player.id)) return;
 
@@ -193,11 +193,11 @@ export default class Map {
 
   removeOtherPlayer(playerId: string) {
     if (!playerId) return;
-    
+
     const player = this.otherPlayers.get(playerId);
     if (player) {
       try {
-        if (typeof player.destroy === 'function') {
+        if (typeof player.destroy === "function") {
           player.destroy();
         }
         this.otherPlayers.delete(playerId);
@@ -214,9 +214,9 @@ export default class Map {
     frame: number
   ) {
     if (!playerId || !position) return;
-    
+
     const player = this.otherPlayers.get(playerId);
-    if (player && typeof player.updatePosition === 'function') {
+    if (player && typeof player.updatePosition === "function") {
       try {
         player.updatePosition(position.x, position.y, frame);
       } catch (error) {
@@ -227,9 +227,9 @@ export default class Map {
 
   playOtherPlayerAnimation(playerId: string, animation: string) {
     if (!playerId || !animation) return;
-    
+
     const player = this.otherPlayers.get(playerId);
-    if (player && typeof player.playAnimation === 'function') {
+    if (player && typeof player.playAnimation === "function") {
       try {
         player.playAnimation(animation);
       } catch (error) {
@@ -295,18 +295,13 @@ export default class Map {
   }
 
   showMapSelectionPrompt() {
-    const prompt = this.scene.add.text(
-      175,
-      20,
-      "Press M to select map",
-      {
-        fontSize: "10px",
-        color: "#ffffff",
-        fontFamily: "CustomFont, Arial",
-        backgroundColor: "#000000",
-        padding: { x: 4, y: 2 },
-      }
-    );
+    const prompt = this.scene.add.text(175, 20, "Press M to select map", {
+      fontSize: "10px",
+      color: "#ffffff",
+      fontFamily: "CustomFont, Arial",
+      backgroundColor: "#000000",
+      padding: { x: 4, y: 2 },
+    });
     prompt.setOrigin(0.5);
     prompt.setScrollFactor(0);
 
@@ -367,7 +362,7 @@ export default class Map {
       if (this.wsClient) {
         this.wsClient.leaveRoom();
       }
-      
+
       // Show transition message
       const transitionText = this.scene.add.text(
         175,
@@ -387,12 +382,12 @@ export default class Map {
 
       // Transition to map selection after a short delay
       this.scene.time.delayedCall(1000, () => {
-        this.scene.start("Map_Selection_Screen");
+        this.scene.scene.start("Map_Selection_Screen");
       });
     } catch (error) {
       console.error("Failed to return to map selection:", error);
       // Fallback: direct scene transition
-      this.scene.start("Map_Selection_Screen");
+      this.scene.scene.start("Map_Selection_Screen");
     }
   }
 
@@ -400,7 +395,7 @@ export default class Map {
     try {
       // Clean up multiplayer
       this.clearMultiplayerEvents();
-      
+
       if (this.wsClient) {
         this.wsClient.leaveRoom();
       }
