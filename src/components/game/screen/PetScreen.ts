@@ -79,15 +79,16 @@ export default class PetScreen extends Phaser.Scene {
     );
 
     // Listen for pet changes
-    this.events.on('wake', this.onWake, this);
+    this.events.on("wake", this.onWake, this);
   }
 
   onWake() {
+    alert("triggered");
     // Update pet sprite when returning from pet selection
     if (this.pet) {
       this.pet.updatePetSprite();
     }
-    
+
     // Update status bars to show current pet
     if (this.statusBars) {
       this.statusBars.updateBars();
@@ -95,6 +96,11 @@ export default class PetScreen extends Phaser.Scene {
   }
 
   update() {
+    // Update Pet Sprite
+    if (this.pet) {
+      this.pet.updatePetSprite();
+    }
+
     // Update status bars
     if (this.statusBars) {
       this.statusBars.updateBars();

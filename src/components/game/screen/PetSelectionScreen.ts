@@ -98,9 +98,21 @@ export default class PetSelectionScreen extends Phaser.Scene {
       // Create slot background
       const slot = this.add.graphics();
       slot.fillStyle(0x444444, 1);
-      slot.fillRoundedRect(-slotWidth/2, -slotHeight/2, slotWidth, slotHeight, 8);
+      slot.fillRoundedRect(
+        -slotWidth / 2,
+        -slotHeight / 2,
+        slotWidth,
+        slotHeight,
+        8
+      );
       slot.lineStyle(2, 0x666666);
-      slot.strokeRoundedRect(-slotWidth/2, -slotHeight/2, slotWidth, slotHeight, 8);
+      slot.strokeRoundedRect(
+        -slotWidth / 2,
+        -slotHeight / 2,
+        slotWidth,
+        slotHeight,
+        8
+      );
 
       // Pet sprite preview
       const petSprite = this.add.sprite(0, -15, pet.sprite);
@@ -121,7 +133,7 @@ export default class PetSelectionScreen extends Phaser.Scene {
       // Pet stage indicator
       const stageText = this.add.text(0, 28, pet.stage.toUpperCase(), {
         fontSize: "8px",
-        color: pet.stage === 'adult' ? "#4caf50" : "#ffa502",
+        color: pet.stage === "adult" ? "#4caf50" : "#ffa502",
         fontFamily: "CustomFont, Arial",
         resolution: 2,
         padding: { x: 1, y: 1 },
@@ -144,19 +156,31 @@ export default class PetSelectionScreen extends Phaser.Scene {
       if (!pet.unlocked) {
         const lockOverlay = this.add.graphics();
         lockOverlay.fillStyle(0x000000, 0.7);
-        lockOverlay.fillRoundedRect(-slotWidth/2, -slotHeight/2, slotWidth, slotHeight, 8);
-        
+        lockOverlay.fillRoundedRect(
+          -slotWidth / 2,
+          -slotHeight / 2,
+          slotWidth,
+          slotHeight,
+          8
+        );
+
         const lockIcon = this.add.text(0, 0, "🔒", {
           fontSize: "24px",
           fontFamily: "CustomFont, Arial",
         });
         lockIcon.setOrigin(0.5);
-        
+
         petContainer.add([lockOverlay, lockIcon]);
       }
 
       // Add elements to container
-      petContainer.add([slot, petSprite, petName, stageText, selectedIndicator]);
+      petContainer.add([
+        slot,
+        petSprite,
+        petName,
+        stageText,
+        selectedIndicator,
+      ]);
 
       // Add to main container
       this.container.add(petContainer);
@@ -171,7 +195,12 @@ export default class PetSelectionScreen extends Phaser.Scene {
     });
   }
 
-  createMiniStatusBars(container: Phaser.GameObjects.Container, pet: PetData, x: number, y: number) {
+  createMiniStatusBars(
+    container: Phaser.GameObjects.Container,
+    pet: PetData,
+    x: number,
+    y: number
+  ) {
     const barWidth = 60;
     const barHeight = 3;
     const spacing = 6;
@@ -179,41 +208,53 @@ export default class PetSelectionScreen extends Phaser.Scene {
     // Happiness bar
     const happinessBg = this.add.graphics();
     happinessBg.fillStyle(0x333333, 1);
-    happinessBg.fillRect(x - barWidth/2, y, barWidth, barHeight);
-    
+    happinessBg.fillRect(x - barWidth / 2, y, barWidth, barHeight);
+
     const happinessBar = this.add.graphics();
     const happinessWidth = (pet.stats.happiness / 100) * barWidth;
     happinessBar.fillStyle(0xff6b6b, 1);
-    happinessBar.fillRect(x - barWidth/2, y, happinessWidth, barHeight);
+    happinessBar.fillRect(x - barWidth / 2, y, happinessWidth, barHeight);
 
     // Hunger bar
     const hungerBg = this.add.graphics();
     hungerBg.fillStyle(0x333333, 1);
-    hungerBg.fillRect(x - barWidth/2, y + spacing, barWidth, barHeight);
-    
+    hungerBg.fillRect(x - barWidth / 2, y + spacing, barWidth, barHeight);
+
     const hungerBar = this.add.graphics();
     const hungerWidth = (pet.stats.hunger / 100) * barWidth;
     hungerBar.fillStyle(0x4ecdc4, 1);
-    hungerBar.fillRect(x - barWidth/2, y + spacing, hungerWidth, barHeight);
+    hungerBar.fillRect(x - barWidth / 2, y + spacing, hungerWidth, barHeight);
 
     // Thirst bar
     const thirstBg = this.add.graphics();
     thirstBg.fillStyle(0x333333, 1);
-    thirstBg.fillRect(x - barWidth/2, y + spacing * 2, barWidth, barHeight);
-    
+    thirstBg.fillRect(x - barWidth / 2, y + spacing * 2, barWidth, barHeight);
+
     const thirstBar = this.add.graphics();
     const thirstWidth = (pet.stats.thirst / 100) * barWidth;
     thirstBar.fillStyle(0x45b7d1, 1);
-    thirstBar.fillRect(x - barWidth/2, y + spacing * 2, thirstWidth, barHeight);
+    thirstBar.fillRect(
+      x - barWidth / 2,
+      y + spacing * 2,
+      thirstWidth,
+      barHeight
+    );
 
-    container.add([happinessBg, happinessBar, hungerBg, hungerBar, thirstBg, thirstBar]);
+    container.add([
+      happinessBg,
+      happinessBar,
+      hungerBg,
+      hungerBar,
+      thirstBg,
+      thirstBar,
+    ]);
   }
 
   updateSelection() {
     // Reset all slots
     this.petElements.forEach((element, index) => {
       const pet = element.pet;
-      
+
       if (index === this.selectedPet && pet.unlocked) {
         element.slot.clear();
         element.slot.fillStyle(0x555555, 1);
@@ -229,7 +270,9 @@ export default class PetSelectionScreen extends Phaser.Scene {
       }
 
       // Update selected pet indicator (using selectedPetId)
-      element.selectedIndicator.setVisible(pet.id === this.gameState.selectedPetId);
+      element.selectedIndicator.setVisible(
+        pet.id === this.gameState.selectedPetId
+      );
     });
   }
 
@@ -239,22 +282,25 @@ export default class PetSelectionScreen extends Phaser.Scene {
       this.selectedPet = Math.max(0, this.selectedPet - 1);
       this.updateSelection();
     } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
-      this.selectedPet = Math.min(this.gameState.getAllPets().length - 1, this.selectedPet + 1);
+      this.selectedPet = Math.min(
+        this.gameState.getAllPets().length - 1,
+        this.selectedPet + 1
+      );
       this.updateSelection();
     }
 
     // Handle pet selection
     if (Phaser.Input.Keyboard.JustDown(this.enterKey)) {
       const selectedPetData = this.gameState.getAllPets()[this.selectedPet];
-      
+
       if (selectedPetData && selectedPetData.unlocked) {
         // Use the new setSelectedPet method
         const success = this.gameState.setSelectedPet(selectedPetData.id);
-        
+
         if (success) {
           // Show feedback
           this.showPetSelectedFeedback(selectedPetData);
-          
+
           // Update selection to show new selected pet
           this.updateSelection();
         }
@@ -283,9 +329,10 @@ export default class PetSelectionScreen extends Phaser.Scene {
       targets: feedbackText,
       alpha: 0,
       y: 25,
-      duration: 1500,
+      duration: 500,
       onComplete: () => {
         feedbackText.destroy();
+        this.closePetSelection();
       },
     });
   }

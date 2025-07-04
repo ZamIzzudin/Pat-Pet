@@ -28,7 +28,7 @@ export default class Pet {
 
   createPetSprite() {
     const selectedPet = this.gameState.getSelectedPet();
-    
+
     // Destroy existing sprite if it exists
     if (this.sprite) {
       this.sprite.destroy();
@@ -38,33 +38,32 @@ export default class Pet {
     this.sprite = this.scene.add.sprite(this.x, this.y, selectedPet.sprite);
     this.sprite.setOrigin(0.5);
     this.sprite.setScale(2);
-    
+
     // Update current sprite key
     this.currentSpriteKey = selectedPet.sprite;
   }
 
   updatePetSprite() {
     const newSpriteKey = this.gameState.getSelectedPet().sprite;
-    
     // Only update if sprite actually changed
     if (this.currentSpriteKey !== newSpriteKey) {
       // Stop current animation
       if (this.sprite && this.sprite.anims) {
         this.sprite.anims.stop();
       }
-      
+
       // Create new sprite
       this.createPetSprite();
-      
+
       // Create animations for new sprite
       this.createAllAnimations();
-      
+
       // Start appropriate idle animation
       this.startIdleAnimation();
     }
   }
 
-  getSelectedPetStage(): 'egg' | 'adult' {
+  getSelectedPetStage(): "egg" | "adult" {
     return this.gameState.getSelectedPet().stage;
   }
 
@@ -74,7 +73,7 @@ export default class Pet {
 
   createAllAnimations() {
     const spriteKey = this.getSelectedPetSprite();
-    
+
     // Create egg idle animation
     if (!this.scene.anims.exists(`${spriteKey}-egg-idle`)) {
       this.scene.anims.create({
@@ -97,50 +96,11 @@ export default class Pet {
           end: 23,
         }),
         frameRate: 4,
-        repeat: 2,
+        repeat: -1,
       });
     }
 
     // Create adult animations
-    this.createAdultAnimations();
-  }
-
-  playHatchAnimation() {
-    if (this.isAnimating || this.getSelectedPetStage() === 'adult') return;
-
-    this.isAnimating = true;
-    const spriteKey = this.getSelectedPetSprite();
-
-    // Ensure hatch animation exists
-    this.createAllAnimations();
-
-    this.sprite.anims.play(`${spriteKey}-hatch`, true);
-
-    this.scene.tweens.add({
-      targets: this.sprite,
-      scaleX: 2.2,
-      scaleY: 2.2,
-      duration: 200,
-      yoyo: true,
-      repeat: 2,
-      onComplete: () => {
-        // Change to adult stage after hatching
-        this.gameState.updateSelectedPetStage('adult');
-        
-        // Create adult idle animation if it doesn't exist
-        this.createAdultAnimations();
-        
-        // Start adult idle animation
-        this.sprite.anims.play(`${spriteKey}-idle`, true);
-        this.isAnimating = false;
-      },
-    });
-  }
-
-  createAdultAnimations() {
-    const spriteKey = this.getSelectedPetSprite();
-
-    // Create adult idle animation if it doesn't exist
     if (!this.scene.anims.exists(`${spriteKey}-idle`)) {
       this.scene.anims.create({
         key: `${spriteKey}-idle`,
@@ -158,11 +118,11 @@ export default class Pet {
       this.scene.anims.create({
         key: `${spriteKey}-feed`,
         frames: this.scene.anims.generateFrameNumbers(spriteKey, {
-          start: 36,
-          end: 39,
+          start: 24,
+          end: 35,
         }),
         frameRate: 8,
-        repeat: 2,
+        repeat: -1,
       });
     }
 
@@ -171,11 +131,11 @@ export default class Pet {
       this.scene.anims.create({
         key: `${spriteKey}-drink`,
         frames: this.scene.anims.generateFrameNumbers(spriteKey, {
-          start: 40,
-          end: 43,
+          start: 24,
+          end: 35,
         }),
         frameRate: 6,
-        repeat: 2,
+        repeat: -1,
       });
     }
 
@@ -184,13 +144,42 @@ export default class Pet {
       this.scene.anims.create({
         key: `${spriteKey}-happy`,
         frames: this.scene.anims.generateFrameNumbers(spriteKey, {
-          start: 44,
-          end: 47,
+          start: 24,
+          end: 35,
         }),
         frameRate: 10,
-        repeat: 3,
+        repeat: -1,
       });
     }
+  }
+
+  playHatchAnimation() {
+    if (this.isAnimating || this.getSelectedPetStage() === "adult") return;
+
+    this.isAnimating = true;
+    const spriteKey = this.getSelectedPetSprite();
+
+    // Ensure hatch animation exists
+    this.createAllAnimations();
+
+    this.sprite.anims.play(`${spriteKey}-hatch`, true);
+
+    this.scene.tweens.add({
+      targets: this.sprite,
+      scaleX: 2.2,
+      scaleY: 2.2,
+      duration: 500,
+      yoyo: true,
+      repeat: 2,
+      onComplete: () => {
+        // Change to adult stage after hatching
+        this.gameState.updateSelectedPetStage("adult");
+
+        // Start adult idle animation
+        this.sprite.anims.play(`${spriteKey}-idle`, true);
+        this.isAnimating = false;
+      },
+    });
   }
 
   startIdleAnimation() {
@@ -200,7 +189,7 @@ export default class Pet {
     // Ensure all animations are created
     this.createAllAnimations();
 
-    if (stage === 'egg') {
+    if (stage === "egg") {
       this.sprite.anims.play(`${spriteKey}-egg-idle`, true);
     } else {
       this.sprite.anims.play(`${spriteKey}-idle`, true);
@@ -213,15 +202,12 @@ export default class Pet {
     const spriteKey = this.getSelectedPetSprite();
 
     // If still an egg, trigger hatch instead
-    if (this.getSelectedPetStage() === 'egg') {
+    if (this.getSelectedPetStage() === "egg") {
       this.playHatchAnimation();
       return;
     }
 
     this.isAnimating = true;
-
-    // Ensure animations exist
-    this.createAdultAnimations();
 
     // Play feed animation
     this.sprite.anims.play(`${spriteKey}-feed`, true);
@@ -251,15 +237,12 @@ export default class Pet {
     const spriteKey = this.getSelectedPetSprite();
 
     // If still an egg, trigger hatch instead
-    if (this.getSelectedPetStage() === 'egg') {
+    if (this.getSelectedPetStage() === "egg") {
       this.playHatchAnimation();
       return;
     }
 
     this.isAnimating = true;
-
-    // Ensure animations exist
-    this.createAdultAnimations();
 
     // Play drink animation
     this.sprite.anims.play(`${spriteKey}-drink`, true);
@@ -288,15 +271,12 @@ export default class Pet {
     const spriteKey = this.getSelectedPetSprite();
 
     // If still an egg, trigger hatch instead
-    if (this.getSelectedPetStage() === 'egg') {
+    if (this.getSelectedPetStage() === "egg") {
       this.playHatchAnimation();
       return;
     }
 
     this.isAnimating = true;
-
-    // Ensure animations exist
-    this.createAdultAnimations();
 
     // Play happy animation
     this.sprite.anims.play(`${spriteKey}-happy`, true);
