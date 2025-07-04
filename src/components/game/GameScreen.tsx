@@ -7,7 +7,7 @@ import * as Phaser from "phaser";
 
 import MainScreen from "./screen/MainScreen";
 import HouseScreen from "./screen/HouseScreen";
-import BackpackScreen from "./screen/BackpackScreen";
+import BackpackScreen from "./screen/BackpackScreen.ts";
 import GoalsScreen from "./screen/GoalsScreen";
 import PetScreen from "./screen/PetScreen";
 import Preloader from "./screen/Preloader";
