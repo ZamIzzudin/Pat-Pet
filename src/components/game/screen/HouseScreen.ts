@@ -56,4 +56,11 @@ export default class HouseScreen extends Phaser.Scene {
       this.petButton.handler();
     }
   }
+
+  shutdown() {
+    // Clean up map when scene shuts down
+    if (this.map) {
+      this.map.destroy();
+    }
+  }
 }

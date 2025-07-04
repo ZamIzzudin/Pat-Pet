@@ -4,7 +4,6 @@ import { io, Socket } from "socket.io-client";
 
 export interface Player {
   id: string;
-  username: string;
   position: { x: number; y: number };
   frame: number;
 }
@@ -117,13 +116,6 @@ export class SocketIOClient {
       });
     });
 
-    this.socket.on("player_username_changed", (data) => {
-      this.emit("player_username_changed", {
-        playerId: data.playerId,
-        username: data.username,
-      });
-    });
-
     // Generic message handler for any other events
     this.socket.onAny((event, ...args) => {
       this.emit("message", { type: event, data: args });
@@ -191,12 +183,6 @@ export class SocketIOClient {
     this.send("player_animation", {
       animation,
       frame,
-    });
-  }
-
-  public setUsername(username: string) {
-    this.send("set_username", {
-      username,
     });
   }
 

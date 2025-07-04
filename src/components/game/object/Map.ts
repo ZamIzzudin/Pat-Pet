@@ -2,6 +2,8 @@
 // @ts-nocheck: Object is possibly 'null'.
 
 import Char from "./Char";
+import MultiplayerChar from "./Multiplayer";
+import { SocketIOClient, Player } from "@/lib/ws";
 
 export default class Map {
   scene: Phaser.Scene;
@@ -12,10 +14,21 @@ export default class Map {
   interactionPrompt: Phaser.GameObjects.Text | null;
   spaceKey: Phaser.Input.Keyboard.Key;
 
+  // // Multiplayer properties
+  wsClient: any;
+  // otherPlayers: Map<string, MultiplayerChar>;
+  lastSentPosition: { x: number; y: number } | null;
+  lastSentFrame: number | null;
+
   constructor(scene: Phaser.Scene, mapKey: string) {
     this.scene = scene;
     this.mapKey = mapKey;
     this.interactionPrompt = null;
+
+    // Multiplayer props
+    // this.otherPlayers = new Map();
+    this.lastSentPosition = null;
+    this.lastSentFrame = null;
 
     const map = this.scene.add.image(0, 0, this.mapKey).setOrigin(0);
     this.scene.cameras.main.setBounds(0, 0, map.width, map.height);
@@ -39,6 +52,147 @@ export default class Map {
     this.spaceKey = this.scene.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.SPACE
     );
+
+    // Initialize WebSocket client
+    this.initializeMultiplayer();
+  }
+
+  initializeMultiplayer() {
+    this.wsClient = new SocketIOClient();
+
+    // Set up event listeners
+    this.wsClient.on("room_state", (players: Player[]) => {
+      this.handleRoomState(players);
+    });
+
+    this.wsClient.on("player_joined", (player: Player) => {
+      this.addOtherPlayer(player);
+    });
+
+    this.wsClient.on("player_left", (playerId: string) => {
+      this.removeOtherPlayer(playerId);
+    });
+
+    this.wsClient.on(
+      "player_moved",
+      (data: {
+        playerId: string;
+        position: { x: number; y: number };
+        frame: number;
+      }) => {
+        this.updateOtherPlayerPosition(
+          data.playerId,
+          data.position,
+          data.frame
+        );
+      }
+    );
+
+    this.wsClient.on(
+      "player_animation",
+      (data: { playerId: string; animation: string; frame: number }) => {
+        this.playOtherPlayerAnimation(data.playerId, data.animation);
+      }
+    );
+
+    // Join the current room
+    const roomId = this.getSceneKey();
+    this.wsClient.joinRoom(roomId, {
+      x: this.player.coordinate.x,
+      y: this.player.coordinate.y,
+    });
+  }
+
+  getSceneKey(): string {
+    if (this.mapKey === "Island") return "Main_Screen";
+    if (this.mapKey === "House") return "House_Screen";
+    return this.scene.scene.key;
+  }
+
+  handleRoomState(players: Player[]) {
+    // Clear existing other players
+    this.otherPlayers.forEach((player) => player.destroy());
+    this.otherPlayers.clear();
+
+    // Add all players except self
+    players.forEach((player) => {
+      if (player.id !== this.wsClient.getClientId()) {
+        this.addOtherPlayer(player);
+      }
+    });
+  }
+
+  addOtherPlayer(player: Player) {
+    if (this.otherPlayers.has(player.id)) return;
+
+    const otherPlayer = new MultiplayerChar(
+      this.scene,
+      player.position.x,
+      player.position.y,
+      "player",
+      player.frame,
+      player.id,
+      player.username
+    );
+
+    this.otherPlayers.set(player.id, otherPlayer);
+    console.log(`Added player: ${player.username} (${player.id})`);
+  }
+
+  removeOtherPlayer(playerId: string) {
+    const player = this.otherPlayers.get(playerId);
+    if (player) {
+      player.destroy();
+      this.otherPlayers.delete(playerId);
+      console.log(`Removed player: ${playerId}`);
+    }
+  }
+
+  updateOtherPlayerPosition(
+    playerId: string,
+    position: { x: number; y: number },
+    frame: number
+  ) {
+    const player = this.otherPlayers.get(playerId);
+    if (player) {
+      player.updatePosition(position.x, position.y, frame);
+    }
+  }
+
+  playOtherPlayerAnimation(playerId: string, animation: string) {
+    const player = this.otherPlayers.get(playerId);
+    if (player) {
+      player.playAnimation(animation);
+    }
+  }
+
+  updateOtherPlayerUsername(playerId: string, username: string) {
+    const player = this.otherPlayers.get(playerId);
+    if (player) {
+      player.updateUsername(username);
+    }
+  }
+
+  sendPlayerUpdate() {
+    if (!this.wsClient.isConnected()) return;
+
+    const currentPosition = {
+      x: this.player.coordinate.x,
+      y: this.player.coordinate.y,
+    };
+    const currentFrame = this.player.sprite.frame.name;
+
+    // Only send update if position or frame changed
+    if (
+      !this.lastSentPosition ||
+      this.lastSentPosition.x !== currentPosition.x ||
+      this.lastSentPosition.y !== currentPosition.y ||
+      this.lastSentFrame !== currentFrame
+    ) {
+      this.wsClient.sendPlayerMove(currentPosition, currentFrame);
+      this.lastSentPosition = { ...currentPosition };
+      this.lastSentFrame = currentFrame;
+    }
   }
 
   setupMapBoundaries() {
