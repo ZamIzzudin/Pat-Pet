@@ -4,8 +4,11 @@ import { io, Socket } from "socket.io-client";
 
 export interface Player {
   id: string;
+  socketId: string;
+  username: string;
   position: { x: number; y: number };
   frame: number;
+  joinedAt?: string;
 }
 
 export interface SocketMessage {
@@ -20,12 +23,21 @@ export class SocketIOClient {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private messageHandlers: Map<string, Function[]> = new Map();
+  private isInitialized = false;
 
   constructor(private url: string = "http://localhost:3001") {
-    this.connect();
+    if (!this.isInitialized) {
+      this.connect();
+      this.isInitialized = true;
+    }
   }
 
   private connect() {
+    if (this.socket && this.socket.connected) {
+      console.log("Socket already connected");
+      return;
+    }
+
     try {
       this.socket = io(this.url, {
         autoConnect: true,
@@ -35,6 +47,7 @@ export class SocketIOClient {
         reconnectionDelayMax: 5000,
         timeout: 20000,
         transports: ["websocket", "polling"],
+        forceNew: false, // Prevent creating multiple connections
       });
 
       this.setupEventHandlers();
@@ -47,6 +60,9 @@ export class SocketIOClient {
   private setupEventHandlers() {
     if (!this.socket) return;
 
+    // Remove existing listeners to prevent duplicates
+    this.socket.removeAllListeners();
+
     this.socket.on("connect", () => {
       console.log("Connected to Socket.IO server");
       this.reconnectAttempts = 0;
@@ -54,9 +70,15 @@ export class SocketIOClient {
       this.emit("connected");
     });
 
+    this.socket.on("connected", (data: any) => {
+      console.log("Server welcome message:", data);
+      this.clientId = data.clientId || this.socket!.id;
+      this.emit("connected", data);
+    });
+
     this.socket.on("disconnect", (reason) => {
       console.log("Socket.IO connection disconnected:", reason);
-      this.emit("disconnected");
+      this.emit("disconnected", reason);
     });
 
     this.socket.on("connect_error", (error) => {
@@ -88,37 +110,42 @@ export class SocketIOClient {
     });
 
     // Game-specific events
-    this.socket.on("room_state", (players) => {
-      this.emit("room_state", players);
+    this.socket.on("room_state", (data: any) => {
+      console.log("Room state received:", data);
+      this.emit("room_state", data);
     });
 
-    this.socket.on("player_joined", (player) => {
-      this.emit("player_joined", player);
+    this.socket.on("player_joined", (data: any) => {
+      console.log("Player joined:", data);
+      this.emit("player_joined", data);
     });
 
-    this.socket.on("player_left", (playerId) => {
-      this.emit("player_left", playerId);
+    this.socket.on("player_left", (data: any) => {
+      console.log("Player left:", data);
+      this.emit("player_left", data);
     });
 
-    this.socket.on("player_moved", (data) => {
-      this.emit("player_moved", {
-        playerId: data.playerId,
-        position: data.position,
-        frame: data.frame,
-      });
+    this.socket.on("player_moved", (data: any) => {
+      this.emit("player_moved", data);
     });
 
-    this.socket.on("player_animation", (data) => {
-      this.emit("player_animation", {
-        playerId: data.playerId,
-        animation: data.animation,
-        frame: data.frame,
-      });
+    this.socket.on("player_animation", (data: any) => {
+      this.emit("player_animation", data);
     });
 
-    // Generic message handler for any other events
-    this.socket.onAny((event, ...args) => {
-      this.emit("message", { type: event, data: args });
+    this.socket.on("room_update", (data: any) => {
+      console.log("Room update:", data);
+      this.emit("room_update", data);
+    });
+
+    this.socket.on("error", (error: any) => {
+      console.error("Server error:", error);
+      this.emit("error", error);
+    });
+
+    this.socket.on("server_shutdown", (data: any) => {
+      console.log("Server shutting down:", data);
+      this.emit("server_shutdown", data);
     });
   }
 
@@ -129,7 +156,13 @@ export class SocketIOClient {
     this.messageHandlers.get(event)!.push(handler);
   }
 
-  public off(event: string, handler: Function) {
+  public off(event: string, handler?: Function) {
+    if (!handler) {
+      // Remove all handlers for this event
+      this.messageHandlers.delete(event);
+      return;
+    }
+
     const handlers = this.messageHandlers.get(event);
     if (handlers) {
       const index = handlers.indexOf(handler);
@@ -142,7 +175,13 @@ export class SocketIOClient {
   private emit(event: string, data?: any) {
     const handlers = this.messageHandlers.get(event);
     if (handlers) {
-      handlers.forEach((handler) => handler(data));
+      handlers.forEach((handler) => {
+        try {
+          handler(data);
+        } catch (error) {
+          console.error(`Error in event handler for ${event}:`, error);
+        }
+      });
     }
   }
 
@@ -158,16 +197,23 @@ export class SocketIOClient {
   }
 
   public joinRoom(roomId: string, position?: { x: number; y: number }) {
+    if (this.currentRoom === roomId) {
+      console.log(`Already in room: ${roomId}`);
+      return;
+    }
+
     this.currentRoom = roomId;
     this.send("join_room", {
       roomId,
-      position,
+      position: position || { x: 192, y: 160 },
     });
+    console.log(`Joining room: ${roomId}`);
   }
 
   public leaveRoom() {
     if (this.currentRoom) {
       this.send("leave_room");
+      console.log(`Leaving room: ${this.currentRoom}`);
       this.currentRoom = null;
     }
   }
@@ -202,10 +248,10 @@ export class SocketIOClient {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
+      this.isInitialized = false;
     }
   }
 
-  // Additional Socket.IO specific methods
   public forceReconnect() {
     if (this.socket) {
       this.socket.disconnect();
@@ -226,4 +272,12 @@ export function getSocketIOClient(): SocketIOClient {
     socketClient = new SocketIOClient();
   }
   return socketClient;
+}
+
+// Clean up function for when component unmounts
+export function cleanupSocketIOClient() {
+  if (socketClient) {
+    socketClient.disconnect();
+    socketClient = null;
+  }
 }

@@ -1,7 +1,5 @@
 /** @format */
 
-// import GridParse from "../utils/GridParse";
-
 export default class MultiplayerChar {
   scene: Phaser.Scene;
   sprite: Phaser.GameObjects.Sprite;
@@ -11,6 +9,7 @@ export default class MultiplayerChar {
   key: string;
   playerId: string;
   username: string;
+  isDestroyed: boolean;
 
   constructor(
     scene: Phaser.Scene,
@@ -27,24 +26,32 @@ export default class MultiplayerChar {
     this.key = key;
     this.playerId = playerId;
     this.username = username;
+    this.isDestroyed = false;
 
-    // Create sprite
-    this.sprite = this.scene.add.sprite(x, y, this.key, frame);
-    this.sprite.setOrigin(0, 0);
-    this.sprite.setTint(this.generatePlayerColor(playerId)); // Different color for each player
+    try {
+      // Create sprite
+      this.sprite = this.scene.add.sprite(x, y, this.key, frame);
+      this.sprite.setOrigin(0, 0);
+      this.sprite.setTint(this.generatePlayerColor(playerId));
 
-    // Create username text above the character
-    this.nameText = this.scene.add.text(x + 24, y - 10, username, {
-      fontSize: "8px",
-      color: "#ffffff",
-      fontFamily: "CustomFont, Arial",
-      backgroundColor: "#000000",
-      padding: { x: 2, y: 1 },
-    });
-    this.nameText.setOrigin(0.5, 1);
+      // Create username text above the character
+      this.nameText = this.scene.add.text(x + 24, y - 10, username, {
+        fontSize: "8px",
+        color: "#ffffff",
+        fontFamily: "CustomFont, Arial",
+        backgroundColor: "#000000",
+        padding: { x: 2, y: 1 },
+      });
+      this.nameText.setOrigin(0.5, 1);
+    } catch (error) {
+      console.error("Failed to create multiplayer character:", error);
+      this.isDestroyed = true;
+    }
   }
 
   private generatePlayerColor(playerId: string): number {
+    if (!playerId) return 0xffffff;
+    
     // Generate a consistent color based on player ID
     let hash = 0;
     for (let i = 0; i < playerId.length; i++) {
@@ -64,45 +71,83 @@ export default class MultiplayerChar {
   }
 
   updatePosition(x: number, y: number, frame: number) {
-    if (this.isMoving) return;
+    if (this.isDestroyed || this.isMoving) return;
 
-    this.isMoving = true;
-    this.coordinate = { x, y };
+    try {
+      this.isMoving = true;
+      this.coordinate = { x, y };
 
-    // Smooth movement to new position
-    this.scene.tweens.add({
-      targets: [this.sprite, this.nameText],
-      x: [this.sprite.x, x, this.nameText.x, x + 24],
-      y: [this.sprite.y, y, this.nameText.y, y - 10],
-      duration: 250,
-      onComplete: () => {
-        this.isMoving = false;
-        this.sprite.setFrame(frame);
-      },
-    });
+      // Smooth movement to new position
+      this.scene.tweens.add({
+        targets: [this.sprite, this.nameText],
+        x: [this.sprite.x, x, this.nameText.x, x + 24],
+        y: [this.sprite.y, y, this.nameText.y, y - 10],
+        duration: 250,
+        onComplete: () => {
+          if (!this.isDestroyed) {
+            this.isMoving = false;
+            if (this.sprite && typeof frame !== 'undefined') {
+              this.sprite.setFrame(frame);
+            }
+          }
+        },
+      });
+    } catch (error) {
+      console.error("Failed to update player position:", error);
+      this.isMoving = false;
+    }
   }
 
   playAnimation(animationKey: string) {
-    if (this.sprite.anims.exists(animationKey)) {
-      this.sprite.anims.play(animationKey, true);
+    if (this.isDestroyed || !this.sprite) return;
+    
+    try {
+      if (this.sprite.anims && this.sprite.anims.exists(animationKey)) {
+        this.sprite.anims.play(animationKey, true);
+      }
+    } catch (error) {
+      console.error("Failed to play animation:", error);
     }
   }
 
   setFrame(frame: number) {
-    this.sprite.setFrame(frame);
+    if (this.isDestroyed || !this.sprite) return;
+    
+    try {
+      this.sprite.setFrame(frame);
+    } catch (error) {
+      console.error("Failed to set frame:", error);
+    }
   }
 
   updateUsername(newUsername: string) {
-    this.username = newUsername;
-    this.nameText.setText(newUsername);
+    if (this.isDestroyed || !this.nameText) return;
+    
+    try {
+      this.username = newUsername;
+      this.nameText.setText(newUsername);
+    } catch (error) {
+      console.error("Failed to update username:", error);
+    }
   }
 
   destroy() {
-    if (this.sprite) {
-      this.sprite.destroy();
-    }
-    if (this.nameText) {
-      this.nameText.destroy();
+    if (this.isDestroyed) return;
+    
+    try {
+      this.isDestroyed = true;
+      
+      if (this.sprite) {
+        this.sprite.destroy();
+        this.sprite = null;
+      }
+      
+      if (this.nameText) {
+        this.nameText.destroy();
+        this.nameText = null;
+      }
+    } catch (error) {
+      console.error("Failed to destroy multiplayer character:", error);
     }
   }
 }

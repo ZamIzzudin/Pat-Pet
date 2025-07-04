@@ -26,14 +26,17 @@ export default class Map {
     this.mapKey = mapKey;
     this.interactionPrompt = null;
 
-    // Multiplayer props
-    this.otherPlayers = new Map();
+    // Initialize multiplayer properties FIRST
+    this.otherPlayers = new Map<string, MultiplayerChar>();
     this.lastSentPosition = null;
     this.lastSentFrame = null;
+    this.currentRoomId = "";
 
+    // Create map display
     const map = this.scene.add.image(0, 0, this.mapKey).setOrigin(0);
     this.scene.cameras.main.setBounds(0, 0, map.width, map.height);
 
+    // Initialize boundaries
     this.boundaries = {
       minX: 0,
       maxX: 0,
@@ -44,20 +47,20 @@ export default class Map {
     // Set boundaries based on map
     this.setupMapBoundaries();
 
+    // Create player character
     this.player = new Char(this.scene, 12, 10, "player", 0);
     this.player.centeredCamera();
 
-    // Add space key for interactions
+    // Add keyboard controls
     this.spaceKey = this.scene.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.SPACE
     );
 
-    // Add map selection key (M key)
     this.mapSelectionKey = this.scene.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.M
     );
 
-    // Initialize WebSocket client
+    // Initialize multiplayer AFTER everything else is set up
     this.initializeMultiplayer();
 
     // Show map selection prompt
@@ -65,9 +68,43 @@ export default class Map {
   }
 
   initializeMultiplayer() {
-    this.wsClient = getSocketIOClient();
+    try {
+      // Get existing WebSocket client (don't create new one)
+      this.wsClient = getSocketIOClient();
 
-    // Set up event listeners
+      // Clear any existing event listeners to prevent duplicates
+      this.clearMultiplayerEvents();
+
+      // Set up event listeners
+      this.setupMultiplayerEvents();
+
+      // Join the current room
+      this.currentRoomId = this.getSceneKey();
+      this.wsClient.joinRoom(this.currentRoomId, {
+        x: this.player.coordinate.x,
+        y: this.player.coordinate.y,
+      });
+
+      console.log(`Joined room: ${this.currentRoomId}`);
+    } catch (error) {
+      console.error("Failed to initialize multiplayer:", error);
+    }
+  }
+
+  clearMultiplayerEvents() {
+    // Remove existing event listeners to prevent memory leaks
+    if (this.wsClient) {
+      this.wsClient.off("room_state");
+      this.wsClient.off("player_joined");
+      this.wsClient.off("player_left");
+      this.wsClient.off("player_moved");
+      this.wsClient.off("player_animation");
+    }
+  }
+
+  setupMultiplayerEvents() {
+    if (!this.wsClient) return;
+
     this.wsClient.on("room_state", (data: any) => {
       this.handleRoomState(data.players);
     });
@@ -101,13 +138,6 @@ export default class Map {
         this.playOtherPlayerAnimation(data.playerId, data.animation);
       }
     );
-
-    // Join the current room
-    this.currentRoomId = this.getSceneKey();
-    this.wsClient.joinRoom(this.currentRoomId, {
-      x: this.player.coordinate.x,
-      y: this.player.coordinate.y,
-    });
   }
 
   getSceneKey(): string {
@@ -118,8 +148,7 @@ export default class Map {
 
   handleRoomState(players: Player[]) {
     // Clear existing other players
-    this.otherPlayers.forEach((player) => player.destroy());
-    this.otherPlayers.clear();
+    this.clearOtherPlayers();
 
     // Add all players except self
     players.forEach((player) => {
@@ -129,29 +158,53 @@ export default class Map {
     });
   }
 
+  clearOtherPlayers() {
+    this.otherPlayers.forEach((player) => {
+      if (player && typeof player.destroy === 'function') {
+        player.destroy();
+      }
+    });
+    this.otherPlayers.clear();
+  }
+
   addOtherPlayer(player: Player) {
+    if (!player || !player.id) return;
+    
+    // Don't add if already exists
     if (this.otherPlayers.has(player.id)) return;
 
-    const otherPlayer = new MultiplayerChar(
-      this.scene,
-      player.position.x,
-      player.position.y,
-      "player",
-      player.frame,
-      player.id,
-      player.username
-    );
+    try {
+      const otherPlayer = new MultiplayerChar(
+        this.scene,
+        player.position.x,
+        player.position.y,
+        "player",
+        player.frame,
+        player.id,
+        player.username
+      );
 
-    this.otherPlayers.set(player.id, otherPlayer);
-    console.log(`Added player: ${player.username} (${player.id})`);
+      this.otherPlayers.set(player.id, otherPlayer);
+      console.log(`Added player: ${player.username} (${player.id})`);
+    } catch (error) {
+      console.error("Failed to add other player:", error);
+    }
   }
 
   removeOtherPlayer(playerId: string) {
+    if (!playerId) return;
+    
     const player = this.otherPlayers.get(playerId);
     if (player) {
-      player.destroy();
-      this.otherPlayers.delete(playerId);
-      console.log(`Removed player: ${playerId}`);
+      try {
+        if (typeof player.destroy === 'function') {
+          player.destroy();
+        }
+        this.otherPlayers.delete(playerId);
+        console.log(`Removed player: ${playerId}`);
+      } catch (error) {
+        console.error("Failed to remove player:", error);
+      }
     }
   }
 
@@ -160,57 +213,71 @@ export default class Map {
     position: { x: number; y: number },
     frame: number
   ) {
+    if (!playerId || !position) return;
+    
     const player = this.otherPlayers.get(playerId);
-    if (player) {
-      player.updatePosition(position.x, position.y, frame);
+    if (player && typeof player.updatePosition === 'function') {
+      try {
+        player.updatePosition(position.x, position.y, frame);
+      } catch (error) {
+        console.error("Failed to update player position:", error);
+      }
     }
   }
 
   playOtherPlayerAnimation(playerId: string, animation: string) {
+    if (!playerId || !animation) return;
+    
     const player = this.otherPlayers.get(playerId);
-    if (player) {
-      player.playAnimation(animation);
+    if (player && typeof player.playAnimation === 'function') {
+      try {
+        player.playAnimation(animation);
+      } catch (error) {
+        console.error("Failed to play player animation:", error);
+      }
     }
   }
 
   sendPlayerUpdate() {
-    if (!this.wsClient.isConnected()) return;
+    if (!this.wsClient || !this.wsClient.isConnected()) return;
 
-    const currentPosition = {
-      x: this.player.coordinate.x,
-      y: this.player.coordinate.y,
-    };
-    const currentFrame = this.player.sprite.frame.name;
+    try {
+      const currentPosition = {
+        x: this.player.coordinate.x,
+        y: this.player.coordinate.y,
+      };
+      const currentFrame = this.player.sprite.frame.name;
 
-    // Only send update if position or frame changed
-    if (
-      !this.lastSentPosition ||
-      this.lastSentPosition.x !== currentPosition.x ||
-      this.lastSentPosition.y !== currentPosition.y ||
-      this.lastSentFrame !== currentFrame
-    ) {
-      this.wsClient.sendPlayerMove(currentPosition, currentFrame);
-      this.lastSentPosition = { ...currentPosition };
-      this.lastSentFrame = currentFrame;
+      // Only send update if position or frame changed
+      if (
+        !this.lastSentPosition ||
+        this.lastSentPosition.x !== currentPosition.x ||
+        this.lastSentPosition.y !== currentPosition.y ||
+        this.lastSentFrame !== currentFrame
+      ) {
+        this.wsClient.sendPlayerMove(currentPosition, currentFrame);
+        this.lastSentPosition = { ...currentPosition };
+        this.lastSentFrame = currentFrame;
+      }
+    } catch (error) {
+      console.error("Failed to send player update:", error);
     }
   }
 
   setupMapBoundaries() {
     if (this.mapKey === "Island") {
-      // Island boundaries (adjust based on your island image size)
       this.boundaries = {
         minX: 8,
-        maxX: 15, // Adjust based on island width
+        maxX: 15,
         minY: 10,
-        maxY: 14, // Adjust based on island height
+        maxY: 14,
       };
     } else if (this.mapKey === "House") {
-      // House/Room boundaries
       this.boundaries = {
         minX: 1,
-        maxX: 7, // Adjust based on room width
+        maxX: 7,
         minY: 2,
-        maxY: 9, // Adjust based on room height
+        maxY: 9,
       };
     }
   }
@@ -252,7 +319,7 @@ export default class Map {
   }
 
   moveChar(cursors: Phaser.Types.Input.Keyboard.CursorKeys) {
-    if (this.player.isMoving) return;
+    if (!this.player || this.player.isMoving) return;
 
     let targetX = this.player.coordinate.x;
     let targetY = this.player.coordinate.y;
@@ -295,45 +362,61 @@ export default class Map {
   }
 
   returnToMapSelection() {
-    // Leave current room
-    this.wsClient.leaveRoom();
-    
-    // Show transition message
-    const transitionText = this.scene.add.text(
-      175,
-      96,
-      "Returning to map selection...",
-      {
-        fontSize: "12px",
-        color: "#4caf50",
-        fontFamily: "CustomFont, Arial",
-        fontStyle: "bold",
-        backgroundColor: "#000000",
-        padding: { x: 8, y: 4 },
+    try {
+      // Leave current room
+      if (this.wsClient) {
+        this.wsClient.leaveRoom();
       }
-    );
-    transitionText.setOrigin(0.5);
-    transitionText.setScrollFactor(0);
+      
+      // Show transition message
+      const transitionText = this.scene.add.text(
+        175,
+        96,
+        "Returning to map selection...",
+        {
+          fontSize: "12px",
+          color: "#4caf50",
+          fontFamily: "CustomFont, Arial",
+          fontStyle: "bold",
+          backgroundColor: "#000000",
+          padding: { x: 8, y: 4 },
+        }
+      );
+      transitionText.setOrigin(0.5);
+      transitionText.setScrollFactor(0);
 
-    // Transition to map selection after a short delay
-    this.scene.time.delayedCall(1000, () => {
+      // Transition to map selection after a short delay
+      this.scene.time.delayedCall(1000, () => {
+        this.scene.start("Map_Selection_Screen");
+      });
+    } catch (error) {
+      console.error("Failed to return to map selection:", error);
+      // Fallback: direct scene transition
       this.scene.start("Map_Selection_Screen");
-    });
+    }
   }
 
   destroy() {
-    // Clean up multiplayer
-    if (this.wsClient) {
-      this.wsClient.leaveRoom();
-    }
+    try {
+      // Clean up multiplayer
+      this.clearMultiplayerEvents();
+      
+      if (this.wsClient) {
+        this.wsClient.leaveRoom();
+      }
 
-    // Clean up other players
-    this.otherPlayers.forEach((player) => player.destroy());
-    this.otherPlayers.clear();
+      // Clean up other players
+      this.clearOtherPlayers();
 
-    // Clean up UI elements
-    if (this.interactionPrompt) {
-      this.interactionPrompt.destroy();
+      // Clean up UI elements
+      if (this.interactionPrompt) {
+        this.interactionPrompt.destroy();
+        this.interactionPrompt = null;
+      }
+
+      console.log("Map destroyed successfully");
+    } catch (error) {
+      console.error("Error during map destruction:", error);
     }
   }
 }
