@@ -70,6 +70,7 @@ export default class Preloader extends Phaser.Scene {
 
   create() {
     MoveAnimation(this, "player");
-    this.scene.start("Main_Screen");
+    // Start with map selection instead of directly going to Main_Screen
+    this.scene.start("Map_Selection_Screen");
   }
 }

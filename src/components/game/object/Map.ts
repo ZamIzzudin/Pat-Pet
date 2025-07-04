@@ -3,22 +3,23 @@
 
 import Char from "./Char";
 import MultiplayerChar from "./Multiplayer";
-import { SocketIOClient, Player } from "@/lib/ws";
+import { getSocketIOClient, Player } from "@/lib/ws";
 
 export default class Map {
   scene: Phaser.Scene;
   player: Char;
   mapKey: string;
   boundaries: { minX: number; maxX: number; minY: number; maxY: number };
-  doorTiles: Array<{ x: number; y: number; targetScene: string }>;
   interactionPrompt: Phaser.GameObjects.Text | null;
   spaceKey: Phaser.Input.Keyboard.Key;
+  mapSelectionKey: Phaser.Input.Keyboard.Key;
 
-  // // Multiplayer properties
+  // Multiplayer properties
   wsClient: any;
-  // otherPlayers: Map<string, MultiplayerChar>;
+  otherPlayers: Map<string, MultiplayerChar>;
   lastSentPosition: { x: number; y: number } | null;
   lastSentFrame: number | null;
+  currentRoomId: string;
 
   constructor(scene: Phaser.Scene, mapKey: string) {
     this.scene = scene;
@@ -26,14 +27,13 @@ export default class Map {
     this.interactionPrompt = null;
 
     // Multiplayer props
-    // this.otherPlayers = new Map();
+    this.otherPlayers = new Map();
     this.lastSentPosition = null;
     this.lastSentFrame = null;
 
     const map = this.scene.add.image(0, 0, this.mapKey).setOrigin(0);
     this.scene.cameras.main.setBounds(0, 0, map.width, map.height);
 
-    this.doorTiles = [];
     this.boundaries = {
       minX: 0,
       maxX: 0,
@@ -41,9 +41,8 @@ export default class Map {
       maxY: 0,
     };
 
-    // Set boundaries and door tiles based on map
+    // Set boundaries based on map
     this.setupMapBoundaries();
-    this.setupDoorTiles();
 
     this.player = new Char(this.scene, 12, 10, "player", 0);
     this.player.centeredCamera();
@@ -53,24 +52,32 @@ export default class Map {
       Phaser.Input.Keyboard.KeyCodes.SPACE
     );
 
+    // Add map selection key (M key)
+    this.mapSelectionKey = this.scene.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.M
+    );
+
     // Initialize WebSocket client
     this.initializeMultiplayer();
+
+    // Show map selection prompt
+    this.showMapSelectionPrompt();
   }
 
   initializeMultiplayer() {
-    this.wsClient = new SocketIOClient();
+    this.wsClient = getSocketIOClient();
 
     // Set up event listeners
-    this.wsClient.on("room_state", (players: Player[]) => {
-      this.handleRoomState(players);
+    this.wsClient.on("room_state", (data: any) => {
+      this.handleRoomState(data.players);
     });
 
-    this.wsClient.on("player_joined", (player: Player) => {
-      this.addOtherPlayer(player);
+    this.wsClient.on("player_joined", (data: any) => {
+      this.addOtherPlayer(data.player);
     });
 
-    this.wsClient.on("player_left", (playerId: string) => {
-      this.removeOtherPlayer(playerId);
+    this.wsClient.on("player_left", (data: any) => {
+      this.removeOtherPlayer(data.playerId);
     });
 
     this.wsClient.on(
@@ -96,8 +103,8 @@ export default class Map {
     );
 
     // Join the current room
-    const roomId = this.getSceneKey();
-    this.wsClient.joinRoom(roomId, {
+    this.currentRoomId = this.getSceneKey();
+    this.wsClient.joinRoom(this.currentRoomId, {
       x: this.player.coordinate.x,
       y: this.player.coordinate.y,
     });
@@ -166,13 +173,6 @@ export default class Map {
     }
   }
 
-  updateOtherPlayerUsername(playerId: string, username: string) {
-    const player = this.otherPlayers.get(playerId);
-    if (player) {
-      player.updateUsername(username);
-    }
-  }
-
   sendPlayerUpdate() {
     if (!this.wsClient.isConnected()) return;
 
@@ -215,18 +215,6 @@ export default class Map {
     }
   }
 
-  setupDoorTiles() {
-    this.doorTiles = [];
-
-    if (this.mapKey === "Island") {
-      // Door tile to enter house (adjust coordinates based on your house position)
-      this.doorTiles.push({ x: 12, y: 10, targetScene: "House_Screen" });
-    } else if (this.mapKey === "House") {
-      // Door tile to exit house back to island
-      this.doorTiles.push({ x: 4, y: 9, targetScene: "Main_Screen" });
-    }
-  }
-
   checkBoundaries(newX: number, newY: number): boolean {
     const gridX = Math.floor((newX + 8) / 16);
     const gridY = Math.floor((newY + 18) / 16);
@@ -239,55 +227,28 @@ export default class Map {
     );
   }
 
-  checkDoorTile(x: number, y: number): string | null {
-    const gridX = Math.floor((x + 8) / 16);
-    const gridY = Math.floor((y + 18) / 16);
-
-    for (const door of this.doorTiles) {
-      if (door.x === gridX && door.y === gridY) {
-        return door.targetScene;
+  showMapSelectionPrompt() {
+    const prompt = this.scene.add.text(
+      175,
+      20,
+      "Press M to select map",
+      {
+        fontSize: "10px",
+        color: "#ffffff",
+        fontFamily: "CustomFont, Arial",
+        backgroundColor: "#000000",
+        padding: { x: 4, y: 2 },
       }
-    }
-    return null;
-  }
+    );
+    prompt.setOrigin(0.5);
+    prompt.setScrollFactor(0);
 
-  checkNearDoorTile(x: number, y: number): boolean {
-    const gridX = Math.floor((x + 8) / 16);
-    const gridY = Math.floor((y + 18) / 16);
-
-    for (const door of this.doorTiles) {
-      const distance = Math.abs(door.x - gridX) + Math.abs(door.y - gridY);
-      if (distance <= 0.5) {
-        return true;
+    // Auto-hide after 3 seconds
+    this.scene.time.delayedCall(3000, () => {
+      if (prompt) {
+        prompt.destroy();
       }
-    }
-    return false;
-  }
-
-  showInteractionPrompt() {
-    if (!this.interactionPrompt) {
-      this.interactionPrompt = this.scene.add.text(
-        175,
-        180,
-        "Press SPACE to enter",
-        {
-          fontSize: "10px",
-          color: "#ffffff",
-          fontFamily: "Arial",
-          backgroundColor: "#000000",
-          padding: { x: 4, y: 2 },
-        }
-      );
-      this.interactionPrompt.setOrigin(0.5);
-      this.interactionPrompt.setScrollFactor(0);
-    }
-  }
-
-  hideInteractionPrompt() {
-    if (this.interactionPrompt) {
-      this.interactionPrompt.destroy();
-      this.interactionPrompt = null;
-    }
+    });
   }
 
   moveChar(cursors: Phaser.Types.Input.Keyboard.CursorKeys) {
@@ -322,27 +283,57 @@ export default class Map {
       } else if (direction === "down") {
         this.player.moveToTile("y", 1, "down");
       }
+
+      // Send movement update to server
+      this.sendPlayerUpdate();
     }
 
-    // Check if near door tile and show/hide prompt
-    if (
-      this.checkNearDoorTile(this.player.coordinate.x, this.player.coordinate.y)
-    ) {
-      this.showInteractionPrompt();
-    } else {
-      this.hideInteractionPrompt();
+    // Handle map selection key
+    if (Phaser.Input.Keyboard.JustDown(this.mapSelectionKey)) {
+      this.returnToMapSelection();
     }
+  }
 
-    // Handle space key for door interaction
-    if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
-      const targetScene = this.checkDoorTile(
-        this.player.coordinate.x,
-        this.player.coordinate.y
-      );
-      if (targetScene) {
-        this.hideInteractionPrompt();
-        this.scene.scene.start(targetScene);
+  returnToMapSelection() {
+    // Leave current room
+    this.wsClient.leaveRoom();
+    
+    // Show transition message
+    const transitionText = this.scene.add.text(
+      175,
+      96,
+      "Returning to map selection...",
+      {
+        fontSize: "12px",
+        color: "#4caf50",
+        fontFamily: "CustomFont, Arial",
+        fontStyle: "bold",
+        backgroundColor: "#000000",
+        padding: { x: 8, y: 4 },
       }
+    );
+    transitionText.setOrigin(0.5);
+    transitionText.setScrollFactor(0);
+
+    // Transition to map selection after a short delay
+    this.scene.time.delayedCall(1000, () => {
+      this.scene.start("Map_Selection_Screen");
+    });
+  }
+
+  destroy() {
+    // Clean up multiplayer
+    if (this.wsClient) {
+      this.wsClient.leaveRoom();
+    }
+
+    // Clean up other players
+    this.otherPlayers.forEach((player) => player.destroy());
+    this.otherPlayers.clear();
+
+    // Clean up UI elements
+    if (this.interactionPrompt) {
+      this.interactionPrompt.destroy();
     }
   }
 }

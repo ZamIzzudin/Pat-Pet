@@ -3,7 +3,6 @@
 
 import * as Phaser from "phaser";
 import Map from "../object/Map";
-
 import Button from "../ui/Button";
 
 export default class MainScreen extends Phaser.Scene {
