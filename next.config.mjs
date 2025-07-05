@@ -25,6 +25,44 @@ const nextConfig = {
   experimental: {
     esmExternals: false,
   },
+  images: {
+    remotePatterns: [
+      // Your specific Pinata gateway
+      {
+        protocol: 'https',
+        hostname: 'emerald-quiet-bobcat-167.mypinata.cloud',
+        port: '',
+        pathname: '/ipfs/**',
+      },
+      // General Pinata gateway
+      {
+        protocol: 'https',
+        hostname: 'gateway.pinata.cloud',
+        port: '',
+        pathname: '/ipfs/**',
+      },
+      // All Pinata custom gateways (wildcard)
+      {
+        protocol: 'https',
+        hostname: '*.mypinata.cloud',
+        port: '',
+        pathname: '/ipfs/**',
+      },
+      // Other common IPFS gateways (optional)
+      {
+        protocol: 'https',
+        hostname: 'ipfs.io',
+        port: '',
+        pathname: '/ipfs/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cloudflare-ipfs.com',
+        port: '',
+        pathname: '/ipfs/**',
+      },
+    ],
+  },
 };
 
 export default nextConfig;

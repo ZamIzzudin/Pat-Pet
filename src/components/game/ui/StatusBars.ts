@@ -161,7 +161,7 @@ export default class StatusBars {
     const selectedPet = this.gameState.getSelectedPet();
     const stats = selectedPet.stats;
 
-    console.log("StatusBars: Updating with selected pet", selectedPet);
+    // console.log('StatusBars: Updating with selected pet', selectedPet);
 
     // Update pet name
     this.petNameText.setText(selectedPet.name);
