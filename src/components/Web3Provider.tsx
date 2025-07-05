@@ -2,14 +2,15 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useAccount, useDisconnect } from 'wagmi';
 import { EventBus, GAME_EVENTS, WalletData, PetData, Web3GameData } from '@/lib/eventBus';
+import toast from 'react-hot-toast';
 
 interface Web3ContextType {
   wallet: WalletData | null;
   pets: PetData[];
   isGameReady: boolean;
-  connectWallet: () => Promise<void>;
-  disconnectWallet: () => void;
+  isConnecting: boolean;
   updatePetStats: (petId: number, stats: any) => void;
   selectPet: (petId: number) => void;
 }
@@ -29,13 +30,16 @@ interface Web3ProviderProps {
 }
 
 export default function Web3Provider({ children }: Web3ProviderProps) {
+  const { address, isConnected, isConnecting } = useAccount();
+  const { disconnect } = useDisconnect();
+  
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [pets, setPets] = useState<PetData[]>([]);
   const [isGameReady, setIsGameReady] = useState(false);
   const [eventBus] = useState(() => EventBus.getInstance());
 
-  // Mock Web3 data - replace with actual Web3 integration
-  const mockPetsData: PetData[] = [
+  // Mock pets data - will be replaced with actual NFT data
+  const getMockPetsData = (walletAddress: string): PetData[] => [
     {
       id: 1,
       name: "Crypto Fluffy",
@@ -43,7 +47,7 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
       stage: "egg",
       stats: { happiness: 80, hunger: 60, thirst: 70 },
       unlocked: true,
-      owner: "0x1234...5678",
+      owner: walletAddress,
       tokenId: "1"
     },
     {
@@ -53,7 +57,7 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
       stage: "egg",
       stats: { happiness: 75, hunger: 55, thirst: 65 },
       unlocked: true,
-      owner: "0x1234...5678",
+      owner: walletAddress,
       tokenId: "2"
     },
     {
@@ -63,7 +67,7 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
       stage: "egg", 
       stats: { happiness: 75, hunger: 55, thirst: 65 },
       unlocked: true,
-      owner: "0x1234...5678",
+      owner: walletAddress,
       tokenId: "3"
     },
     {
@@ -77,21 +81,60 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
     }
   ];
 
+  // Handle wallet connection changes
   useEffect(() => {
-    // Listen for game events
+    if (isConnected && address) {
+      const walletData: WalletData = {
+        address,
+        username: `Player_${address.slice(2, 8)}`,
+        isConnected: true
+      };
+
+      setWallet(walletData);
+      
+      // Load pets data (mock for now)
+      const petsData = getMockPetsData(address);
+      setPets(petsData);
+
+      // Emit wallet connected event
+      eventBus.emit(GAME_EVENTS.WALLET_CONNECTED, walletData);
+      
+      // Send game data if game is ready
+      if (isGameReady) {
+        setTimeout(() => {
+          sendGameData(walletData, petsData);
+        }, 100);
+      }
+
+      toast.success(`Wallet connected: ${address.slice(0, 6)}...${address.slice(-4)}`);
+      console.log('Wallet connected:', walletData);
+    } else {
+      // Handle disconnection
+      if (wallet) {
+        setWallet(null);
+        setPets([]);
+        eventBus.emit(GAME_EVENTS.WALLET_DISCONNECTED);
+        toast.error('Wallet disconnected');
+        console.log('Wallet disconnected');
+      }
+    }
+  }, [isConnected, address, isGameReady, eventBus, wallet]);
+
+  // Setup game event listeners
+  useEffect(() => {
     const handleGameReady = () => {
       console.log('Game is ready!');
       setIsGameReady(true);
       
       // Send initial data to game if wallet is connected
-      if (wallet) {
-        sendGameData();
+      if (wallet && pets.length > 0) {
+        sendGameData(wallet, pets);
       }
     };
 
     const handlePetStatsUpdated = (data: any) => {
       console.log('Pet stats updated from game:', data);
-      // Update local state or sync with blockchain
+      // Update local state
       setPets(prevPets => 
         prevPets.map(pet => 
           pet.id === data.petId 
@@ -99,11 +142,27 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
             : pet
         )
       );
+      
+      // TODO: Sync with blockchain/backend
+      toast.success(`Pet stats updated for pet #${data.petId}`);
     };
 
     const handlePetActionPerformed = (data: any) => {
       console.log('Pet action performed:', data);
-      // Handle pet actions (could trigger blockchain transactions)
+      
+      // Show toast notification
+      const actionMessages = {
+        hatch: '🥚 Pet hatched!',
+        feed: '🍎 Pet fed!',
+        drink: '💧 Pet hydrated!',
+        play: '🎾 Pet played!',
+        rest: '😴 Pet rested!'
+      };
+      
+      const message = actionMessages[data.action as keyof typeof actionMessages] || `Pet action: ${data.action}`;
+      toast.success(message);
+      
+      // TODO: Handle blockchain transactions for pet actions
     };
 
     eventBus.on(GAME_EVENTS.GAME_READY, handleGameReady);
@@ -115,59 +174,17 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
       eventBus.off(GAME_EVENTS.PET_STATS_UPDATED, handlePetStatsUpdated);
       eventBus.off(GAME_EVENTS.PET_ACTION_PERFORMED, handlePetActionPerformed);
     };
-  }, [eventBus, wallet]);
+  }, [eventBus, wallet, pets]);
 
-  const sendGameData = () => {
-    if (!wallet) return;
-
+  const sendGameData = (walletData: WalletData, petsData: PetData[]) => {
     const gameData: Web3GameData = {
-      wallet,
-      pets,
-      selectedPetId: pets.find(pet => pet.unlocked)?.id || 1
+      wallet: walletData,
+      pets: petsData,
+      selectedPetId: petsData.find(pet => pet.unlocked)?.id || 1
     };
 
     eventBus.emit(GAME_EVENTS.PETS_DATA_UPDATED, gameData);
-  };
-
-  const connectWallet = async () => {
-    try {
-      // Mock wallet connection - replace with actual Web3 logic
-      console.log('Connecting wallet...');
-      
-      // Simulate wallet connection delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockWallet: WalletData = {
-        address: "0x1234567890123456789012345678901234567890",
-        username: `Player_${Math.random().toString(36).substr(2, 6)}`,
-        isConnected: true
-      };
-
-      setWallet(mockWallet);
-      setPets(mockPetsData);
-
-      // Emit wallet connected event
-      eventBus.emit(GAME_EVENTS.WALLET_CONNECTED, mockWallet);
-
-      // Send game data if game is ready
-      if (isGameReady) {
-        setTimeout(() => {
-          sendGameData();
-        }, 100);
-      }
-
-      console.log('Wallet connected successfully');
-    } catch (error) {
-      console.error('Failed to connect wallet:', error);
-      eventBus.emit(GAME_EVENTS.ERROR, { message: 'Failed to connect wallet' });
-    }
-  };
-
-  const disconnectWallet = () => {
-    setWallet(null);
-    setPets([]);
-    eventBus.emit(GAME_EVENTS.WALLET_DISCONNECTED);
-    console.log('Wallet disconnected');
+    console.log('Game data sent:', gameData);
   };
 
   const updatePetStats = (petId: number, stats: any) => {
@@ -185,14 +202,14 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
 
   const selectPet = (petId: number) => {
     eventBus.emit(GAME_EVENTS.SELECTED_PET_CHANGED, { petId });
+    toast.success(`Pet #${petId} selected`);
   };
 
   const value: Web3ContextType = {
     wallet,
     pets,
     isGameReady,
-    connectWallet,
-    disconnectWallet,
+    isConnecting,
     updatePetStats,
     selectPet
   };
