@@ -138,8 +138,8 @@ export function GoalProvider({ children }: { children: React.ReactNode }) {
   const { execute, transactionState, reset } = useTransactions()
   
   // State for tracking the latest created goal
-  const [latestGoalId, setLatestGoalId] = useState<number | null>(null)
-  const [latestPetTokenId, setLatestPetTokenId] = useState<number | null>(null)
+  const [latestGoalId, setLatestGoalId] = useState<number | null>(0)
+  const [latestPetTokenId, setLatestPetTokenId] = useState<number | null>(0)
   
   // Constants from contracts
   const MAX_MILESTONES = 4

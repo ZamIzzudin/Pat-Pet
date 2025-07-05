@@ -43,7 +43,7 @@ export const PET_ASSETS = {
   },
   CAT: {
     images: {
-      EGG: `${pinataGateway}/ipfs/bafkreig5hqcubiy33f2whq54ebhdegps3jmxs7amsk6wjfba2hywpc7rgm`,
+      EGG: `${pinataGateway}/ipfs/bafkreidhrd6libud5rzgodb4f2nrbeqwlit6xflh63nqvqsfqyobwhxtsu`,
       BABY: `${pinataGateway}/ipfs/bafkreig5hqcubiy33f2whq54ebhdegps3jmxs7amsk6wjfba2hywpc7rgm`,
       ADULT: `${pinataGateway}/ipfs/bafkreig5hqcubiy33f2whq54ebhdegps3jmxs7amsk6wjfba2hywpc7rgm`,
     },
@@ -413,6 +413,9 @@ export class PetMetadataHelper {
   static getPetImageUrl(petType: PetType, stage: EvolutionStage): string {
     const petTypeKey = PET_TYPE_NAMES[petType]
     const stageKey = EVOLUTION_STAGE_NAMES[stage]
+
+    console.log("test", PET_ASSETS[petTypeKey].images[stageKey])
+
     return PET_ASSETS[petTypeKey].images[stageKey]
   }
 

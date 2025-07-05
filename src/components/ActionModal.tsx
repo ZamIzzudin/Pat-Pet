@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
 import { EventBus, GAME_EVENTS } from "@/lib/eventBus";
@@ -97,6 +97,11 @@ function Renderer({
     resetTransaction 
   } = useGoal();
 
+  useEffect(() => {
+    console.log(petInfo ,"PET INFO")
+  }, [petInfo])
+  
+
   const [isCreatingGoal, setIsCreatingGoal] = useState(false);
 
   const mintPet = async () => {
@@ -125,7 +130,7 @@ function Renderer({
       const initialMetadata = PetMetadataHelper.generateInitialPetMetadata(
         testGoalData.petName,
         testGoalData.petType,
-        2, // Will be replaced with actual goalId after creation
+        1, // Will be replaced with actual goalId after creation
         testGoalData.milestoneDescriptions.length,
         testGoalData.title
       );
@@ -201,7 +206,7 @@ function Renderer({
           </div>
         )}
 
-        <div className="flex gap-3 w-full cursor-pointer">
+        {/* <div className="flex gap-3 w-full cursor-pointer">
           {data.map((pet: any, index: number) => (
             <div key={index} className="bg-[#6b4b5b] p-3">
               <Image
@@ -216,7 +221,7 @@ function Renderer({
               </div>
             </div>
           ))}
-        </div>
+        </div> */}
 
         <button
           className="absolute bottom-5 right-5 bg-[#6b4b5b] px-5 py-2 disabled:opacity-50"
