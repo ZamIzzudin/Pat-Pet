@@ -196,7 +196,7 @@ export const GET_USER_PETS = gql`
 
 // Validation Requests - For validators/admins
 export const GET_VALIDATION_REQUESTS = gql`
-  query GetValidationRequests($status: String = "PENDING", $limit: Int = 10) {
+  query GetValidationRequests($status: validationStatus = PENDING, $limit: Int = 10) {
     validationRequests: validationRequestss(
       where: { status: $status, isResolved: false }
       orderBy: "createdAt"
