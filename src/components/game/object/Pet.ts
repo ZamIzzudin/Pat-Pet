@@ -2,6 +2,7 @@
 
 import Web3GameState from "./Web3GameState";
 import { EventBus, GAME_EVENTS } from "@/lib/eventBus";
+import FeedingUI from "../ui/FeedingUI";
 
 export default class Pet {
   scene: Phaser.Scene;
@@ -33,12 +34,18 @@ export default class Pet {
   }
 
   private setupEventListeners() {
-    this.eventBus.on(GAME_EVENTS.GAME_STATE_CHANGED, this.handleGameStateChange.bind(this));
+    this.eventBus.on(
+      GAME_EVENTS.GAME_STATE_CHANGED,
+      this.handleGameStateChange.bind(this)
+    );
   }
 
   private handleGameStateChange(data: any) {
-    if (data.type === 'pet_selection_changed' || data.type === 'pet_stage_changed') {
-      console.log('Pet: Handling game state change', data);
+    if (
+      data.type === "pet_selection_changed" ||
+      data.type === "pet_stage_changed"
+    ) {
+      console.log("Pet: Handling game state change", data);
       this.updatePetSprite();
     }
   }
@@ -64,8 +71,13 @@ export default class Pet {
     const newSpriteKey = this.gameState.getSelectedPet().sprite;
     // Only update if sprite actually changed
     if (this.currentSpriteKey !== newSpriteKey) {
-      console.log('Pet: Updating sprite from', this.currentSpriteKey, 'to', newSpriteKey);
-      
+      console.log(
+        "Pet: Updating sprite from",
+        this.currentSpriteKey,
+        "to",
+        newSpriteKey
+      );
+
       // Stop current animation
       if (this.sprite && this.sprite.anims) {
         this.sprite.anims.stop();
@@ -172,7 +184,7 @@ export default class Pet {
     }
   }
 
-  playHatchAnimation() {
+  playHatchAnimation(scene: FeedingUI) {
     if (this.isAnimating || this.getSelectedPetStage() === "adult") return;
 
     this.isAnimating = true;
@@ -199,10 +211,13 @@ export default class Pet {
         this.isAnimating = false;
 
         // Emit Web3 event for hatching
-        this.gameState.performPetAction('hatch', {
+        this.gameState.performPetAction("hatch", {
           spriteKey,
-          newStage: 'adult'
+          newStage: "adult",
         });
+
+        scene.selectedAction = "food";
+        scene.createActionButtons();
       },
     });
   }
@@ -226,12 +241,6 @@ export default class Pet {
 
     const spriteKey = this.getSelectedPetSprite();
 
-    // If still an egg, trigger hatch instead
-    if (this.getSelectedPetStage() === "egg") {
-      this.playHatchAnimation();
-      return;
-    }
-
     this.isAnimating = true;
 
     // Play feed animation
@@ -251,9 +260,9 @@ export default class Pet {
         this.isAnimating = false;
 
         // Emit Web3 event for feeding
-        this.gameState.performPetAction('feed', {
+        this.gameState.performPetAction("feed", {
           spriteKey,
-          animationType: 'feed'
+          animationType: "feed",
         });
       },
     });
@@ -266,12 +275,6 @@ export default class Pet {
     if (this.isAnimating) return;
 
     const spriteKey = this.getSelectedPetSprite();
-
-    // If still an egg, trigger hatch instead
-    if (this.getSelectedPetStage() === "egg") {
-      this.playHatchAnimation();
-      return;
-    }
 
     this.isAnimating = true;
 
@@ -291,9 +294,9 @@ export default class Pet {
         this.isAnimating = false;
 
         // Emit Web3 event for drinking
-        this.gameState.performPetAction('drink', {
+        this.gameState.performPetAction("drink", {
           spriteKey,
-          animationType: 'drink'
+          animationType: "drink",
         });
       },
     });
@@ -306,12 +309,6 @@ export default class Pet {
     if (this.isAnimating) return;
 
     const spriteKey = this.getSelectedPetSprite();
-
-    // If still an egg, trigger hatch instead
-    if (this.getSelectedPetStage() === "egg") {
-      this.playHatchAnimation();
-      return;
-    }
 
     this.isAnimating = true;
 
@@ -331,9 +328,9 @@ export default class Pet {
         this.isAnimating = false;
 
         // Emit Web3 event for playing
-        this.gameState.performPetAction('play', {
+        this.gameState.performPetAction("play", {
           spriteKey,
-          animationType: 'happy'
+          animationType: "happy",
         });
       },
     });
@@ -401,7 +398,7 @@ export default class Pet {
   destroy() {
     // Clean up event listeners
     this.eventBus.off(GAME_EVENTS.GAME_STATE_CHANGED);
-    
+
     if (this.sprite) {
       this.sprite.destroy();
     }

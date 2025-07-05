@@ -31,9 +31,10 @@ export class SocketIOClient {
     frame: number;
   } | null = null;
 
-  constructor(
-    private url: string = "https://pat-pet-ws-production.up.railway.app/"
-  ) {
+  private url: string = "https://pat-pet-ws-production.up.railway.app/";
+  // private url: string = "http://localhost:3001";
+
+  constructor() {
     if (!this.isInitialized) {
       this.connect();
       this.isInitialized = true;

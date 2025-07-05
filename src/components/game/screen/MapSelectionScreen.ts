@@ -123,7 +123,9 @@ export default class MapSelectionScreen extends Phaser.Scene {
   async refreshRoomData() {
     try {
       // Fetch room data from server
-      const response = await fetch("http://localhost:3001/api/rooms");
+      const response = await fetch(
+        "https://pat-pet-ws-production.up.railway.app/api/rooms"
+      );
       if (response.ok) {
         const roomsData = await response.json();
         this.updateRoomPlayerCounts(roomsData);

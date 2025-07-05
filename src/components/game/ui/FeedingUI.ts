@@ -10,7 +10,7 @@ export default class FeedingUI {
   gameState: GameState;
   pet: Pet;
   container: Phaser.GameObjects.Container;
-  selectedAction: number;
+  selectedAction: string;
   actionButtons: any[];
   cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   enterKey: Phaser.Input.Keyboard.Key;
@@ -19,7 +19,6 @@ export default class FeedingUI {
     this.scene = scene;
     this.gameState = GameState.getInstance();
     this.pet = pet;
-    this.selectedAction = 0;
     this.actionButtons = [];
     this.create();
   }
@@ -44,56 +43,64 @@ export default class FeedingUI {
     this.enterKey = this.scene.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.ENTER
     );
-
-    // Update selection visual
-    this.updateSelection();
   }
 
   createActionButtons() {
-    const actions = [
-      {
-        name: "Hatch",
-        icon: "🥚",
-        color: 0xffa502,
-        type: "hatch",
-        effects: { happiness: 20 },
-      },
-      {
-        name: "Feed",
-        icon: "🍎",
-        color: 0x4caf50,
-        type: "food",
-        effects: { hunger: 20, happiness: 10 },
-      },
-      {
-        name: "Water",
-        icon: "💧",
-        color: 0x2196f3,
-        type: "drink",
-        effects: { thirst: 25, happiness: 5 },
-      },
-      {
-        name: "Play",
-        icon: "🎾",
-        color: 0xff9800,
-        type: "toy",
-        effects: { happiness: 30, hunger: -5 },
-      },
-      {
-        name: "Rest",
-        icon: "😴",
-        color: 0x9c27b0,
-        type: "rest",
-        effects: { happiness: 15, hunger: -3, thirst: -3 },
-      },
-    ];
+    // Clear Style
+    if (this.actionButtons.length > 0) {
+      this.actionButtons.forEach((button) => {
+        button.background.clear();
+        button.background.fillStyle(0x444444, 0);
+        button.background.fillRoundedRect(-22, -20, 44, 40, 6);
+        button.background.lineStyle(0, 0x666666);
+        button.background.strokeRoundedRect(-22, -20, 44, 40, 6);
+      });
+    }
+
+    const stage = this.pet.getSelectedPetStage();
+    this.selectedAction = stage === "egg" ? "hatch" : "food";
+    const actions =
+      stage === "egg"
+        ? [
+            {
+              name: "Hatch",
+              icon: "🥚",
+              color: 0xffa502,
+              type: "hatch",
+              effects: { happiness: 20 },
+            },
+          ]
+        : [
+            {
+              name: "Feed",
+              icon: "🍎",
+              color: 0xffa502,
+              type: "food",
+              effects: { hunger: 20, happiness: 10 },
+            },
+            {
+              name: "Water",
+              icon: "💧",
+              color: 0x2196f3,
+              type: "drink",
+              effects: { thirst: 25, happiness: 5 },
+            },
+            {
+              name: "Play",
+              icon: "🎾",
+              color: 0xff9800,
+              type: "toy",
+              effects: { happiness: 30, hunger: -5 },
+            },
+          ];
 
     // Calculate spacing for 5 items to fit properly
     const totalWidth = 320; // Available width inside the background
     const buttonWidth = 50;
-    const spacing = (totalWidth - (5 * buttonWidth)) / 6; // Space between buttons
-    const startX = -160 + spacing + (buttonWidth / 2); // Starting position
+    const spacing = (totalWidth - 5 * buttonWidth) / 6; // Space between buttons
+    const startX = -30 * (actions.length - 1); // Starting position
 
+    const actionsParsed = [];
     actions.forEach((action, index) => {
       const x = startX + index * (buttonWidth + spacing);
       const y = 0;
@@ -131,11 +138,12 @@ export default class FeedingUI {
       this.container.add(buttonContainer);
 
       // Store reference
-      this.actionButtons.push({
+      actionsParsed.push({
         container: buttonContainer,
         background: buttonBg,
         action: action,
         index: index,
+        type: action.type,
       });
 
       // Make interactive with adjusted hit area
@@ -149,17 +157,19 @@ export default class FeedingUI {
       );
       interactiveArea.setInteractive();
       interactiveArea.on("pointerdown", () => {
-        this.selectedAction = index;
         this.updateSelection();
         this.performAction(action);
       });
       this.container.add(interactiveArea);
     });
+
+    this.actionButtons = actionsParsed;
+    this.updateSelection();
   }
 
   updateSelection() {
     this.actionButtons.forEach((button, index) => {
-      if (index === this.selectedAction) {
+      if (button.type === this.selectedAction) {
         button.background.clear();
         button.background.fillStyle(0x555555, 1);
         button.background.fillRoundedRect(-22, -20, 44, 40, 6);
@@ -182,7 +192,7 @@ export default class FeedingUI {
     // Play appropriate pet animation
     switch (action.type) {
       case "hatch":
-        this.pet.playHatchAnimation();
+        this.pet.playHatchAnimation(this);
         break;
       case "food":
         this.pet.playFeedAnimation();
@@ -232,20 +242,36 @@ export default class FeedingUI {
   update() {
     // Handle navigation
     if (Phaser.Input.Keyboard.JustDown(this.cursors.left)) {
-      this.selectedAction = Math.max(0, this.selectedAction - 1);
+      const selectedActionIndex = this.actionButtons
+        .map((action) => action.type)
+        .indexOf(this.selectedAction);
+
+      if (selectedActionIndex === 0) {
+        this.selectedAction =
+          this.actionButtons[this.actionButtons.length - 1].type;
+      } else {
+        this.selectedAction = this.actionButtons[selectedActionIndex - 1].type;
+      }
       this.updateSelection();
     } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
-      this.selectedAction = Math.min(
-        this.actionButtons.length - 1,
-        this.selectedAction + 1
-      );
+      const selectedActionIndex = this.actionButtons
+        .map((action) => action.type)
+        .indexOf(this.selectedAction);
+
+      if (selectedActionIndex === this.actionButtons.length - 1) {
+        this.selectedAction = this.actionButtons[0].type;
+      } else {
+        this.selectedAction = this.actionButtons[selectedActionIndex + 1].type;
+      }
       this.updateSelection();
     }
 
     // Handle action execution
     if (Phaser.Input.Keyboard.JustDown(this.enterKey)) {
-      const selectedActionData = this.actionButtons[this.selectedAction].action;
-      this.performAction(selectedActionData);
+      const selectedActionData = this.actionButtons.find(
+        (action) => action.type === this.selectedAction
+      );
+      this.performAction(selectedActionData.action);
     }
   }
 

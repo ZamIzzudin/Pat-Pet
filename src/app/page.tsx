@@ -137,7 +137,7 @@ export default function Home() {
             <h1 className="text-[60px] leading-[60px] text-center font-[500] text-white">
               Show Your Collection,
               <br />
-              <span className="text-[#639b56]">Show Your Achivement</span>
+              <span className="text-[#639b56]">Show Your Achievement</span>
             </h1>
           </div>
         </div>
