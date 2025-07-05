@@ -24,12 +24,21 @@ export class SocketIOClient {
   private maxReconnectAttempts = 5;
   private messageHandlers: Map<string, Function[]> = new Map();
   private isInitialized = false;
+  private username: string | null = null; // Store username
+  private movementDebounceTimer: NodeJS.Timeout | null = null;
+  private pendingMovement: { position: { x: number; y: number }; frame: number } | null = null;
 
   constructor(private url: string = "http://localhost:3001") {
     if (!this.isInitialized) {
       this.connect();
       this.isInitialized = true;
     }
+  }
+
+  // Set username from wallet connection
+  public setUsername(username: string) {
+    this.username = username;
+    console.log('SocketIOClient: Username set to', username);
   }
 
   private connect() {
@@ -203,11 +212,19 @@ export class SocketIOClient {
     }
 
     this.currentRoom = roomId;
-    this.send("join_room", {
+    
+    // Send join room with username if available
+    const joinData: any = {
       roomId,
       position: position || { x: 192, y: 160 },
-    });
-    console.log(`Joining room: ${roomId}`);
+    };
+
+    if (this.username) {
+      joinData.username = this.username;
+    }
+
+    this.send("join_room", joinData);
+    console.log(`Joining room: ${roomId} with username: ${this.username}`);
   }
 
   public leaveRoom() {
@@ -218,11 +235,26 @@ export class SocketIOClient {
     }
   }
 
+  // Debounced movement sending
   public sendPlayerMove(position: { x: number; y: number }, frame: number) {
-    this.send("player_move", {
-      position,
-      frame,
-    });
+    // Store the latest movement data
+    this.pendingMovement = { position, frame };
+
+    // Clear existing timer
+    if (this.movementDebounceTimer) {
+      clearTimeout(this.movementDebounceTimer);
+    }
+
+    // Set new timer for debounced sending
+    this.movementDebounceTimer = setTimeout(() => {
+      if (this.pendingMovement && this.socket && this.socket.connected) {
+        this.send("player_move", {
+          position: this.pendingMovement.position,
+          frame: this.pendingMovement.frame,
+        });
+        this.pendingMovement = null;
+      }
+    }, 100); // 100ms debounce delay
   }
 
   public sendPlayerAnimation(animation: string, frame: number) {
@@ -245,6 +277,12 @@ export class SocketIOClient {
   }
 
   public disconnect() {
+    // Clear any pending movement timers
+    if (this.movementDebounceTimer) {
+      clearTimeout(this.movementDebounceTimer);
+      this.movementDebounceTimer = null;
+    }
+
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
@@ -261,23 +299,5 @@ export class SocketIOClient {
 
   public getSocket(): Socket | null {
     return this.socket;
-  }
-}
-
-// Singleton instance
-let socketClient: SocketIOClient | null = null;
-
-export function getSocketIOClient(): SocketIOClient {
-  if (!socketClient) {
-    socketClient = new SocketIOClient();
-  }
-  return socketClient;
-}
-
-// Clean up function for when component unmounts
-export function cleanupSocketIOClient() {
-  if (socketClient) {
-    socketClient.disconnect();
-    socketClient = null;
   }
 }

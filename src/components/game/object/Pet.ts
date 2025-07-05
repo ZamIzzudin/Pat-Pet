@@ -1,6 +1,7 @@
 /** @format */
 
 import Web3GameState from "./Web3GameState";
+import { EventBus, GAME_EVENTS } from "@/lib/eventBus";
 
 export default class Pet {
   scene: Phaser.Scene;
@@ -8,22 +9,38 @@ export default class Pet {
   x: number;
   y: number;
   isAnimating: boolean;
-  gameState: Web3GameState; // Changed to Web3GameState
+  gameState: Web3GameState;
   currentSpriteKey: string;
+  eventBus: EventBus;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     this.scene = scene;
     this.x = x;
     this.y = y;
     this.isAnimating = false;
-    this.gameState = Web3GameState.getInstance(); // Use Web3GameState
+    this.gameState = Web3GameState.getInstance();
     this.currentSpriteKey = "";
+    this.eventBus = EventBus.getInstance();
 
     // Create pet sprite based on selected pet
     this.createPetSprite();
 
     // Start idle animation based on stage
     this.startIdleAnimation();
+
+    // Listen for game state changes
+    this.setupEventListeners();
+  }
+
+  private setupEventListeners() {
+    this.eventBus.on(GAME_EVENTS.GAME_STATE_CHANGED, this.handleGameStateChange.bind(this));
+  }
+
+  private handleGameStateChange(data: any) {
+    if (data.type === 'pet_selection_changed' || data.type === 'pet_stage_changed') {
+      console.log('Pet: Handling game state change', data);
+      this.updatePetSprite();
+    }
   }
 
   createPetSprite() {
@@ -47,6 +64,8 @@ export default class Pet {
     const newSpriteKey = this.gameState.getSelectedPet().sprite;
     // Only update if sprite actually changed
     if (this.currentSpriteKey !== newSpriteKey) {
+      console.log('Pet: Updating sprite from', this.currentSpriteKey, 'to', newSpriteKey);
+      
       // Stop current animation
       if (this.sprite && this.sprite.anims) {
         this.sprite.anims.stop();
@@ -380,6 +399,9 @@ export default class Pet {
   }
 
   destroy() {
+    // Clean up event listeners
+    this.eventBus.off(GAME_EVENTS.GAME_STATE_CHANGED);
+    
     if (this.sprite) {
       this.sprite.destroy();
     }

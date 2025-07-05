@@ -6,7 +6,8 @@ import Pet from "../object/Pet";
 import StatusBars from "../ui/StatusBars";
 import FeedingUI from "../ui/FeedingUI";
 import Button from "../ui/Button";
-import GameState from "../object/GameState";
+import Web3GameState from "../object/Web3GameState";
+import { EventBus, GAME_EVENTS } from "@/lib/eventBus";
 
 export default class PetScreen extends Phaser.Scene {
   previousScene: string;
@@ -15,7 +16,8 @@ export default class PetScreen extends Phaser.Scene {
   goalsButton: Button;
   statusBars: StatusBars;
   feedingUI: FeedingUI;
-  gameState: GameState;
+  gameState: Web3GameState;
+  eventBus: EventBus;
   petSelectionKey: Phaser.Input.Keyboard.Key;
   goalsKey: Phaser.Input.Keyboard.Key;
   escapeKey: Phaser.Input.Keyboard.Key;
@@ -47,7 +49,8 @@ export default class PetScreen extends Phaser.Scene {
   }
 
   create() {
-    this.gameState = GameState.getInstance();
+    this.gameState = Web3GameState.getInstance();
+    this.eventBus = EventBus.getInstance();
 
     // Create background
     const bg = this.add.image(176, 96, "bg");
@@ -78,20 +81,44 @@ export default class PetScreen extends Phaser.Scene {
       Phaser.Input.Keyboard.KeyCodes.ESC
     );
 
-    // Listen for pet changes
+    // Listen for scene wake events (when returning from other scenes)
     this.events.on("wake", this.onWake, this);
+    
+    // Setup event listeners for game state changes
+    this.setupEventListeners();
+  }
+
+  setupEventListeners() {
+    this.eventBus.on(GAME_EVENTS.GAME_STATE_CHANGED, this.handleGameStateChange.bind(this));
+  }
+
+  handleGameStateChange(data: any) {
+    if (data.type === 'pet_selection_changed') {
+      console.log('PetScreen: Pet selection changed', data);
+      // Force update all components
+      this.updateAllComponents();
+    }
   }
 
   onWake() {
-    alert("triggered");
-    // Update pet sprite when returning from pet selection
+    console.log('PetScreen: Scene woke up, updating components');
+    this.updateAllComponents();
+  }
+
+  updateAllComponents() {
+    // Update pet sprite
     if (this.pet) {
       this.pet.updatePetSprite();
     }
 
-    // Update status bars to show current pet
+    // Update status bars
     if (this.statusBars) {
       this.statusBars.updateBars();
+    }
+
+    // Update feeding UI
+    if (this.feedingUI) {
+      this.feedingUI.update();
     }
   }
 
@@ -125,5 +152,11 @@ export default class PetScreen extends Phaser.Scene {
       this.scene.stop();
       this.scene.start(this.previousScene);
     }
+  }
+
+  shutdown() {
+    // Clean up event listeners
+    this.eventBus.off(GAME_EVENTS.GAME_STATE_CHANGED);
+    this.events.off("wake", this.onWake, this);
   }
 }

@@ -16,6 +16,7 @@ import {
   PetData,
   Web3GameData,
 } from "@/lib/eventBus";
+import { getSocketIOClient } from "@/lib/ws";
 import toast from "react-hot-toast";
 
 interface Web3ContextType {
@@ -102,12 +103,18 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
         isConnected: true,
       };
       setWallet(walletData);
+      
       // Load pets data (mock for now)
       const petsData = getMockPetsData(address);
       setPets(petsData);
 
+      // Set username in WebSocket client
+      const wsClient = getSocketIOClient();
+      wsClient.setUsername(walletData.username);
+
       // Emit wallet connected event
       eventBus.emit(GAME_EVENTS.WALLET_CONNECTED, walletData);
+      
       // Send game data if game is ready
       if (isGameReady) {
         setTimeout(() => {
@@ -168,6 +175,7 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
         drink: "💧 Pet hydrated!",
         play: "🎾 Pet played!",
         rest: "😴 Pet rested!",
+        stage_change: "🌟 Pet evolved!",
       };
 
       const message =
@@ -178,16 +186,23 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
       // TODO: Handle blockchain transactions for pet actions
     };
 
+    const handleSelectedPetChanged = (data: any) => {
+      console.log("Selected pet changed from game:", data);
+      toast.success(`Pet #${data.petId} selected`);
+    };
+
     eventBus.on(GAME_EVENTS.GAME_READY, handleGameReady);
     eventBus.on(GAME_EVENTS.PET_STATS_UPDATED, handlePetStatsUpdated);
     eventBus.on(GAME_EVENTS.PET_ACTION_PERFORMED, handlePetActionPerformed);
+    eventBus.on(GAME_EVENTS.SELECTED_PET_CHANGED, handleSelectedPetChanged);
 
     return () => {
       eventBus.off(GAME_EVENTS.GAME_READY, handleGameReady);
       eventBus.off(GAME_EVENTS.PET_STATS_UPDATED, handlePetStatsUpdated);
       eventBus.off(GAME_EVENTS.PET_ACTION_PERFORMED, handlePetActionPerformed);
+      eventBus.off(GAME_EVENTS.SELECTED_PET_CHANGED, handleSelectedPetChanged);
     };
-  }, [eventBus, isConnected, pets]);
+  }, [eventBus, isConnected, pets, wallet]);
 
   const sendGameData = (walletData: WalletData, petsData: PetData[]) => {
     const gameData: Web3GameData = {

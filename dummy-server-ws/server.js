@@ -121,7 +121,7 @@ io.on("connection", (socket) => {
     `🎮 Client connected: Player_${shortId} (Socket ID: ${socket.id})`
   );
 
-  // Initialize client data
+  // Initialize client data with default username
   clients.set(clientId, {
     socket,
     id: clientId,
@@ -129,7 +129,7 @@ io.on("connection", (socket) => {
     currentRoom: null,
     position: { x: 192, y: 160 },
     frame: 0,
-    username: `Player_${shortId}`,
+    username: `Player_${shortId}`, // Default username
     connectedAt: new Date().toISOString(),
     lastActivity: new Date().toISOString(),
   });
@@ -142,9 +142,19 @@ io.on("connection", (socket) => {
     availableRooms: Array.from(rooms.keys()),
   });
 
-  // Handle join room
+  // Handle join room with optional username
   socket.on("join_room", (data) => {
     console.log(`📍 ${clientId} attempting to join room: ${data.roomId}`);
+    
+    // Update username if provided
+    if (data.username) {
+      const client = clients.get(clientId);
+      if (client) {
+        client.username = data.username;
+        console.log(`🏷️ Updated username for ${clientId}: ${data.username}`);
+      }
+    }
+    
     handleJoinRoom(clientId, data.roomId, data.position);
   });
 
@@ -172,7 +182,9 @@ io.on("connection", (socket) => {
 
   // Handle disconnect
   socket.on("disconnect", (reason) => {
-    console.log(`❌ Client disconnected: Player_${shortId} (${reason})`);
+    const client = clients.get(clientId);
+    const username = client ? client.username : `Player_${shortId}`;
+    console.log(`❌ Client disconnected: ${username} (${reason})`);
     handleDisconnect(clientId);
   });
 
@@ -218,7 +230,7 @@ function handleJoinRoom(clientId, roomId, position) {
   room.set(clientId, {
     id: clientId,
     socketId: client.socketId,
-    username: client.username,
+    username: client.username, // Use updated username
     position: client.position,
     frame: client.frame,
     joinedAt: client.joinedAt,
@@ -241,7 +253,7 @@ function handleJoinRoom(clientId, roomId, position) {
     player: {
       id: clientId,
       socketId: client.socketId,
-      username: client.username,
+      username: client.username, // Use updated username
       position: client.position,
       frame: client.frame,
       joinedAt: client.joinedAt,

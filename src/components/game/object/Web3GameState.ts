@@ -122,6 +122,28 @@ export default class Web3GameState extends GameState {
     return success;
   }
 
+  // Enhanced setSelectedPet with proper event emission
+  public setSelectedPet(petId: number): boolean {
+    const success = super.setSelectedPet(petId);
+    
+    if (success) {
+      // Emit to Web3 layer for external state sync
+      this.eventBus.emit(GAME_EVENTS.SELECTED_PET_CHANGED, {
+        petId,
+        timestamp: Date.now()
+      });
+      
+      // Force update for all game components
+      this.eventBus.emit(GAME_EVENTS.GAME_STATE_CHANGED, {
+        type: 'pet_selection_changed',
+        selectedPetId: petId,
+        selectedPet: this.getSelectedPet()
+      });
+    }
+    
+    return success;
+  }
+
   // New Web3-specific methods
   public isWalletConnected(): boolean {
     return this.isWeb3Connected;
@@ -160,18 +182,12 @@ export default class Web3GameState extends GameState {
       newStage: stage,
       timestamp: Date.now()
     });
-  }
 
-  public setSelectedPet(petId: number): boolean {
-    const success = super.setSelectedPet(petId);
-    
-    if (success) {
-      this.eventBus.emit(GAME_EVENTS.SELECTED_PET_CHANGED, {
-        petId,
-        timestamp: Date.now()
-      });
-    }
-    
-    return success;
+    // Force update for all game components
+    this.eventBus.emit(GAME_EVENTS.GAME_STATE_CHANGED, {
+      type: 'pet_stage_changed',
+      selectedPetId: this.selectedPetId,
+      selectedPet: this.getSelectedPet()
+    });
   }
 }

@@ -2,10 +2,12 @@
 
 import * as Phaser from "phaser";
 import Web3GameState from "../object/Web3GameState";
+import { EventBus, GAME_EVENTS } from "@/lib/eventBus";
 
 export default class StatusBars {
   scene: Phaser.Scene;
-  gameState: Web3GameState; // Changed to Web3GameState
+  gameState: Web3GameState;
+  eventBus: EventBus;
 
   // UI Elements
   barLayoutSprite: Phaser.GameObjects.Sprite;
@@ -18,15 +20,29 @@ export default class StatusBars {
   hungerText: Phaser.GameObjects.Text;
   thirstText: Phaser.GameObjects.Text;
   petNameText: Phaser.GameObjects.Text;
-  walletText: Phaser.GameObjects.Text; // New: wallet info
+  walletText: Phaser.GameObjects.Text;
+  petIdText: Phaser.GameObjects.Text; // New: NFT ID display
 
   // UI Container for fixed positioning
   uiContainer: Phaser.GameObjects.Container;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
-    this.gameState = Web3GameState.getInstance(); // Use Web3GameState
+    this.gameState = Web3GameState.getInstance();
+    this.eventBus = EventBus.getInstance();
     this.create();
+    this.setupEventListeners();
+  }
+
+  private setupEventListeners() {
+    this.eventBus.on(GAME_EVENTS.GAME_STATE_CHANGED, this.handleGameStateChange.bind(this));
+  }
+
+  private handleGameStateChange(data: any) {
+    if (data.type === 'pet_selection_changed' || data.type === 'pet_stage_changed') {
+      console.log('StatusBars: Handling game state change', data);
+      this.updateBars();
+    }
   }
 
   create() {
@@ -47,7 +63,7 @@ export default class StatusBars {
     this.profileSprite.setScrollFactor(0);
 
     // Pet name display
-    this.petNameText = this.scene.add.text(35, 50, "", {
+    this.petNameText = this.scene.add.text(35, 45, "", {
       fontSize: "8px",
       color: "#ffffff",
       fontFamily: "CustomFont, Arial",
@@ -58,8 +74,19 @@ export default class StatusBars {
     this.petNameText.setOrigin(0.5);
     this.petNameText.setScrollFactor(0);
 
-    // Wallet info display (new)
-    this.walletText = this.scene.add.text(35, 60, "", {
+    // Pet ID display (new)
+    this.petIdText = this.scene.add.text(35, 53, "", {
+      fontSize: "6px",
+      color: "#4caf50",
+      fontFamily: "CustomFont, Arial",
+      resolution: 2,
+      padding: { x: 1, y: 1 },
+    });
+    this.petIdText.setOrigin(0.5);
+    this.petIdText.setScrollFactor(0);
+
+    // Wallet info display
+    this.walletText = this.scene.add.text(35, 61, "", {
       fontSize: "6px",
       color: "#cccccc",
       fontFamily: "CustomFont, Arial",
@@ -128,10 +155,15 @@ export default class StatusBars {
     const selectedPet = this.gameState.getSelectedPet();
     const stats = selectedPet.stats;
 
+    console.log('StatusBars: Updating with selected pet', selectedPet);
+
     // Update pet name
     this.petNameText.setText(selectedPet.name);
 
-    // Update wallet info (new)
+    // Update pet ID (NFT ID)
+    this.petIdText.setText(`NFT #${selectedPet.id}`);
+
+    // Update wallet info
     const username = this.gameState.getUsername();
     const walletAddress = this.gameState.getWalletAddress();
     if (username && walletAddress) {
@@ -203,10 +235,14 @@ export default class StatusBars {
   }
 
   destroy() {
+    // Clean up event listeners
+    this.eventBus.off(GAME_EVENTS.GAME_STATE_CHANGED);
+    
     if (this.uiContainer) this.uiContainer.destroy();
     if (this.barLayoutSprite) this.barLayoutSprite.destroy();
     if (this.profileSprite) this.profileSprite.destroy();
     if (this.petNameText) this.petNameText.destroy();
+    if (this.petIdText) this.petIdText.destroy();
     if (this.walletText) this.walletText.destroy();
     if (this.happinessBar) this.happinessBar.destroy();
     if (this.hungerBar) this.hungerBar.destroy();

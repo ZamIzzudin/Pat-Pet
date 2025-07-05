@@ -4,6 +4,7 @@
 import Char from "./Char";
 import MultiplayerChar from "./Multiplayer";
 import { getSocketIOClient, Player } from "@/lib/ws";
+import Web3GameState from "./Web3GameState";
 
 export default class MapObj {
   scene: Phaser.Scene;
@@ -20,11 +21,13 @@ export default class MapObj {
   lastSentPosition: { x: number; y: number } | null;
   lastSentFrame: number | null;
   currentRoomId: string;
+  gameState: Web3GameState;
 
   constructor(scene: Phaser.Scene, mapKey: string) {
     this.scene = scene;
     this.mapKey = mapKey;
     this.interactionPrompt = null;
+    this.gameState = Web3GameState.getInstance();
 
     // Initialize multiplayer properties FIRST
     this.otherPlayers = new Map<string, MultiplayerChar>();
@@ -72,6 +75,12 @@ export default class MapObj {
       // Get existing WebSocket client (don't create new one)
       this.wsClient = getSocketIOClient();
 
+      // Set username from wallet if connected
+      const username = this.gameState.getUsername();
+      if (username) {
+        this.wsClient.setUsername(username);
+      }
+
       // Clear any existing event listeners to prevent duplicates
       this.clearMultiplayerEvents();
 
@@ -85,7 +94,7 @@ export default class MapObj {
         y: this.player.coordinate.y,
       });
 
-      console.log(`Joined room: ${this.currentRoomId}`);
+      console.log(`Joined room: ${this.currentRoomId} with username: ${username}`);
     } catch (error) {
       console.error("Failed to initialize multiplayer:", error);
     }
@@ -248,17 +257,8 @@ export default class MapObj {
       };
       const currentFrame = this.player.sprite.frame.name;
 
-      // Only send update if position or frame changed
-      if (
-        !this.lastSentPosition ||
-        this.lastSentPosition.x !== currentPosition.x ||
-        this.lastSentPosition.y !== currentPosition.y ||
-        this.lastSentFrame !== currentFrame
-      ) {
-        this.wsClient.sendPlayerMove(currentPosition, currentFrame);
-        this.lastSentPosition = { ...currentPosition };
-        this.lastSentFrame = currentFrame;
-      }
+      // Use debounced movement sending
+      this.wsClient.sendPlayerMove(currentPosition, currentFrame);
     } catch (error) {
       console.error("Failed to send player update:", error);
     }
@@ -346,7 +346,7 @@ export default class MapObj {
         this.player.moveToTile("y", 1, "down");
       }
 
-      // Send movement update to server
+      // Send movement update to server (debounced)
       this.sendPlayerUpdate();
     }
 
