@@ -42,6 +42,13 @@ export enum EvolutionStage {
   ADULT = 2
 }
 
+export enum ValidationStatus {
+  PENDING = "PENDING",
+  APPROVED = "APPROVED", 
+  REJECTED = "REJECTED",
+  DISPUTED = "DISPUTED"
+}
+
 export interface CreateGoalParams {
   title: string
   stakeAmount: string
@@ -79,8 +86,9 @@ export interface FormattedPetInfo extends Pet {
 }
 
 export interface SubmitMilestoneParams {
-  milestoneId: string
-  evidenceFile: File
+  milestoneId: string;
+  evidenceFile: File;
+  evidenceIPFS?: string; // Add optional IPFS hash
 }
 
 interface GoalContextValue {
@@ -196,14 +204,17 @@ export function GoalProvider({ children }: { children: React.ReactNode }) {
   })
   
   // Validation Requests Query (for admin/validators)
-  const { 
+  const {
     data: validationData,
     loading: isLoadingValidations,
     refetch: refetchValidations
   } = useQuery(GET_VALIDATION_REQUESTS, {
-    variables: { status: 'PENDING', first: 20, skip: 0 },
-    pollInterval: 10000, // Poll every 10 seconds for validation updates
-  })
+    variables: { 
+      status: ValidationStatus.PENDING,
+      limit: 20 
+    },
+    pollInterval: 10000,
+  });
   
   // User Pending Milestones Query
   const { 
@@ -480,9 +491,8 @@ export function GoalProvider({ children }: { children: React.ReactNode }) {
     
     console.log('🚀 Starting milestone submission', params)
     
-    // TODO: Upload evidence to IPFS using Pinata
-    // For now, use placeholder IPFS hash
-    const evidenceIPFS = "QmPlaceholderEvidenceHash" // This should be actual upload result
+    // Use provided IPFS hash if available, otherwise use placeholder
+    const evidenceIPFS = params.evidenceIPFS 
     
     // Create transaction request
     const transactionRequest = {
@@ -500,6 +510,7 @@ export function GoalProvider({ children }: { children: React.ReactNode }) {
         milestoneId: params.milestoneId,
         evidenceType: params.evidenceFile.type,
         evidenceSize: params.evidenceFile.size,
+        evidenceIPFS: evidenceIPFS,
       }
     }
     
@@ -526,6 +537,12 @@ export function GoalProvider({ children }: { children: React.ReactNode }) {
     }
   }, [transactionState.isCompleted, transactionState.transactionType, refetchDashboard, refetchGoalProgress, refetchValidations, systemStatsDataRefetch])
   
+
+  useEffect(() => {
+    console.log('📊 Validation data:', validationData)
+  }, [validationData])
+  
+
   const contextValue: GoalContextValue = {
     // Goal creation
     createGoalWithMilestones,
