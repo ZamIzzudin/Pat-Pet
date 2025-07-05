@@ -5,7 +5,7 @@ import { formatEther, parseEther } from 'viem';
 
 // Create HTTP link to Ponder GraphQL endpoint  
 const httpLink = createHttpLink({
-  uri: 'http://localhost:42070/graphql', // Update with your Ponder endpoint
+  uri: 'https://patpet-ponder-indexer-production.up.railway.app/graphql', //
 });
 
 // Create Apollo Client with optimized cache configuration
