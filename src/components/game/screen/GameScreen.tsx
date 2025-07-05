@@ -10,7 +10,7 @@ import HouseScreen from "./HouseScreen";
 import PetSelectionScreen from "./PetSelectionScreen";
 import GoalsScreen from "./GoalsScreen";
 import PetScreen from "./PetScreen";
-import Preloader from "./Preloader";
+import Web3Preloader from "./Web3Preloader";
 import MapSelectionScreen from "./MapSelectionScreen";
 
 export default function GameScreen() {
@@ -42,7 +42,7 @@ export default function GameScreen() {
         mode: Phaser.Scale.NONE,
       },
       scene: [
-        Preloader,
+        Web3Preloader, // Start with Web3 preloader instead of regular preloader
         MapSelectionScreen,
         MainScreen,
         HouseScreen,

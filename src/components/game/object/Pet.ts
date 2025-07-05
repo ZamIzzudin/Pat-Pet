@@ -1,6 +1,6 @@
 /** @format */
 
-import GameState from "./GameState";
+import Web3GameState from "./Web3GameState";
 
 export default class Pet {
   scene: Phaser.Scene;
@@ -8,7 +8,7 @@ export default class Pet {
   x: number;
   y: number;
   isAnimating: boolean;
-  gameState: GameState;
+  gameState: Web3GameState; // Changed to Web3GameState
   currentSpriteKey: string;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
@@ -16,7 +16,7 @@ export default class Pet {
     this.x = x;
     this.y = y;
     this.isAnimating = false;
-    this.gameState = GameState.getInstance();
+    this.gameState = Web3GameState.getInstance(); // Use Web3GameState
     this.currentSpriteKey = "";
 
     // Create pet sprite based on selected pet
@@ -178,6 +178,12 @@ export default class Pet {
         // Start adult idle animation
         this.sprite.anims.play(`${spriteKey}-idle`, true);
         this.isAnimating = false;
+
+        // Emit Web3 event for hatching
+        this.gameState.performPetAction('hatch', {
+          spriteKey,
+          newStage: 'adult'
+        });
       },
     });
   }
@@ -224,6 +230,12 @@ export default class Pet {
         // Return to idle animation
         this.sprite.anims.play(`${spriteKey}-idle`, true);
         this.isAnimating = false;
+
+        // Emit Web3 event for feeding
+        this.gameState.performPetAction('feed', {
+          spriteKey,
+          animationType: 'feed'
+        });
       },
     });
 
@@ -258,6 +270,12 @@ export default class Pet {
         this.sprite.x = this.x;
         this.sprite.anims.play(`${spriteKey}-idle`, true);
         this.isAnimating = false;
+
+        // Emit Web3 event for drinking
+        this.gameState.performPetAction('drink', {
+          spriteKey,
+          animationType: 'drink'
+        });
       },
     });
 
@@ -292,6 +310,12 @@ export default class Pet {
         this.sprite.y = this.y;
         this.sprite.anims.play(`${spriteKey}-idle`, true);
         this.isAnimating = false;
+
+        // Emit Web3 event for playing
+        this.gameState.performPetAction('play', {
+          spriteKey,
+          animationType: 'happy'
+        });
       },
     });
 

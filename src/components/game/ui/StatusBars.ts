@@ -1,11 +1,11 @@
 /** @format */
 
 import * as Phaser from "phaser";
-import GameState from "../object/GameState";
+import Web3GameState from "../object/Web3GameState";
 
 export default class StatusBars {
   scene: Phaser.Scene;
-  gameState: GameState;
+  gameState: Web3GameState; // Changed to Web3GameState
 
   // UI Elements
   barLayoutSprite: Phaser.GameObjects.Sprite;
@@ -18,13 +18,14 @@ export default class StatusBars {
   hungerText: Phaser.GameObjects.Text;
   thirstText: Phaser.GameObjects.Text;
   petNameText: Phaser.GameObjects.Text;
+  walletText: Phaser.GameObjects.Text; // New: wallet info
 
   // UI Container for fixed positioning
   uiContainer: Phaser.GameObjects.Container;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
-    this.gameState = GameState.getInstance();
+    this.gameState = Web3GameState.getInstance(); // Use Web3GameState
     this.create();
   }
 
@@ -56,6 +57,17 @@ export default class StatusBars {
     });
     this.petNameText.setOrigin(0.5);
     this.petNameText.setScrollFactor(0);
+
+    // Wallet info display (new)
+    this.walletText = this.scene.add.text(35, 60, "", {
+      fontSize: "6px",
+      color: "#cccccc",
+      fontFamily: "CustomFont, Arial",
+      resolution: 2,
+      padding: { x: 1, y: 1 },
+    });
+    this.walletText.setOrigin(0.5);
+    this.walletText.setScrollFactor(0);
 
     // Create status bars positioned to align with BarLayout
     this.createStatusBar("happiness", 75, 20, 0xff6b6b); // Red for happiness
@@ -118,6 +130,15 @@ export default class StatusBars {
 
     // Update pet name
     this.petNameText.setText(selectedPet.name);
+
+    // Update wallet info (new)
+    const username = this.gameState.getUsername();
+    const walletAddress = this.gameState.getWalletAddress();
+    if (username && walletAddress) {
+      this.walletText.setText(`${username} (${walletAddress.slice(0, 6)}...)`);
+    } else {
+      this.walletText.setText("Demo Mode");
+    }
 
     // Update happiness bar
     this.updateBar(
@@ -186,6 +207,7 @@ export default class StatusBars {
     if (this.barLayoutSprite) this.barLayoutSprite.destroy();
     if (this.profileSprite) this.profileSprite.destroy();
     if (this.petNameText) this.petNameText.destroy();
+    if (this.walletText) this.walletText.destroy();
     if (this.happinessBar) this.happinessBar.destroy();
     if (this.hungerBar) this.hungerBar.destroy();
     if (this.thirstBar) this.thirstBar.destroy();
