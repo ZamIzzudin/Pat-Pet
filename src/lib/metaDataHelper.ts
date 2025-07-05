@@ -1,16 +1,34 @@
-// lib/metadata-helper.ts
+// lib/metadata-helper.ts - Updated with Pinata SDK
 
-import { EvolutionStage, PetType } from "../hooks/contexts/GoalHookContext"
+import { PinataSDK } from "pinata";
+import { EvolutionStage, PetType } from "@/app/hooks/contexts/GoalHookContext"
 
-export const PAT_PET_PINATA_GATEWAY = process.env.NEXT_PUBLIC_PAT_PET_PINATA_GATEWAY 
+const pinataGateway = process.env.NEXT_PUBLIC_PAT_PET_PINATA_GATEWAY;
 
+// Initialize Pinata SDK
+const initializePinata = () => {
+  const pinataJwt = process.env.NEXT_PUBLIC_PINATA_JWT;
+
+  if (!pinataJwt) {
+    throw new Error('PINATA_JWT environment variable is required');
+  }
+
+  if (!pinataGateway) {
+    throw new Error('PINATA_GATEWAY environment variable is required');
+  }
+
+  return new PinataSDK({
+    pinataJwt,
+    pinataGateway,
+  });
+};
 
 // Static IPFS URLs for pet images and assets
 export const PET_ASSETS = {
   DRAGON: {
     // NFT Images for each evolution stage
     images: {
-      EGG: "https://gateway.pinata.cloud/ipfs/QmDragonEggStatic001",
+      EGG: "ipfs/QmDragonEggStatic001",
       BABY: "https://gateway.pinata.cloud/ipfs/QmDragonBabyStatic002", 
       ADULT: "https://gateway.pinata.cloud/ipfs/QmDragonAdultStatic003"
     },
@@ -25,11 +43,11 @@ export const PET_ASSETS = {
   },
   CAT: {
     images: {
-      EGG: `${PAT_PET_PINATA_GATEWAY}/bafkreidhrd6libud5rzgodb4f2nrbeqwlit6xflh63nqvqsfqyobwhxtsu`,
-      BABY: `${PAT_PET_PINATA_GATEWAY}/bafkreig5hqcubiy33f2whq54ebhdegps3jmxs7amsk6wjfba2hywpc7rgm`,
-      ADULT: `${PAT_PET_PINATA_GATEWAY}/bafkreig5hqcubiy33f2whq54ebhdegps3jmxs7amsk6wjfba2hywpc7rgm`
+      EGG: `${pinataGateway}/ipfs/bafkreig5hqcubiy33f2whq54ebhdegps3jmxs7amsk6wjfba2hywpc7rgm`,
+      BABY: `${pinataGateway}/ipfs/bafkreig5hqcubiy33f2whq54ebhdegps3jmxs7amsk6wjfba2hywpc7rgm`,
+      ADULT: `${pinataGateway}/ipfs/bafkreig5hqcubiy33f2whq54ebhdegps3jmxs7amsk6wjfba2hywpc7rgm`,
     },
-    sprite: `${PAT_PET_PINATA_GATEWAY}/bafkreiaulxgnc5hstx47m66kc5bmbvllewplegjseggrqwsu5ibo2j42xm`,
+    sprite: `${pinataGateway}/ipfs/bafkreiaulxgnc5hstx47m66kc5bmbvllewplegjseggrqwsu5ibo2j42xm`,
     metadata: {
       name: "Cat",
       description: "A curious and agile feline companion with sharp instincts",
@@ -276,54 +294,116 @@ export class PetMetadataHelper {
   }
 
   /**
-   * Upload metadata to Pinata
+   * Upload metadata to Pinata using SDK
    */
   static async uploadMetadataToPinata(
     metadata: GeneratedPetMetadata,
-    pinataConfig: {
-      apiKey: string
-      secretKey: string
-    },
     tokenId?: number
   ): Promise<string> {
     try {
-      const response = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'pinata_api_key': pinataConfig.apiKey,
-          'pinata_secret_api_key': pinataConfig.secretKey
-        },
-        body: JSON.stringify({
-          pinataContent: metadata,
-          pinataMetadata: {
-            name: `${metadata.name}-metadata-${Date.now()}`,
-            keyvalues: {
-              type: 'pet_metadata',
-              pet_name: metadata.name,
-              pet_type: metadata.properties.pet_type,
-              evolution_stage: metadata.properties.evolution_stage,
-              token_id: tokenId?.toString() || 'new',
-              timestamp: Date.now().toString(),
-              version: metadata.properties.version
-            }
-          },
-          pinataOptions: {
-            cidVersion: 1,
-            wrapWithDirectory: false
-          }
-        })
-      })
+      console.log('🚀 Initializing Pinata SDK...');
+      
+      // Initialize Pinata SDK
+      const pinata = initializePinata();
+      
+      console.log('📝 Preparing metadata for upload...');
+      
+      // Create filename
+      const fileName = `${metadata.name}-metadata-${Date.now()}.json`;
+      
+      console.log('📤 Uploading metadata to Pinata...');
+      
+      // Upload JSON using Pinata SDK
+      const upload = await pinata.upload.public
+        .json(metadata)
+        .name(fileName)
+        .keyvalues({
+          type: 'pet_metadata',
+          pet_name: metadata.name,
+          pet_type: metadata.properties.pet_type,
+          evolution_stage: metadata.properties.evolution_stage,
+          token_id: tokenId?.toString() || 'new',
+          timestamp: Date.now().toString(),
+          version: metadata.properties.version
+        });
 
-      if (!response.ok) {
-        throw new Error(`Pinata upload failed: ${response.statusText}`)
+      console.log('✅ Pinata upload successful:', upload);
+      
+      // Extract CID from response
+      const ipfsHash = upload.cid;
+      
+      if (!ipfsHash) {
+        throw new Error('No CID returned from Pinata SDK');
       }
 
-      const result = await response.json()
-      return result.IpfsHash
+      console.log('✅ Metadata uploaded to Pinata:', ipfsHash);
+      
+      // Verify the upload by trying to fetch it
+      try {
+        console.log('🔍 Verifying upload...');
+        const gatewayUrl = await pinata.gateways.public.convert(ipfsHash);
+        console.log('✅ Upload verification successful, Gateway URL:', gatewayUrl);
+      } catch (verifyError) {
+        console.warn('⚠️ Could not verify upload, but upload seems successful');
+      }
+      
+      return ipfsHash;
+
     } catch (error) {
-      console.error('Failed to upload metadata to Pinata:', error)
-      throw error
+      console.error('❌ Failed to upload metadata to Pinata:', error);
+      
+      // Provide more specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes('PINATA_JWT')) {
+          throw new Error('Pinata JWT token not configured. Please add NEXT_PUBLIC_PINATA_JWT to your environment variables.');
+        } else if (error.message.includes('PINATA_GATEWAY')) {
+          throw new Error('Pinata Gateway not configured. Please add NEXT_PUBLIC_PINATA_GATEWAY to your environment variables.');
+        } else if (error.message.includes('401') || error.message.includes('unauthorized')) {
+          throw new Error('Pinata authentication failed. Please check your JWT token.');
+        } else if (error.message.includes('403') || error.message.includes('forbidden')) {
+          throw new Error('Pinata access forbidden. Check your account permissions and quota.');
+        } else if (error.message.includes('429')) {
+          throw new Error('Pinata rate limit exceeded. Please try again later.');
+        }
+      }
+      
+      throw error;
+    }
+  }
+
+  /**
+   * Test Pinata SDK connection
+   */
+  static async testPinataConnection(): Promise<boolean> {
+    try {
+      console.log('🔍 Testing Pinata SDK connection...');
+      
+      // Initialize Pinata SDK
+      const pinata = initializePinata();
+      
+      // Test with a simple JSON upload
+      const testData = {
+        message: "Hello from PatPet!",
+        timestamp: Date.now()
+      };
+
+      const upload = await pinata.upload.public
+        .json(testData)
+        .name('pinata-connection-test.json')
+        .keyvalues({
+          type: 'connection_test'
+        });
+
+      if (upload.cid) {
+        console.log('✅ Pinata SDK connection test successful:', upload.cid);
+        return true;
+      } else {
+        console.error('❌ Pinata SDK connection test failed: No CID returned');
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Pinata SDK connection test error:', error);
+      return false;
     }
   }
 
@@ -374,10 +454,20 @@ export class PetMetadataHelper {
   }
 
   /**
-   * Parse metadata from IPFS hash
+   * Parse metadata from IPFS hash using Pinata Gateway
    */
-  static async fetchMetadataFromIPFS(ipfsHash: string): Promise<GeneratedPetMetadata> {
+  static async fetchMetadataFromIPFS(ipfsHash: string) {
     try {
+      // Try Pinata SDK first if available
+      try {
+        const pinata = initializePinata();
+        const data = await pinata.gateways.public.get(ipfsHash);
+        return data ;
+      } catch (sdkError) {
+        console.warn('⚠️ Pinata SDK fetch failed, falling back to direct gateway');
+      }
+
+      // Fallback to direct gateway fetch
       const response = await fetch(`https://gateway.pinata.cloud/ipfs/${ipfsHash}`)
       if (!response.ok) {
         throw new Error(`Failed to fetch metadata: ${response.statusText}`)
@@ -416,6 +506,6 @@ export const {
   getPetSpriteUrl,
   getPetTypeMetadata,
   fetchMetadataFromIPFS,
-  validateMetadata
+  validateMetadata,
+  testPinataConnection
 } = PetMetadataHelper
-

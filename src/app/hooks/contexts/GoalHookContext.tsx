@@ -214,36 +214,16 @@ export function GoalProvider({ children }: { children: React.ReactNode }) {
     }
   }
   
-  // Format goal info
-  const formattedGoalInfo = useMemo((): FormattedGoalInfo | null => {
-    if (!goalBasicInfo || latestGoalId === null) return null
-    
-    const [owner, stakeAmount, endTime, status, milestonesCompleted, totalMilestones] = goalBasicInfo as any[]
-    const progressPercentage = totalMilestones > 0 ? (milestonesCompleted * 100) / totalMilestones : 0
-    const endDate = new Date(Number(endTime) * 1000)
-    const isExpired = Date.now() > endDate.getTime()
-    const isActive = status === GoalStatus.ACTIVE
-    
-    return {
-      goalId: latestGoalId,
-      owner,
-      stakeAmount: formatUnits(stakeAmount, 18),
-      endTime: endDate,
-      status,
-      statusText: getStatusText(status),
-      milestonesCompleted,
-      totalMilestones,
-      progressPercentage,
-      isActive,
-      isExpired
-    }
-  }, [goalBasicInfo, latestGoalId])
-  
-  // Format pet info
-  const formattedPetInfo = useMemo((): FormattedPetInfo | null => {
+  // Format pet info - FIXED VERSION with BigInt conversion
+const formattedPetInfo = useMemo((): FormattedPetInfo | null => {
     if (!petBasicInfo || latestPetTokenId === null) return null
     
     const [owner, experience, level, petType, stage, goalId, milestonesCompleted] = petBasicInfo as any[]
+    
+    // Convert BigInt values to numbers for calculations
+    const milestonesNum = Number(milestonesCompleted) // Convert BigInt to number
+    const levelNum = Number(level) // Convert BigInt to number (if it's also BigInt)
+    const goalIdNum = Number(goalId) // Convert BigInt to number (if it's also BigInt)
     
     // Calculate evolution progress
     const getEvolutionProgress = (milestones: number) => {
@@ -275,18 +255,49 @@ export function GoalProvider({ children }: { children: React.ReactNode }) {
       tokenId: latestPetTokenId,
       owner,
       experience: formatUnits(experience, 0), // Experience is stored as integer
-      level,
+      level: levelNum, // Use converted number
       petType,
       petTypeName: getPetTypeName(petType),
       petTypeEmoji: getPetTypeEmoji(petType),
       stage,
       stageName: getStageName(stage),
       stageEmoji: getStageEmoji(stage),
-      goalId,
-      milestonesCompleted,
-      evolutionProgress: getEvolutionProgress(milestonesCompleted)
+      goalId: goalIdNum, // Use converted number
+      milestonesCompleted: milestonesNum, // Use converted number
+      evolutionProgress: getEvolutionProgress(milestonesNum) // Use converted number
     }
   }, [petBasicInfo, latestPetTokenId])
+  
+  // Also fix the formattedGoalInfo to handle BigInt properly
+  const formattedGoalInfo = useMemo((): FormattedGoalInfo | null => {
+    if (!goalBasicInfo || latestGoalId === null) return null
+    
+    const [owner, stakeAmount, endTime, status, milestonesCompleted, totalMilestones] = goalBasicInfo as any[]
+    
+    // Convert BigInt values to numbers for calculations
+    const milestonesCompletedNum = Number(milestonesCompleted)
+    const totalMilestonesNum = Number(totalMilestones)
+    const endTimeNum = Number(endTime)
+    
+    const progressPercentage = totalMilestonesNum > 0 ? (milestonesCompletedNum * 100) / totalMilestonesNum : 0
+    const endDate = new Date(endTimeNum * 1000)
+    const isExpired = Date.now() > endDate.getTime()
+    const isActive = status === GoalStatus.ACTIVE
+    
+    return {
+      goalId: latestGoalId,
+      owner,
+      stakeAmount: formatUnits(stakeAmount, 18),
+      endTime: endDate,
+      status,
+      statusText: getStatusText(status),
+      milestonesCompleted: milestonesCompletedNum, // Use converted number
+      totalMilestones: totalMilestonesNum, // Use converted number
+      progressPercentage,
+      isActive,
+      isExpired
+    }
+  }, [goalBasicInfo, latestGoalId])
   
   // Validation function
   const validateGoalCreation = (params: CreateGoalParams): string[] => {
