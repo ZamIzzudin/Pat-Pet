@@ -30,11 +30,11 @@ const initializePinata = () => {
 export const PET_ASSETS = {
   DRAGON: {
     images: {
-      EGG: "ipfs/QmDragonEggStatic001",
-      BABY: "https://gateway.pinata.cloud/ipfs/QmDragonBabyStatic002", 
-      ADULT: "https://gateway.pinata.cloud/ipfs/QmDragonAdultStatic003"
+      EGG: `${pinataGateway}/ipfs/bafkreihswqedv24xdnjtll2oiguar35dn4heyxqj7dwta64fx6i5xhn5ny`,
+      BABY: `${pinataGateway}/ipfs/bafkreigcm2tnrzmihsbfsn44lavrwvg3fprt3zwlfwwc74hqakha6lb44i`,
+      ADULT: `${pinataGateway}/ipfs/bafkreigcm2tnrzmihsbfsn44lavrwvg3fprt3zwlfwwc74hqakha6lb44i`,
     },
-    sprite: "https://gateway.pinata.cloud/ipfs/QmDragonSpriteSheet001",
+    sprite: `${pinataGateway}/ipfs/bafkreicbmbbxnpyanm54ozwk27wtut6zvvo77g72zxb4jd6sfz7lx4p34i`, 
     metadata: {
       name: "Dragon",
       description: "A fierce dragon companion that breathes fire and soars through the skies",
@@ -44,7 +44,7 @@ export const PET_ASSETS = {
   },
   CAT: {
     images: {
-      EGG: `${pinataGateway}/ipfs/bafkreidhrd6libud5rzgodb4f2nrbeqwlit6xflh63nqvqsfqyobwhxtsu`,
+      EGG: `${pinataGateway}/ipfs/bafkreif4umwprhu3jkkhqcrzccr42hyfuz6bis7ztgcszctufdclsyi73a`,
       BABY: `${pinataGateway}/ipfs/bafkreig5hqcubiy33f2whq54ebhdegps3jmxs7amsk6wjfba2hywpc7rgm`,
       ADULT: `${pinataGateway}/ipfs/bafkreig5hqcubiy33f2whq54ebhdegps3jmxs7amsk6wjfba2hywpc7rgm`,
     },
@@ -58,11 +58,11 @@ export const PET_ASSETS = {
   },
   PLANT: {
     images: {
-      EGG: "https://gateway.pinata.cloud/ipfs/QmPlantSeedStatic001",
-      BABY: "https://gateway.pinata.cloud/ipfs/QmPlantSproutStatic002",
-      ADULT: "https://gateway.pinata.cloud/ipfs/QmPlantBloomStatic003"
+      EGG: `${pinataGateway}/ipfs/bafkreidhrd6libud5rzgodb4f2nrbeqwlit6xflh63nqvqsfqyobwhxtsu`,
+      BABY: `${pinataGateway}/ipfs/bafkreifhpq6dlahgs7fg5cd6yfcddvxzguzk6riws42g6ucu2g677n5nbu`, 
+      ADULT: `${pinataGateway}/ipfs/bafkreifhpq6dlahgs7fg5cd6yfcddvxzguzk6riws42g6ucu2g677n5nbu`
     },
-    sprite: "https://gateway.pinata.cloud/ipfs/QmPlantSpriteSheet001",
+    sprite: `${pinataGateway}/ipfs/bafkreifwsecavxtb3ovzr43bc2bskaiii43ixh6hxwrd2vpnglnpdrjed4`, 
     metadata: {
       name: "Plant",
       description: "A mystical plant companion that harnesses nature's power",

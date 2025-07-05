@@ -149,8 +149,8 @@ export function GoalProvider({ children }: { children: React.ReactNode }) {
   
   // Read nextGoalId from contract
   const { 
-    data: nextGoalIdData,
-    refetch: refetchNextGoalId 
+    data: systemStatsData,
+    refetch: systemStatsDataRefetch 
   } = useReadContract({
     address: PAT_GOAL_MANAGER_ADDRESS,
     abi: PAT_GOAL_MANAGER_ABI,
@@ -214,17 +214,18 @@ export function GoalProvider({ children }: { children: React.ReactNode }) {
     pollInterval: 10000,
   })
   
-
+  // ============ FORMAT DATA ============
+  const getStatusText = (status: string): string => {
+    const statusTexts: Record<string, string> = {
+      'ACTIVE': 'Active',
+      'COMPLETED': 'Completed',
+      'FAILED': 'Failed'
+    }
+    return statusTexts[status] || 'Unknown'
+  }
 
     // ============ HELPER FUNCTIONS ============
-    const getStatusText = (status: string): string => {
-      const statusTexts: Record<string, string> = {
-        'ACTIVE': 'Active',
-        'COMPLETED': 'Completed',
-        'FAILED': 'Failed'
-      }
-      return statusTexts[status] || 'Unknown'
-    }
+  
     const getPetTypeName = (petType: string): string => {
       const types: Record<string, string> = {
         'DRAGON': 'Dragon',
@@ -261,15 +262,16 @@ export function GoalProvider({ children }: { children: React.ReactNode }) {
       return emojis[stage] || '❓'
     }
     
-    // ============ FORMAT DATA ============
- 
+  
   // Get next goal ID from contract
   const nextGoalId = useMemo(() => {
-    if (nextGoalIdData) {
-      return Number(nextGoalIdData); // totalGoals = nextGoalId
+    let system = systemStatsData as any
+    if (system) {
+      return Number(system[0]); // nextGoalId
     }
-    return 0;
-  }, [nextGoalIdData]);
+
+    return 1;
+  }, [systemStatsData]);
   
   // Format user goals
   const userGoals = useMemo((): FormattedGoalInfo[] => {
@@ -515,14 +517,14 @@ export function GoalProvider({ children }: { children: React.ReactNode }) {
       if (transactionState.transactionType === 'createGoal') {
         // Refetch dashboard data and system stats after goal creation
         refetchDashboard()
-        refetchNextGoalId()
+        systemStatsDataRefetch()
       } else if (transactionState.transactionType === 'submitMilestone') {
         // Refetch goal progress and validations after milestone submission
         refetchGoalProgress()
         refetchValidations()
       }
     }
-  }, [transactionState.isCompleted, transactionState.transactionType, refetchDashboard, refetchGoalProgress, refetchValidations, refetchNextGoalId])
+  }, [transactionState.isCompleted, transactionState.transactionType, refetchDashboard, refetchGoalProgress, refetchValidations, systemStatsDataRefetch])
   
   const contextValue: GoalContextValue = {
     // Goal creation

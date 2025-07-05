@@ -320,7 +320,7 @@ function Renderer({
         )}
 
         {/* Selected Goal Details */}
-        {selectedGoal && (
+        {/* {selectedGoal && (
           <div className="bg-[#6b4b5b] p-3 rounded w-full border-2 border-[#eeff82]">
             <h3 className="text-[18px] mb-2">Selected Goal Details:</h3>
             <p className="font-semibold">{selectedGoal.title}</p>
@@ -336,7 +336,7 @@ function Renderer({
               Created: {selectedGoal.createdDate.toLocaleDateString()}
             </p>
           </div>
-        )}
+        )} */}
 
         <button
           className="absolute bottom-5 right-5 bg-[#6b4b5b] px-5 py-2 disabled:opacity-50"

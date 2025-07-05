@@ -1,6 +1,7 @@
 // lib/graphql.ts
 import { ApolloClient, InMemoryCache, gql, createHttpLink } from '@apollo/client';
 import { PetMetadataHelper } from '@/lib/metaDataHelper';
+import { formatEther, parseEther } from 'viem';
 
 // Create HTTP link to Ponder GraphQL endpoint  
 const httpLink = createHttpLink({
@@ -362,6 +363,8 @@ export interface Goal {
   createdAt: string;
 }
 
+
+
 export interface Pet {
   id: string;
   goalId: string;
@@ -410,7 +413,7 @@ export interface ValidationRequest {
 
 export const formatGoalData = (goal: Goal) => ({
   ...goal,
-  stakeAmountFormatted: parseFloat(goal.stakeAmount).toFixed(2),
+  stakeAmountFormatted: formatEther(BigInt(goal.stakeAmount), 'wei').toString(),
   endDate: new Date(parseInt(goal.endTime) * 1000),
   createdDate: new Date(parseInt(goal.createdAt) * 1000),
   progressPercentage: goal.totalMilestones > 0 
@@ -438,11 +441,11 @@ export const getPetSpriteUrl = (petType: string): string => {
   
   // Add other pet types when available
   if (petType === 'DRAGON') {
-    return `${baseUrl}/ipfs/placeholder-dragon-sprite`;
+    return `${baseUrl}/ipfs/bafkreicbmbbxnpyanm54ozwk27wtut6zvvo77g72zxb4jd6sfz7lx4p34i`;
   }
   
   if (petType === 'PLANT') {
-    return `${baseUrl}/ipfs/placeholder-plant-sprite`;
+    return `${baseUrl}/ipfs/bafkreifwsecavxtb3ovzr43bc2bskaiii43ixh6hxwrd2vpnglnpdrjed4`;
   }
   
   return `${baseUrl}/ipfs/placeholder-${petType.toLowerCase()}-sprite`;
