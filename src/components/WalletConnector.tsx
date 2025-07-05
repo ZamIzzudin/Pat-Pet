@@ -49,7 +49,7 @@ export default function WalletConnector() {
                       <button
                         onClick={openConnectModal}
                         type="button"
-                        className="bg-blue-600 hover:bg-blue-700 text-[#4f3718] py-2 px-4 rounded-lg text-sm transition-colors font-semibold"
+                        className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors font-semibold"
                         disabled={isConnecting}
                       >
                         {isConnecting ? "Connecting..." : "Connect Wallet"}
@@ -62,7 +62,7 @@ export default function WalletConnector() {
                       <button
                         onClick={openChainModal}
                         type="button"
-                        className="bg-red-600 hover:bg-red-700 text-[#4f3718] py-2 px-4 rounded-lg text-sm transition-colors font-semibold"
+                        className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors font-semibold"
                       >
                         Wrong network
                       </button>
@@ -74,7 +74,7 @@ export default function WalletConnector() {
                       <button
                         onClick={openChainModal}
                         type="button"
-                        className="bg-gray-600 hover:bg-gray-700 text-[#4f3718] py-2 px-3 rounded-lg text-sm transition-colors"
+                        className="bg-gray-600 hover:bg-gray-700 text-white py-2 px-3 rounded-lg transition-colors"
                       >
                         {chain.hasIcon && (
                           <div
@@ -102,10 +102,10 @@ export default function WalletConnector() {
                       <button
                         onClick={openAccountModal}
                         type="button"
-                        className="bg-green-600 hover:bg-green-700 text-[#4f3718] py-2 px-3 rounded-lg text-sm transition-colors font-semibold flex gap-5"
+                        className="bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-lg transition-colors flex gap-5"
                       >
                         <span>{account.displayName}</span>
-                        <span>
+                        <span className="font-semibold">
                           {account.displayBalance
                             ? ` ${account.displayBalance}`
                             : ""}

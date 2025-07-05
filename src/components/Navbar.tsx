@@ -20,21 +20,20 @@ export default function Navbar() {
   // Array containing navigation items
   const navItems = [
     { id: 1, text: "Home", redirect: "/" },
-    { id: 2, text: "Community", redirect: "/community" },
-    { id: 3, text: "Market", redirect: "/market" },
-    { id: 4, text: "News", redirect: "/news" },
-    { id: 5, text: "Play", redirect: "/play" },
+    { id: 2, text: "Roadmap", redirect: "/roadmap" },
+    { id: 3, text: "Community", redirect: "/community" },
+    { id: 4, text: "Play", redirect: "/play" },
   ];
   return (
     <Web3Provider>
-      <nav className="bg-[#fcd3b7] fixed justify-end items-center max-w-[100vw] text-[#4f3718] md:justify-center z-30 left-0 right-0">
+      <nav className="bg-[#639b56] fixed justify-end items-center max-w-[100vw] text-white md:justify-center z-30 left-0 right-0">
         {/* Desktop Navigation */}
         <div className="hidden md:flex min-w-w-screen gap-24 justify-between items-center px-4">
           <ul className="hidden md:flex gap-24 justify-between items-center">
             {navItems.map((item) => (
               <li
                 key={item.id}
-                className="p-4 rounded-xl m-2 cursor-pointer duration-300 hover:text-purple"
+                className="p-4 rounded-xl m-2 cursor-pointer duration-300 hover:text-[#96b669]"
               >
                 <Link href={item.redirect}>{item.text}</Link>
               </li>
@@ -68,7 +67,7 @@ export default function Navbar() {
           {navItems.map((item) => (
             <li
               key={item.id}
-              className="px-4 text-dark hover:bg-purple-gradient duration-300 hover:text-white cursor-pointer flex"
+              className="px-4 text-dark hover:bg-[#96b669] duration-300 hover:text-white cursor-pointer flex"
             >
               <Link className="w-[100%] h-[100%] py-4" href={item.redirect}>
                 {item.text}
