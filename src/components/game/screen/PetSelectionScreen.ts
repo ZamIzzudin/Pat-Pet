@@ -3,10 +3,11 @@
 
 import * as Phaser from "phaser";
 import GameState, { PetData } from "../object/GameState";
+import Web3GameState from "../object/Web3GameState";
 
 export default class PetSelectionScreen extends Phaser.Scene {
   previousScene: string;
-  gameState: GameState;
+  gameState: Web3GameState;
   selectedPet: number;
   petElements: any[];
   titleText: Phaser.GameObjects.Text;
@@ -25,7 +26,7 @@ export default class PetSelectionScreen extends Phaser.Scene {
   }
 
   create() {
-    this.gameState = GameState.getInstance();
+    this.gameState = Web3GameState.getInstance();
     this.selectedPet = 0;
     this.petElements = [];
 
@@ -150,7 +151,7 @@ export default class PetSelectionScreen extends Phaser.Scene {
       selectedIndicator.setVisible(pet.id === this.gameState.selectedPetId);
 
       // Status bars (mini version)
-      this.createMiniStatusBars(petContainer, pet, 0, 40);
+      // this.createMiniStatusBars(petContainer, pet, 0, 40);
 
       // Locked overlay if not unlocked
       if (!pet.unlocked) {
@@ -195,60 +196,60 @@ export default class PetSelectionScreen extends Phaser.Scene {
     });
   }
 
-  createMiniStatusBars(
-    container: Phaser.GameObjects.Container,
-    pet: PetData,
-    x: number,
-    y: number
-  ) {
-    const barWidth = 60;
-    const barHeight = 3;
-    const spacing = 6;
+  // createMiniStatusBars(
+  //   container: Phaser.GameObjects.Container,
+  //   pet: PetData,
+  //   x: number,
+  //   y: number
+  // ) {
+  //   const barWidth = 60;
+  //   const barHeight = 3;
+  //   const spacing = 6;
 
-    // Happiness bar
-    const happinessBg = this.add.graphics();
-    happinessBg.fillStyle(0x333333, 1);
-    happinessBg.fillRect(x - barWidth / 2, y, barWidth, barHeight);
+  //   // Happiness bar
+  //   const happinessBg = this.add.graphics();
+  //   happinessBg.fillStyle(0x333333, 1);
+  //   happinessBg.fillRect(x - barWidth / 2, y, barWidth, barHeight);
 
-    const happinessBar = this.add.graphics();
-    const happinessWidth = (pet.stats.happiness / 100) * barWidth;
-    happinessBar.fillStyle(0xff6b6b, 1);
-    happinessBar.fillRect(x - barWidth / 2, y, happinessWidth, barHeight);
+  //   const happinessBar = this.add.graphics();
+  //   const happinessWidth = (pet.stats.happiness / 100) * barWidth;
+  //   happinessBar.fillStyle(0xff6b6b, 1);
+  //   happinessBar.fillRect(x - barWidth / 2, y, happinessWidth, barHeight);
 
-    // Hunger bar
-    const hungerBg = this.add.graphics();
-    hungerBg.fillStyle(0x333333, 1);
-    hungerBg.fillRect(x - barWidth / 2, y + spacing, barWidth, barHeight);
+  //   // Hunger bar
+  //   const hungerBg = this.add.graphics();
+  //   hungerBg.fillStyle(0x333333, 1);
+  //   hungerBg.fillRect(x - barWidth / 2, y + spacing, barWidth, barHeight);
 
-    const hungerBar = this.add.graphics();
-    const hungerWidth = (pet.stats.hunger / 100) * barWidth;
-    hungerBar.fillStyle(0x4ecdc4, 1);
-    hungerBar.fillRect(x - barWidth / 2, y + spacing, hungerWidth, barHeight);
+  //   const hungerBar = this.add.graphics();
+  //   const hungerWidth = (pet.stats.hunger / 100) * barWidth;
+  //   hungerBar.fillStyle(0x4ecdc4, 1);
+  //   hungerBar.fillRect(x - barWidth / 2, y + spacing, hungerWidth, barHeight);
 
-    // Thirst bar
-    const thirstBg = this.add.graphics();
-    thirstBg.fillStyle(0x333333, 1);
-    thirstBg.fillRect(x - barWidth / 2, y + spacing * 2, barWidth, barHeight);
+  //   // Thirst bar
+  //   const thirstBg = this.add.graphics();
+  //   thirstBg.fillStyle(0x333333, 1);
+  //   thirstBg.fillRect(x - barWidth / 2, y + spacing * 2, barWidth, barHeight);
 
-    const thirstBar = this.add.graphics();
-    const thirstWidth = (pet.stats.thirst / 100) * barWidth;
-    thirstBar.fillStyle(0x45b7d1, 1);
-    thirstBar.fillRect(
-      x - barWidth / 2,
-      y + spacing * 2,
-      thirstWidth,
-      barHeight
-    );
+  //   const thirstBar = this.add.graphics();
+  //   const thirstWidth = (pet.stats.thirst / 100) * barWidth;
+  //   thirstBar.fillStyle(0x45b7d1, 1);
+  //   thirstBar.fillRect(
+  //     x - barWidth / 2,
+  //     y + spacing * 2,
+  //     thirstWidth,
+  //     barHeight
+  //   );
 
-    container.add([
-      happinessBg,
-      happinessBar,
-      hungerBg,
-      hungerBar,
-      thirstBg,
-      thirstBar,
-    ]);
-  }
+  //   container.add([
+  //     happinessBg,
+  //     happinessBar,
+  //     hungerBg,
+  //     hungerBar,
+  //     thirstBg,
+  //     thirstBar,
+  //   ]);
+  // }
 
   updateSelection() {
     // Reset all slots

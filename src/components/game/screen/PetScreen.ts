@@ -3,7 +3,7 @@
 
 import * as Phaser from "phaser";
 import Pet from "../object/Pet";
-import StatusBars from "../ui/StatusBars";
+// import StatusBars from "../ui/StatusBars";
 import FeedingUI from "../ui/FeedingUI";
 import Button from "../ui/Button";
 import ButtonEvent from "../ui/ButtonEvent";
@@ -15,7 +15,7 @@ export default class PetScreen extends Phaser.Scene {
   pet: Pet;
   petSelectionButton: Button;
   goalsButton: Button;
-  statusBars: StatusBars;
+  // statusBars: StatusBars;
   feedingUI: FeedingUI;
   gameState: Web3GameState;
   eventBus: EventBus;
@@ -60,7 +60,7 @@ export default class PetScreen extends Phaser.Scene {
     this.pet = new Pet(this, 176, 90);
 
     // Create status bars at the top
-    this.statusBars = new StatusBars(this);
+    // this.statusBars = new StatusBars(this);
 
     // Create feeding UI at the bottom
     this.feedingUI = new FeedingUI(this, this.pet);
@@ -92,6 +92,10 @@ export default class PetScreen extends Phaser.Scene {
       GAME_EVENTS.GAME_STATE_CHANGED,
       this.handleGameStateChange.bind(this)
     );
+
+    this.eventBus.on(GAME_EVENTS.MODAL_HIDE, () => {
+      this.scene.resume();
+    });
   }
 
   handleGameStateChange(data: any) {
@@ -114,9 +118,9 @@ export default class PetScreen extends Phaser.Scene {
     }
 
     // Update status bars
-    if (this.statusBars) {
-      this.statusBars.updateBars();
-    }
+    // if (this.statusBars) {
+    //   this.statusBars.updateBars();
+    // }
 
     // Update feeding UI
     if (this.feedingUI) {
@@ -131,9 +135,9 @@ export default class PetScreen extends Phaser.Scene {
     }
 
     // Update status bars
-    if (this.statusBars) {
-      this.statusBars.updateBars();
-    }
+    // if (this.statusBars) {
+    //   this.statusBars.updateBars();
+    // }
 
     // Update feeding UI
     if (this.feedingUI) {
