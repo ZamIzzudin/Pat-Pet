@@ -26,7 +26,10 @@ export class SocketIOClient {
   private isInitialized = false;
   private username: string | null = null; // Store username
   private movementDebounceTimer: NodeJS.Timeout | null = null;
-  private pendingMovement: { position: { x: number; y: number }; frame: number } | null = null;
+  private pendingMovement: {
+    position: { x: number; y: number };
+    frame: number;
+  } | null = null;
 
   constructor(private url: string = "http://localhost:3001") {
     if (!this.isInitialized) {
@@ -38,7 +41,7 @@ export class SocketIOClient {
   // Set username from wallet connection
   public setUsername(username: string) {
     this.username = username;
-    console.log('SocketIOClient: Username set to', username);
+    console.log("SocketIOClient: Username set to", username);
   }
 
   private connect() {
@@ -212,7 +215,7 @@ export class SocketIOClient {
     }
 
     this.currentRoom = roomId;
-    
+
     // Send join room with username if available
     const joinData: any = {
       roomId,
@@ -299,5 +302,23 @@ export class SocketIOClient {
 
   public getSocket(): Socket | null {
     return this.socket;
+  }
+}
+
+// Singleton instance
+let socketClient: SocketIOClient | null = null;
+
+export function getSocketIOClient(): SocketIOClient {
+  if (!socketClient) {
+    socketClient = new SocketIOClient();
+  }
+  return socketClient;
+}
+
+// Clean up function for when component unmounts
+export function cleanupSocketIOClient() {
+  if (socketClient) {
+    socketClient.disconnect();
+    socketClient = null;
   }
 }

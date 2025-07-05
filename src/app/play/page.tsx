@@ -4,9 +4,10 @@
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 
-// import MultiplayerStatus from "@/components/MultiplayerStatus";
-// import Web3Provider from "@/components/Web3Provider";
-// import WalletConnector from "@/components/WalletConnector";
+import { EventBus, GAME_EVENTS } from "@/lib/eventBus";
+import ModalEvent from "@/components/ActionModal";
+
+import Web3Provider from "@/components/Web3Provider";
 
 const GameScreen = dynamic(
   () => import("../../components/game/screen/GameScreen"),
@@ -17,14 +18,27 @@ const GameScreen = dynamic(
 
 export default function Play() {
   const [mounted, setMounted] = useState(false);
+  const [eventBus] = useState(() => EventBus.getInstance());
+  const [isShown, setShown] = useState<boolean>(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    eventBus.on(GAME_EVENTS.MODAL_SHOWN, () => setShown(!isShown));
+
+    return () => {
+      eventBus.off(GAME_EVENTS.MODAL_SHOWN, () => setShown(!isShown));
+    };
+  }, [eventBus]);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center max-w-[100vw] overflow-hidden">
-      {mounted && <GameScreen />}
-    </main>
+    <Web3Provider>
+      <main className="flex min-h-screen flex-col items-center justify-center max-w-[100vw] overflow-hidden">
+        <ModalEvent show={isShown} setShow={() => setShown(false)} />
+        {mounted && <GameScreen />}
+      </main>
+    </Web3Provider>
   );
 }

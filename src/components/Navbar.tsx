@@ -68,7 +68,7 @@ export default function Navbar() {
           {navItems.map((item) => (
             <li
               key={item.id}
-              className="px-4 text-dark hover:bg-purple-gradient hover:text-dark duration-300 hover:text-white cursor-pointer flex"
+              className="px-4 text-dark hover:bg-purple-gradient duration-300 hover:text-white cursor-pointer flex"
             >
               <Link className="w-[100%] h-[100%] py-4" href={item.redirect}>
                 {item.text}

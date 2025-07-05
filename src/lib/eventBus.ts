@@ -24,6 +24,8 @@ export interface PetData {
   unlocked: boolean;
   owner?: string;
   tokenId?: string;
+  egg_url: string;
+  adult_url: string;
 }
 
 export interface Web3GameData {
@@ -68,7 +70,7 @@ export class EventBus {
   public emit(event: string, data?: any): void {
     const callbacks = this.listeners.get(event);
     if (callbacks) {
-      callbacks.forEach(callback => {
+      callbacks.forEach((callback) => {
         try {
           callback(data);
         } catch (error) {
@@ -86,20 +88,24 @@ export class EventBus {
 // Event types constants
 export const GAME_EVENTS = {
   // Web3 to Game events
-  WALLET_CONNECTED: 'wallet_connected',
-  WALLET_DISCONNECTED: 'wallet_disconnected',
-  PETS_DATA_UPDATED: 'pets_data_updated',
-  SELECTED_PET_CHANGED: 'selected_pet_changed',
-  
+  WALLET_CONNECTED: "wallet_connected",
+  WALLET_DISCONNECTED: "wallet_disconnected",
+  PETS_DATA_UPDATED: "pets_data_updated",
+  SELECTED_PET_CHANGED: "selected_pet_changed",
+
   // Game to Web3 events
-  GAME_READY: 'game_ready',
-  PET_STATS_UPDATED: 'pet_stats_updated',
-  PET_ACTION_PERFORMED: 'pet_action_performed',
-  GAME_STATE_CHANGED: 'game_state_changed',
-  
+  GAME_READY: "game_ready",
+  PET_STATS_UPDATED: "pet_stats_updated",
+  PET_ACTION_PERFORMED: "pet_action_performed",
+  GAME_STATE_CHANGED: "game_state_changed",
+
+  // Modal Shown
+  MODAL_SHOWN: "modal_shown",
+  MODAL_HIDE: "modal_hide",
+
   // General events
-  ERROR: 'error',
-  LOADING: 'loading'
+  ERROR: "error",
+  LOADING: "loading",
 } as const;
 
-export type GameEventType = typeof GAME_EVENTS[keyof typeof GAME_EVENTS];
+export type GameEventType = (typeof GAME_EVENTS)[keyof typeof GAME_EVENTS];

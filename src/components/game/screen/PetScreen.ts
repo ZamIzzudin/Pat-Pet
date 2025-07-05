@@ -6,6 +6,7 @@ import Pet from "../object/Pet";
 import StatusBars from "../ui/StatusBars";
 import FeedingUI from "../ui/FeedingUI";
 import Button from "../ui/Button";
+import ButtonEvent from "../ui/ButtonEvent";
 import Web3GameState from "../object/Web3GameState";
 import { EventBus, GAME_EVENTS } from "@/lib/eventBus";
 
@@ -33,13 +34,11 @@ export default class PetScreen extends Phaser.Scene {
       "Pet_Screen",
       "Backpack"
     );
-    this.goalsButton = new Button(
+    this.goalsButton = new ButtonEvent(
       this,
       [320, 85],
       [45, 45],
       "GOALS",
-      "Goals_Screen",
-      "Pet_Screen",
       "Backpack"
     );
   }
@@ -83,25 +82,28 @@ export default class PetScreen extends Phaser.Scene {
 
     // Listen for scene wake events (when returning from other scenes)
     this.events.on("wake", this.onWake, this);
-    
+
     // Setup event listeners for game state changes
     this.setupEventListeners();
   }
 
   setupEventListeners() {
-    this.eventBus.on(GAME_EVENTS.GAME_STATE_CHANGED, this.handleGameStateChange.bind(this));
+    this.eventBus.on(
+      GAME_EVENTS.GAME_STATE_CHANGED,
+      this.handleGameStateChange.bind(this)
+    );
   }
 
   handleGameStateChange(data: any) {
-    if (data.type === 'pet_selection_changed') {
-      console.log('PetScreen: Pet selection changed', data);
+    if (data.type === "pet_selection_changed") {
+      console.log("PetScreen: Pet selection changed", data);
       // Force update all components
       this.updateAllComponents();
     }
   }
 
   onWake() {
-    console.log('PetScreen: Scene woke up, updating components');
+    console.log("PetScreen: Scene woke up, updating components");
     this.updateAllComponents();
   }
 

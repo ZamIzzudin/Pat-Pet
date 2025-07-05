@@ -55,42 +55,39 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
   const getMockPetsData = (walletAddress: string): PetData[] => [
     {
       id: 1,
-      name: "Crypto Fluffy",
+      name: "Cat",
       sprite: "Egg",
       stage: "egg",
       stats: { happiness: 80, hunger: 60, thirst: 70 },
       unlocked: true,
       owner: walletAddress,
       tokenId: "1",
+      egg_url: "/categg.png",
+      adult_url: "/catbat.png",
     },
     {
       id: 2,
-      name: "NFT Shadow",
+      name: "Dragon",
       sprite: "Egg2",
       stage: "egg",
       stats: { happiness: 75, hunger: 55, thirst: 65 },
       unlocked: true,
       owner: walletAddress,
       tokenId: "2",
+      egg_url: "/dragoegg.png",
+      adult_url: "/dragobat.png",
     },
     {
       id: 3,
-      name: "DeFi Drago",
+      name: "Leaf",
       sprite: "Egg3",
       stage: "egg",
       stats: { happiness: 75, hunger: 55, thirst: 65 },
       unlocked: true,
       owner: walletAddress,
       tokenId: "3",
-    },
-    {
-      id: 4,
-      name: "Locked Pet",
-      sprite: "Egg",
-      stage: "egg",
-      stats: { happiness: 100, hunger: 100, thirst: 100 },
-      unlocked: false,
-      tokenId: "4",
+      egg_url: "/leafegg.png",
+      adult_url: "/leafbat.png",
     },
   ];
 
@@ -103,7 +100,7 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
         isConnected: true,
       };
       setWallet(walletData);
-      
+
       // Load pets data (mock for now)
       const petsData = getMockPetsData(address);
       setPets(petsData);
@@ -114,7 +111,7 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
 
       // Emit wallet connected event
       eventBus.emit(GAME_EVENTS.WALLET_CONNECTED, walletData);
-      
+
       // Send game data if game is ready
       if (isGameReady) {
         setTimeout(() => {

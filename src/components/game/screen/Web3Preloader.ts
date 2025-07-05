@@ -40,11 +40,11 @@ export default class Web3Preloader extends Phaser.Scene {
       frameWidth: 32,
       frameHeight: 32,
     });
-    this.load.spritesheet("Egg2", "/egg3.png", {
+    this.load.spritesheet("Egg2", "/egg4.png", {
       frameWidth: 32,
       frameHeight: 32,
     });
-    this.load.spritesheet("Egg3", "/egg4.png", {
+    this.load.spritesheet("Egg3", "/egg5.png", {
       frameWidth: 32,
       frameHeight: 32,
     });
