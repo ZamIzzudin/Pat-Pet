@@ -25,7 +25,7 @@ interface Web3ContextType {
   isGameReady: boolean;
   isConnecting: boolean;
   updatePetStats: (petId: number, stats: any) => void;
-  selectPet: (petId: number) => void;
+  // selectPet: (petId: number) => void;
 }
 
 const Web3Context = createContext<Web3ContextType | undefined>(undefined);
@@ -147,20 +147,20 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
       }
     };
 
-    const handlePetStatsUpdated = (data: any) => {
-      console.log("Pet stats updated from game:", data);
-      // Update local state
-      setPets((prevPets) =>
-        prevPets.map((pet) =>
-          pet.id === data.petId
-            ? { ...pet, stats: { ...pet.stats, ...data.stats } }
-            : pet
-        )
-      );
+    // const handlePetStatsUpdated = (data: any) => {
+    //   console.log("Pet stats updated from game:", data);
+    //   // Update local state
+    //   setPets((prevPets) =>
+    //     prevPets.map((pet) =>
+    //       pet.id === data.petId
+    //         ? { ...pet, stats: { ...pet.stats, ...data.stats } }
+    //         : pet
+    //     )
+    //   );
 
-      // TODO: Sync with blockchain/backend
-      toast.success(`Pet stats updated for pet #${data.petId}`);
-    };
+    //   // TODO: Sync with blockchain/backend
+    //   toast.success(`Pet stats updated for pet #${data.petId}`);
+    // };
 
     const handlePetActionPerformed = (data: any) => {
       console.log("Pet action performed:", data);
@@ -183,23 +183,23 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
       // TODO: Handle blockchain transactions for pet actions
     };
 
-    const handleSelectedPetChanged = (data: any) => {
-      console.log("Selected pet changed from game:", data);
-      toast.success(`Pet #${data.petId} selected`);
-    };
+    // const handleSelectedPetChanged = (data: any) => {
+    //   console.log("Selected pet changed from game:", data);
+    //   toast.success(`Pet #${data.petId} selected`);
+    // };
 
     eventBus.on(GAME_EVENTS.GAME_READY, handleGameReady);
-    eventBus.on(GAME_EVENTS.PET_STATS_UPDATED, handlePetStatsUpdated);
+    // eventBus.on(GAME_EVENTS.PET_STATS_UPDATED, handlePetStatsUpdated);
     eventBus.on(GAME_EVENTS.PET_ACTION_PERFORMED, handlePetActionPerformed);
-    eventBus.on(GAME_EVENTS.SELECTED_PET_CHANGED, handleSelectedPetChanged);
+    // eventBus.on(GAME_EVENTS.SELECTED_PET_CHANGED, handleSelectedPetChanged);
 
     return () => {
       eventBus.off(GAME_EVENTS.GAME_READY, handleGameReady);
-      eventBus.off(GAME_EVENTS.PET_STATS_UPDATED, handlePetStatsUpdated);
+      // eventBus.off(GAME_EVENTS.PET_STATS_UPDATED, handlePetStatsUpdated);
       eventBus.off(GAME_EVENTS.PET_ACTION_PERFORMED, handlePetActionPerformed);
-      eventBus.off(GAME_EVENTS.SELECTED_PET_CHANGED, handleSelectedPetChanged);
+      // eventBus.off(GAME_EVENTS.SELECTED_PET_CHANGED, handleSelectedPetChanged);
     };
-  }, [eventBus, isConnected, pets, wallet]);
+  }, [eventBus, isConnected, wallet]);
 
   const sendGameData = (walletData: WalletData, petsData: PetData[]) => {
     const gameData: Web3GameData = {
@@ -223,10 +223,10 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
     eventBus.emit(GAME_EVENTS.PET_STATS_UPDATED, { petId, stats });
   };
 
-  const selectPet = (petId: number) => {
-    eventBus.emit(GAME_EVENTS.SELECTED_PET_CHANGED, { petId });
-    toast.success(`Pet #${petId} selected`);
-  };
+  // const selectPet = (petId: number) => {
+  //   eventBus.emit(GAME_EVENTS.SELECTED_PET_CHANGED, { petId });
+  //   toast.success(`Pet #${petId} selected`);
+  // };
 
   const value: Web3ContextType = {
     wallet,
@@ -234,7 +234,7 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
     isGameReady,
     isConnecting,
     updatePetStats,
-    selectPet,
+    // selectPet,
   };
 
   return <Web3Context.Provider value={value}>{children}</Web3Context.Provider>;

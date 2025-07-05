@@ -27,7 +27,7 @@ export default function Navbar() {
   ];
   return (
     <Web3Provider>
-      <nav className="bg-black fixed justify-end items-center max-w-[100vw] text-white md:justify-center z-30 left-0 right-0">
+      <nav className="bg-[#fcd3b7] fixed justify-end items-center max-w-[100vw] text-[#4f3718] md:justify-center z-30 left-0 right-0">
         {/* Desktop Navigation */}
         <div className="hidden md:flex min-w-w-screen gap-24 justify-between items-center px-4">
           <ul className="hidden md:flex gap-24 justify-between items-center">

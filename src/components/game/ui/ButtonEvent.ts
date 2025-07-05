@@ -128,7 +128,7 @@ export default class ButtonEvent {
   }
 
   handler() {
-    // this.screen.
+    this.screen.scene.pause();
     this.eventBus.emit(GAME_EVENTS.MODAL_SHOWN);
   }
 }

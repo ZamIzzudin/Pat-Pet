@@ -35,13 +35,19 @@ export default class StatusBars {
   }
 
   private setupEventListeners() {
-    this.eventBus.on(GAME_EVENTS.GAME_STATE_CHANGED, this.handleGameStateChange.bind(this));
+    this.eventBus.on(
+      GAME_EVENTS.GAME_STATE_CHANGED,
+      this.handleGameStateChange.bind(this)
+    );
   }
 
   private handleGameStateChange(data: any) {
-    if (data.type === 'pet_selection_changed' || data.type === 'pet_stage_changed') {
-      console.log('StatusBars: Handling game state change', data);
-      this.updateBars();
+    if (
+      data.type === "pet_selection_changed" ||
+      data.type === "pet_stage_changed"
+    ) {
+      console.log("StatusBars: Handling game state change", data);
+      // this.updateBars();
     }
   }
 
@@ -102,7 +108,7 @@ export default class StatusBars {
     this.createStatusBar("thirst", 75, 40, 0x45b7d1); // Blue for thirst
 
     // Update bars initially
-    this.updateBars();
+    // this.updateBars();
   }
 
   createStatusBar(type: string, x: number, y: number, color: number) {
@@ -155,7 +161,7 @@ export default class StatusBars {
     const selectedPet = this.gameState.getSelectedPet();
     const stats = selectedPet.stats;
 
-    console.log('StatusBars: Updating with selected pet', selectedPet);
+    console.log("StatusBars: Updating with selected pet", selectedPet);
 
     // Update pet name
     this.petNameText.setText(selectedPet.name);
@@ -237,7 +243,7 @@ export default class StatusBars {
   destroy() {
     // Clean up event listeners
     this.eventBus.off(GAME_EVENTS.GAME_STATE_CHANGED);
-    
+
     if (this.uiContainer) this.uiContainer.destroy();
     if (this.barLayoutSprite) this.barLayoutSprite.destroy();
     if (this.profileSprite) this.profileSprite.destroy();
