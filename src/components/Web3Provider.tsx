@@ -1,10 +1,22 @@
 /** @format */
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useAccount, useDisconnect } from 'wagmi';
-import { EventBus, GAME_EVENTS, WalletData, PetData, Web3GameData } from '@/lib/eventBus';
-import toast from 'react-hot-toast';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { useAccount, useDisconnect } from "wagmi";
+import {
+  EventBus,
+  GAME_EVENTS,
+  WalletData,
+  PetData,
+  Web3GameData,
+} from "@/lib/eventBus";
+import toast from "react-hot-toast";
 
 interface Web3ContextType {
   wallet: WalletData | null;
@@ -20,7 +32,7 @@ const Web3Context = createContext<Web3ContextType | undefined>(undefined);
 export const useWeb3 = () => {
   const context = useContext(Web3Context);
   if (context === undefined) {
-    throw new Error('useWeb3 must be used within a Web3Provider');
+    throw new Error("useWeb3 must be used within a Web3Provider");
   }
   return context;
 };
@@ -32,7 +44,7 @@ interface Web3ProviderProps {
 export default function Web3Provider({ children }: Web3ProviderProps) {
   const { address, isConnected, isConnecting } = useAccount();
   const { disconnect } = useDisconnect();
-  
+
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [pets, setPets] = useState<PetData[]>([]);
   const [isGameReady, setIsGameReady] = useState(false);
@@ -48,27 +60,27 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
       stats: { happiness: 80, hunger: 60, thirst: 70 },
       unlocked: true,
       owner: walletAddress,
-      tokenId: "1"
+      tokenId: "1",
     },
     {
       id: 2,
       name: "NFT Shadow",
-      sprite: "Egg2", 
+      sprite: "Egg2",
       stage: "egg",
       stats: { happiness: 75, hunger: 55, thirst: 65 },
       unlocked: true,
       owner: walletAddress,
-      tokenId: "2"
+      tokenId: "2",
     },
     {
       id: 3,
       name: "DeFi Drago",
       sprite: "Egg3",
-      stage: "egg", 
+      stage: "egg",
       stats: { happiness: 75, hunger: 55, thirst: 65 },
       unlocked: true,
       owner: walletAddress,
-      tokenId: "3"
+      tokenId: "3",
     },
     {
       id: 4,
@@ -77,8 +89,8 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
       stage: "egg",
       stats: { happiness: 100, hunger: 100, thirst: 100 },
       unlocked: false,
-      tokenId: "4"
-    }
+      tokenId: "4",
+    },
   ];
 
   // Handle wallet connection changes
@@ -87,18 +99,15 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
       const walletData: WalletData = {
         address,
         username: `Player_${address.slice(2, 8)}`,
-        isConnected: true
+        isConnected: true,
       };
-
       setWallet(walletData);
-      
       // Load pets data (mock for now)
       const petsData = getMockPetsData(address);
       setPets(petsData);
 
       // Emit wallet connected event
       eventBus.emit(GAME_EVENTS.WALLET_CONNECTED, walletData);
-      
       // Send game data if game is ready
       if (isGameReady) {
         setTimeout(() => {
@@ -106,26 +115,28 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
         }, 100);
       }
 
-      toast.success(`Wallet connected: ${address.slice(0, 6)}...${address.slice(-4)}`);
-      console.log('Wallet connected:', walletData);
+      toast.success(
+        `Wallet connected: ${address.slice(0, 6)}...${address.slice(-4)}`
+      );
+      console.log("Wallet connected:", walletData);
     } else {
       // Handle disconnection
       if (wallet) {
         setWallet(null);
         setPets([]);
         eventBus.emit(GAME_EVENTS.WALLET_DISCONNECTED);
-        toast.error('Wallet disconnected');
-        console.log('Wallet disconnected');
+        toast.error("Wallet disconnected");
+        console.log("Wallet disconnected");
       }
     }
-  }, [isConnected, address, isGameReady, eventBus, wallet]);
+  }, [isConnected, address, isGameReady, eventBus]);
 
   // Setup game event listeners
   useEffect(() => {
     const handleGameReady = () => {
-      console.log('Game is ready!');
+      console.log("Game is ready!");
       setIsGameReady(true);
-      
+
       // Send initial data to game if wallet is connected
       if (wallet && pets.length > 0) {
         sendGameData(wallet, pets);
@@ -133,35 +144,37 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
     };
 
     const handlePetStatsUpdated = (data: any) => {
-      console.log('Pet stats updated from game:', data);
+      console.log("Pet stats updated from game:", data);
       // Update local state
-      setPets(prevPets => 
-        prevPets.map(pet => 
-          pet.id === data.petId 
+      setPets((prevPets) =>
+        prevPets.map((pet) =>
+          pet.id === data.petId
             ? { ...pet, stats: { ...pet.stats, ...data.stats } }
             : pet
         )
       );
-      
+
       // TODO: Sync with blockchain/backend
       toast.success(`Pet stats updated for pet #${data.petId}`);
     };
 
     const handlePetActionPerformed = (data: any) => {
-      console.log('Pet action performed:', data);
-      
+      console.log("Pet action performed:", data);
+
       // Show toast notification
       const actionMessages = {
-        hatch: '🥚 Pet hatched!',
-        feed: '🍎 Pet fed!',
-        drink: '💧 Pet hydrated!',
-        play: '🎾 Pet played!',
-        rest: '😴 Pet rested!'
+        hatch: "🥚 Pet hatched!",
+        feed: "🍎 Pet fed!",
+        drink: "💧 Pet hydrated!",
+        play: "🎾 Pet played!",
+        rest: "😴 Pet rested!",
       };
-      
-      const message = actionMessages[data.action as keyof typeof actionMessages] || `Pet action: ${data.action}`;
+
+      const message =
+        actionMessages[data.action as keyof typeof actionMessages] ||
+        `Pet action: ${data.action}`;
       toast.success(message);
-      
+
       // TODO: Handle blockchain transactions for pet actions
     };
 
@@ -174,25 +187,23 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
       eventBus.off(GAME_EVENTS.PET_STATS_UPDATED, handlePetStatsUpdated);
       eventBus.off(GAME_EVENTS.PET_ACTION_PERFORMED, handlePetActionPerformed);
     };
-  }, [eventBus, wallet, pets]);
+  }, [eventBus, isConnected, pets]);
 
   const sendGameData = (walletData: WalletData, petsData: PetData[]) => {
     const gameData: Web3GameData = {
       wallet: walletData,
       pets: petsData,
-      selectedPetId: petsData.find(pet => pet.unlocked)?.id || 1
+      selectedPetId: petsData.find((pet) => pet.unlocked)?.id || 1,
     };
 
     eventBus.emit(GAME_EVENTS.PETS_DATA_UPDATED, gameData);
-    console.log('Game data sent:', gameData);
+    console.log("Game data sent:", gameData);
   };
 
   const updatePetStats = (petId: number, stats: any) => {
-    setPets(prevPets => 
-      prevPets.map(pet => 
-        pet.id === petId 
-          ? { ...pet, stats: { ...pet.stats, ...stats } }
-          : pet
+    setPets((prevPets) =>
+      prevPets.map((pet) =>
+        pet.id === petId ? { ...pet, stats: { ...pet.stats, ...stats } } : pet
       )
     );
 
@@ -211,12 +222,8 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
     isGameReady,
     isConnecting,
     updatePetStats,
-    selectPet
+    selectPet,
   };
 
-  return (
-    <Web3Context.Provider value={value}>
-      {children}
-    </Web3Context.Provider>
-  );
+  return <Web3Context.Provider value={value}>{children}</Web3Context.Provider>;
 }
