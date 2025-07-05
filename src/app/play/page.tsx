@@ -35,7 +35,14 @@ export default function Play() {
 
   return (
     <Web3Provider>
-      <main className="flex min-h-screen flex-col items-center justify-center max-w-[100vw] overflow-hidden">
+      <main
+        style={{
+          backgroundImage: "url('./Jumbotron.png')",
+          backgroundSize: "contain",
+          backgroundRepeat: "repeat",
+        }}
+        className="flex min-h-screen flex-col items-center justify-center max-w-[100vw] overflow-hidden"
+      >
         <ModalEvent show={isShown} setShow={() => setShown(false)} />
         {mounted && <GameScreen />}
       </main>
