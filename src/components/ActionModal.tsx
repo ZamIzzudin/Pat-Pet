@@ -7,7 +7,7 @@ import Image from "next/image";
 
 import { EventBus, GAME_EVENTS } from "@/lib/eventBus";
 import { useWeb3 } from "./Web3Provider";
-import { PetType, useGoal } from "@/app/hooks/contexts/GoalHookContext";
+import { PetType, useGoal, FormattedGoalInfo, FormattedPetInfo } from "@/app/hooks/contexts/GoalHookContext";
 import { PetMetadataHelper } from "@/lib/metaDataHelper";
 
 export default function ModalEvent({
@@ -35,7 +35,7 @@ export default function ModalEvent({
         onClick={(e) => {
           e.stopPropagation();
         }}
-        className="bg-[#c49a6c] text-white w-[60dvw] h-[70dvh] flex items-center justify-center relative border-[10px] border-[#6b4b5b]"
+        className="bg-[#c49a6c] text-white w-[80dvw] h-[80dvh] flex items-center justify-center relative border-[10px] border-[#6b4b5b]"
       >
         <button
           className="absolute top-0 right-0 w-[50px] aspect-square text-[24px] cursor-pointer z-100"
@@ -83,7 +83,7 @@ export default function ModalEvent({
 function Renderer({
   tab,
   handler,
-  data,
+  data // this are mock data we dont use this,
 }: {
   tab: string;
   handler: (tab: string) => void;
@@ -92,29 +92,43 @@ function Renderer({
   const { 
     createGoalWithMilestones, 
     transactionState, 
-    goalInfo, 
-    petInfo,
-    resetTransaction 
+    userGoals,
+    userPets,
+    userStats,
+    validationRequests,
+    isLoadingDashboard,
+    isLoadingValidations,
+    resetTransaction,
+    setCurrentGoalId,
+    nextGoalId // Get real nextGoalId from contract
   } = useGoal();
 
-  useEffect(() => {
-    console.log(petInfo ,"PET INFO")
-  }, [petInfo])
-  
-
   const [isCreatingGoal, setIsCreatingGoal] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState<FormattedGoalInfo | null>(null);
+
+  // We no longer need to calculate nextGoalId - it comes from the contract
+  // useEffect removed
+
+  // Log pet info for debugging
+  useEffect(() => {
+    if (userPets && userPets.length > 0) {
+      console.log("User Pets:", userPets);
+    }
+    console.log("Next Goal ID from contract:", nextGoalId);
+  }, [userPets, nextGoalId]);
 
   const mintPet = async () => {
     try {
       setIsCreatingGoal(true);
       console.log('🚀 Starting test goal creation...');
+      console.log('Next Goal ID will be:', nextGoalId);
 
       // Hardcoded test goal data
       const testGoalData = {
-        title: "Complete Fitness Challenge",
+        title: `Complete Fitness Challenge #${nextGoalId}`,
         stakeAmount: "50", // 50 PAT tokens
         durationDays: 30,
-        petName: "TestBuddy",
+        petName: `FitBuddy${nextGoalId}`,
         petType: PetType.CAT, // Using CAT since it has real IPFS URLs
         petMetadataIPFS: "", // Will be generated
         milestoneDescriptions: [
@@ -125,19 +139,19 @@ function Renderer({
         ]
       };
 
-      // Step 1: Generate pet metadata
+      // Step 1: Generate pet metadata with real goal ID
       console.log('📝 Generating pet metadata...');
       const initialMetadata = PetMetadataHelper.generateInitialPetMetadata(
         testGoalData.petName,
         testGoalData.petType,
-        1, // Will be replaced with actual goalId after creation
+        nextGoalId, // Use real nextGoalId from contract
         testGoalData.milestoneDescriptions.length,
         testGoalData.title
       );
 
       console.log('Generated metadata:', initialMetadata);
 
-
+      // Step 2: Upload metadata to Pinata
       const ipfsHash = await PetMetadataHelper.uploadMetadataToPinata(
         initialMetadata,
       );
@@ -153,6 +167,9 @@ function Renderer({
       console.log('🎯 Creating goal with milestones...');
       await createGoalWithMilestones(goalDataWithMetadata);
 
+      // Note: Goal ID will be auto-incremented by the contract
+      // Our Ponder indexer will pick up the actual goalId from the GoalCreated event
+
     } catch (error) {
       console.error('❌ Failed to create test goal:', error);
       alert(`Failed to create goal: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -167,68 +184,166 @@ function Renderer({
     handler("PAT_LIST");
   };
 
+  const handleGoalSelect = (goal: FormattedGoalInfo) => {
+    setSelectedGoal(goal);
+    setCurrentGoalId(goal.id);
+    console.log('Selected goal:', goal);
+  };
+
   if (tab === "PAT_LIST") {
     return (
-      <div className="flex p-3 w-full h-full relative flex-col items-center justify-start gap-3">
+      <div className="flex p-3 w-full h-full relative flex-col items-start justify-start gap-3 overflow-y-auto">
         <h1 className="text-[24px]">PAT LIST</h1>
         
-        {/* Display current goal/pet info if available */}
-        {goalInfo && (
-          <div className="bg-[#6b4b5b] p-3 rounded w-full">
-            <h3 className="text-[18px] mb-2">Latest Goal Created:</h3>
-            <p>Goal ID: {goalInfo.goalId}</p>
-            <p>Status: {goalInfo.statusText}</p>
-            <p>Progress: {goalInfo.milestonesCompleted}/{goalInfo.totalMilestones} milestones</p>
-            <p>Stake: {goalInfo.stakeAmount} PAT</p>
+        {/* Loading State */}
+        {isLoadingDashboard && (
+          <div className="flex items-center justify-center w-full h-32">
+            <p className="text-[#eeff82]">Loading your pets and goals...</p>
           </div>
         )}
 
-        {/* Display pet info if available */}
-        {petInfo && (
+        {/* User Stats */}
+        {userStats && (
           <div className="bg-[#6b4b5b] p-3 rounded w-full">
-            <h3 className="text-[18px] mb-2">Pet Created:</h3>
-            <p>Name: {petInfo.petTypeName}</p>
-            <p>Stage: {petInfo.stageName}</p>
-            <p>Level: {petInfo.level}</p>
-            <p>Experience: {petInfo.experience}</p>
-            <p>Milestones: {petInfo.milestonesCompleted}/{4}</p>
-            
-            {/* Display pet image */}
-            <div className="mt-2">
-              <Image
-                src={PetMetadataHelper.getPetImageUrl(petInfo.petType, petInfo.stage)}
-                alt={petInfo.petTypeName}
-                width={100}
-                height={100}
-                className="rounded"
-              />
+            <h3 className="text-[18px] mb-2">Your Stats:</h3>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <p>Total Goals: {userStats.totalGoals}</p>
+              <p>Completed: {userStats.completedGoals}</p>
+              <p>Active Goals: {userStats.activeGoals}</p>
+              <p>Rewards: {parseFloat(userStats.totalRewardsEarned).toFixed(2)} PAT</p>
+            </div>
+            <p className="text-xs text-[#eeff82] mt-1">
+              Next Goal ID: #{nextGoalId}
+            </p>
+          </div>
+        )}
+
+        {/* Goals List */}
+        {userGoals.length > 0 && (
+          <div className="bg-[#6b4b5b] p-3 rounded w-full">
+            <h3 className="text-[18px] mb-2">Your Goals ({userGoals.length}):</h3>
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {userGoals.map((goal) => (
+                <div 
+                  key={goal.id}
+                  className={`bg-[#92848b] p-2 rounded cursor-pointer hover:bg-[#7a7082] transition-colors ${
+                    selectedGoal?.id === goal.id ? 'ring-2 ring-[#eeff82]' : ''
+                  }`}
+                  onClick={() => handleGoalSelect(goal)}
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-semibold">{goal.title}</p>
+                      <p className="text-sm text-[#eeff82]">
+                        Progress: {goal.milestonesCompleted}/{goal.totalMilestones} milestones
+                      </p>
+                      <p className="text-xs">
+                        Status: {goal.statusText} | Stake: {goal.stakeAmountFormatted} PAT
+                      </p>
+                      <p className="text-xs">Goal ID: #{goal.id}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="w-12 h-12 bg-[#6b4b5b] rounded flex items-center justify-center">
+                        <span className="text-xs">{goal.progressPercentage}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
-        {/* <div className="flex gap-3 w-full cursor-pointer">
-          {data.map((pet: any, index: number) => (
-            <div key={index} className="bg-[#6b4b5b] p-3">
-              <Image
-                src={pet.stage === "egg" ? pet.egg_url : pet.adult_url}
-                alt={pet.name}
-                width={100}
-                height={100}
-              />
-              <div className="flex gap-1">
-                <span>{pet.name}</span>
-                <span className="text-[#eeff82]">({pet.stage})</span>
-              </div>
+        {/* Pets Collection */}
+        {userPets.length > 0 && (
+          <div className="bg-[#6b4b5b] p-3 rounded w-full">
+            <h3 className="text-[18px] mb-2">Your Pet Collection ({userPets.length}):</h3>
+            <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto">
+              {userPets.map((pet) => (
+                <div key={pet.id} className="bg-[#92848b] p-3 rounded">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Image
+                      src={pet.imageUrl}
+                      alt={pet.name}
+                      width={60}
+                      height={60}
+                      className="rounded"
+                      onError={(e) => {
+                        // Fallback image if IPFS fails
+                        e.currentTarget.src = '/placeholder-pet.png';
+                      }}
+                    />
+                    <div>
+                      <p className="font-semibold">{pet.name}</p>
+                      <p className="text-sm text-[#eeff82]">
+                        {pet.petTypeEmoji} {pet.petTypeName}
+                      </p>
+                      <p className="text-xs">
+                        {pet.stageEmoji} {pet.stageName} | Pet #{pet.id}
+                      </p>
+                      <p className="text-xs">Goal #{pet.goalId}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Evolution Progress */}
+                  <div className="bg-[#6b4b5b] rounded-full h-2 mb-1">
+                    <div 
+                      className="bg-[#eeff82] h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${pet.evolutionProgress.progress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs">
+                    Evolution: {pet.evolutionProgress.progress.toFixed(1)}%
+                    {pet.evolutionProgress.next && (
+                      <span className="text-[#eeff82]">
+                        {" "}→ {pet.evolutionProgress.next}
+                      </span>
+                    )}
+                  </p>
+                  
+                  <p className="text-xs mt-1">
+                    Milestones: {pet.milestonesCompleted}/4 | XP: {pet.experienceFormatted}
+                  </p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div> */}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoadingDashboard && userGoals.length === 0 && userPets.length === 0 && (
+          <div className="flex flex-col items-center justify-center w-full h-32 text-center">
+            <p className="text-[#eeff82] mb-2">No pets or goals yet!</p>
+            <p className="text-sm">Create your first goal to get started.</p>
+            <p className="text-xs mt-1">Your first goal will be ID #{nextGoalId}</p>
+          </div>
+        )}
+
+        {/* Selected Goal Details */}
+        {selectedGoal && (
+          <div className="bg-[#6b4b5b] p-3 rounded w-full border-2 border-[#eeff82]">
+            <h3 className="text-[18px] mb-2">Selected Goal Details:</h3>
+            <p className="font-semibold">{selectedGoal.title}</p>
+            <p className="text-sm">Pet: {selectedGoal.petName}</p>
+            <p className="text-sm">Status: {selectedGoal.statusText}</p>
+            <p className="text-sm">Progress: {selectedGoal.progressPercentage}%</p>
+            <p className="text-sm">Stake: {selectedGoal.stakeAmountFormatted} PAT</p>
+            <p className="text-sm">Goal ID: #{selectedGoal.id}</p>
+            <p className="text-sm">
+              {selectedGoal.isExpired ? "Expired" : `${selectedGoal.daysRemaining} days remaining`}
+            </p>
+            <p className="text-xs mt-1">
+              Created: {selectedGoal.createdDate.toLocaleDateString()}
+            </p>
+          </div>
+        )}
 
         <button
           className="absolute bottom-5 right-5 bg-[#6b4b5b] px-5 py-2 disabled:opacity-50"
           onClick={() => handler("MINT")}
           disabled={transactionState.isProcessing}
         >
-          MINT
+          MINT NEW
         </button>
       </div>
     );
@@ -236,9 +351,128 @@ function Renderer({
 
   if (tab === "VERIFICATION") {
     return (
-      <div className="flex flex-col items-center justify-center p-3">
-        <h1 className="text-[24px] mb-4">VERIFICATION</h1>
-        <p>Validation system coming soon...</p>
+      <div className="flex flex-col p-3 w-full h-full overflow-y-auto">
+        <h1 className="text-[24px] mb-4">MILESTONE VALIDATION</h1>
+        
+        {/* Loading State */}
+        {isLoadingValidations && (
+          <div className="flex items-center justify-center w-full h-32">
+            <p className="text-[#eeff82]">Loading validation requests...</p>
+          </div>
+        )}
+
+        {/* Validation Requests */}
+        {validationRequests.length > 0 ? (
+          <div className="space-y-3">
+            <p className="text-sm text-[#eeff82]">
+              {validationRequests.length} pending validation{validationRequests.length !== 1 ? 's' : ''}
+            </p>
+            
+            {validationRequests.map((request) => (
+              <div key={request.id} className="bg-[#6b4b5b] p-4 rounded">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1">
+                    <h3 className="font-semibold">Milestone #{request.id}</h3>
+                    <p className="text-sm text-[#eeff82]">
+                      Goal ID: #{request.goalId}
+                    </p>
+                    <p className="text-sm">
+                      Submitter: {request.submitter.slice(0, 6)}...{request.submitter.slice(-4)}
+                    </p>
+                    <p className="text-sm">
+                      Goal Stake: {parseFloat(request.goalStakeAmount).toFixed(2)} PAT
+                    </p>
+                  </div>
+                  
+                  <div className="text-right">
+                    <p className="text-sm">
+                      Status: <span className="text-[#eeff82]">{request.status}</span>
+                    </p>
+                    <p className="text-xs">
+                      Votes: {request.currentApprovals}✅ / {request.currentRejections}❌
+                    </p>
+                    <p className="text-xs">
+                      Required: {request.requiredValidators} validators
+                    </p>
+                  </div>
+                </div>
+
+                {/* Evidence Display */}
+                {request.evidenceIPFS && (
+                  <div className="bg-[#92848b] p-2 rounded mb-3">
+                    <p className="text-sm font-semibold">Evidence:</p>
+                    <p className="text-xs break-all">
+                      IPFS: {request.evidenceIPFS}
+                    </p>
+                    <a 
+                      href={`https://gateway.pinata.cloud/ipfs/${request.evidenceIPFS}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#eeff82] text-xs underline"
+                    >
+                      View Evidence →
+                    </a>
+                  </div>
+                )}
+
+                {/* Deadline and Actions */}
+                <div className="flex justify-between items-center">
+                  <p className="text-xs">
+                    Deadline: {new Date(parseInt(request.deadline) * 1000).toLocaleString()}
+                  </p>
+                  
+                  {/* Quick Action Buttons (for admin) */}
+                  <div className="flex gap-2">
+                    <button 
+                      className="bg-green-600 px-3 py-1 text-xs rounded hover:bg-green-700"
+                      onClick={() => {
+                        // TODO: Implement approve functionality
+                        alert(`Approve milestone ${request.id} - connect to validation contract`);
+                      }}
+                    >
+                      ✅ Approve
+                    </button>
+                    <button 
+                      className="bg-red-600 px-3 py-1 text-xs rounded hover:bg-red-700"
+                      onClick={() => {
+                        // TODO: Implement reject functionality
+                        alert(`Reject milestone ${request.id} - connect to validation contract`);
+                      }}
+                    >
+                      ❌ Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          !isLoadingValidations && (
+            <div className="flex flex-col items-center justify-center w-full h-32 text-center">
+              <p className="text-[#eeff82] mb-2">No pending validations!</p>
+              <p className="text-sm">All milestones are up to date.</p>
+            </div>
+          )
+        )}
+
+        {/* Validation System Info */}
+        <div className="mt-6 bg-[#6b4b5b] p-3 rounded">
+          <h3 className="text-[16px] mb-2">Validation System</h3>
+          <ul className="text-sm space-y-1">
+            <li>• Milestones require community validation</li>
+            <li>• 3-7 validators assigned based on stake amount</li>
+            <li>• 72-hour review period per milestone</li>
+            <li>• Majority vote determines approval</li>
+            <li>• Validators earn rewards for accurate decisions</li>
+          </ul>
+          
+          {/* System Stats */}
+          <div className="mt-3 pt-3 border-t border-[#92848b]">
+            <p className="text-xs text-[#eeff82]">
+              Current pending validations: {validationRequests.length}
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -275,12 +509,13 @@ function Renderer({
         {transactionState.isCompleted && (
           <div className="bg-green-600 p-4 rounded mb-4 w-full max-w-md">
             <h3 className="text-[18px] mb-2">Success!</h3>
-            <p>Goal created successfully!</p>
+            <p>Goal #{nextGoalId} created successfully!</p>
+            <p className="text-sm">Your pet will appear in the PAT LIST shortly.</p>
             <button
               className="mt-2 bg-[#6b4b5b] px-3 py-1 rounded"
               onClick={handleReset}
             >
-              View Goal
+              View Goals
             </button>
           </div>
         )}
@@ -289,11 +524,12 @@ function Renderer({
         <div className="bg-[#6b4b5b] p-4 rounded mb-4 w-full max-w-md">
           <h3 className="text-[18px] mb-2">Test Goal Details:</h3>
           <ul className="text-sm space-y-1">
-            <li>🎯 Goal: Complete Fitness Challenge</li>
+            <li>🎯 Goal: Complete Fitness Challenge #{nextGoalId}</li>
             <li>💰 Stake: 50 PAT tokens</li>
             <li>⏱️ Duration: 30 days</li>
-            <li>🐱 Pet: TestBuddy (Cat)</li>
+            <li>🐱 Pet: FitBuddy{nextGoalId} (Cat)</li>
             <li>📋 Milestones: 4 total</li>
+            <li>🆔 Goal ID: #{nextGoalId}</li>
           </ul>
         </div>
 

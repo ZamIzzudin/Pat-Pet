@@ -1,9 +1,12 @@
-// lib/metadata-helper.ts - Updated with Pinata SDK
+// lib/metaDataHelper.ts - Fixed version without circular imports
 
 import { PinataSDK } from "pinata";
-import { EvolutionStage, PetType } from "@/app/hooks/contexts/GoalHookContext"
 
 const pinataGateway = process.env.NEXT_PUBLIC_PAT_PET_PINATA_GATEWAY;
+
+// Use string literals instead of enums to avoid circular imports
+type PetTypeString = 'DRAGON' | 'CAT' | 'PLANT';
+type EvolutionStageString = 'EGG' | 'BABY' | 'ADULT';
 
 // Initialize Pinata SDK
 const initializePinata = () => {
@@ -26,13 +29,11 @@ const initializePinata = () => {
 // Static IPFS URLs for pet images and assets
 export const PET_ASSETS = {
   DRAGON: {
-    // NFT Images for each evolution stage
     images: {
       EGG: "ipfs/QmDragonEggStatic001",
       BABY: "https://gateway.pinata.cloud/ipfs/QmDragonBabyStatic002", 
       ADULT: "https://gateway.pinata.cloud/ipfs/QmDragonAdultStatic003"
     },
-    // Single sprite sheet for animations/game
     sprite: "https://gateway.pinata.cloud/ipfs/QmDragonSpriteSheet001",
     metadata: {
       name: "Dragon",
@@ -87,24 +88,35 @@ export const EVOLUTION_DESCRIPTIONS = {
   }
 } as const
 
-// Pet type mapping
-export const PET_TYPE_NAMES: Record<PetType, keyof typeof PET_ASSETS> = {
-  [PetType.DRAGON]: 'DRAGON',
-  [PetType.CAT]: 'CAT',
-  [PetType.PLANT]: 'PLANT'
-}
+// Conversion helpers for enum compatibility
+export const convertPetTypeToString = (petType: any): PetTypeString => {
+  if (typeof petType === 'string') return petType as PetTypeString;
+  
+  // Handle enum values
+  switch (petType) {
+    case 0: return 'DRAGON';
+    case 1: return 'CAT';
+    case 2: return 'PLANT';
+    default: return 'CAT';
+  }
+};
 
-// Evolution stage mapping
-export const EVOLUTION_STAGE_NAMES: Record<EvolutionStage, keyof typeof EVOLUTION_DESCRIPTIONS> = {
-  [EvolutionStage.EGG]: 'EGG',
-  [EvolutionStage.BABY]: 'BABY', 
-  [EvolutionStage.ADULT]: 'ADULT'
-}
+export const convertEvolutionStageToString = (stage: any): EvolutionStageString => {
+  if (typeof stage === 'string') return stage as EvolutionStageString;
+  
+  // Handle enum values
+  switch (stage) {
+    case 0: return 'EGG';
+    case 1: return 'BABY';
+    case 2: return 'ADULT';
+    default: return 'EGG';
+  }
+};
 
 export interface PetMetadataParams {
   petName: string
-  petType: PetType
-  stage: EvolutionStage
+  petType: any // Accept any type to avoid circular imports
+  stage: any // Accept any type to avoid circular imports
   goalId: number
   tokenId?: number
   milestonesCompleted: number
@@ -144,21 +156,21 @@ export class PetMetadataHelper {
    * Generate complete pet metadata for NFT
    */
   static generatePetMetadata(params: PetMetadataParams): GeneratedPetMetadata {
-    const petTypeKey = PET_TYPE_NAMES[params.petType]
-    const stageKey = EVOLUTION_STAGE_NAMES[params.stage]
-    const petAssets = PET_ASSETS[petTypeKey]
-    const stageInfo = EVOLUTION_DESCRIPTIONS[stageKey]
+    const petTypeKey = convertPetTypeToString(params.petType);
+    const stageKey = convertEvolutionStageToString(params.stage);
+    const petAssets = PET_ASSETS[petTypeKey];
+    const stageInfo = EVOLUTION_DESCRIPTIONS[stageKey];
 
     // Get appropriate image for current stage
-    const nftImage = petAssets.images[stageKey]
+    const nftImage = petAssets.images[stageKey];
     
     // Calculate progress and rarity
     const progressPercentage = params.totalMilestones > 0 
       ? Math.round((params.milestonesCompleted / params.totalMilestones) * 100)
-      : 0
+      : 0;
     
-    const rarity = this.calculateRarity(params.stage, params.milestonesCompleted, params.totalMilestones)
-    const mood = params.isHappy !== undefined ? (params.isHappy ? "Happy" : "Sad") : "Neutral"
+    const rarity = this.calculateRarity(stageKey, params.milestonesCompleted, params.totalMilestones);
+    const mood = params.isHappy !== undefined ? (params.isHappy ? "Happy" : "Sad") : "Neutral";
 
     return {
       name: params.petName,
@@ -167,7 +179,7 @@ export class PetMetadataHelper {
       external_url: params.tokenId 
         ? `${this.BASE_URL}/pet/${params.tokenId}`
         : `${this.BASE_URL}/goal/${params.goalId}`,
-      animation_url: petAssets.sprite, // Sprite sheet for animations
+      animation_url: petAssets.sprite,
       attributes: [
         {
           trait_type: "Pet Type",
@@ -234,7 +246,7 @@ export class PetMetadataHelper {
    */
   static generateInitialPetMetadata(
     petName: string,
-    petType: PetType,
+    petType: any,
     goalId: number,
     totalMilestones: number,
     goalTitle?: string
@@ -242,7 +254,7 @@ export class PetMetadataHelper {
     return this.generatePetMetadata({
       petName,
       petType,
-      stage: EvolutionStage.EGG,
+      stage: 'EGG', // Use string directly
       goalId,
       milestonesCompleted: 0,
       totalMilestones,
@@ -259,29 +271,22 @@ export class PetMetadataHelper {
    */
   static generateUpdatedPetMetadata(
     currentMetadata: GeneratedPetMetadata,
-    newStage: EvolutionStage,
+    newStage: any,
     milestonesCompleted: number,
     level: number,
     experience: number,
     isHappy: boolean = true
   ): GeneratedPetMetadata {
-    // Extract pet type from properties
-    const petTypeKey = currentMetadata.properties.pet_type as keyof typeof PET_ASSETS
-    const petType = Object.entries(PET_TYPE_NAMES).find(([_, key]) => key === petTypeKey)?.[0] as unknown as PetType
-    
-    if (petType === undefined) {
-      throw new Error(`Invalid pet type: ${petTypeKey}`)
-    }
-
-    // Get existing attributes
-    const existingGoalId = currentMetadata.attributes.find(attr => attr.trait_type === "Goal ID")?.value as number
-    const existingTotalMilestones = currentMetadata.attributes.find(attr => attr.trait_type === "Total Milestones")?.value as number
-    const existingPetName = currentMetadata.name
-    const existingBirthTime = currentMetadata.attributes.find(attr => attr.trait_type === "Birth Time")?.value as number
+    // Extract info from existing metadata
+    const petTypeKey = currentMetadata.properties.pet_type as PetTypeString;
+    const existingGoalId = currentMetadata.attributes.find(attr => attr.trait_type === "Goal ID")?.value as number;
+    const existingTotalMilestones = currentMetadata.attributes.find(attr => attr.trait_type === "Total Milestones")?.value as number;
+    const existingPetName = currentMetadata.name;
+    const existingBirthTime = currentMetadata.attributes.find(attr => attr.trait_type === "Birth Time")?.value as number;
 
     return this.generatePetMetadata({
       petName: existingPetName,
-      petType,
+      petType: petTypeKey,
       stage: newStage,
       goalId: existingGoalId,
       milestonesCompleted,
@@ -303,17 +308,14 @@ export class PetMetadataHelper {
     try {
       console.log('🚀 Initializing Pinata SDK...');
       
-      // Initialize Pinata SDK
       const pinata = initializePinata();
       
       console.log('📝 Preparing metadata for upload...');
       
-      // Create filename
       const fileName = `${metadata.name}-metadata-${Date.now()}.json`;
       
       console.log('📤 Uploading metadata to Pinata...');
       
-      // Upload JSON using Pinata SDK
       const upload = await pinata.upload.public
         .json(metadata)
         .name(fileName)
@@ -329,7 +331,6 @@ export class PetMetadataHelper {
 
       console.log('✅ Pinata upload successful:', upload);
       
-      // Extract CID from response
       const ipfsHash = upload.cid;
       
       if (!ipfsHash) {
@@ -338,121 +339,56 @@ export class PetMetadataHelper {
 
       console.log('✅ Metadata uploaded to Pinata:', ipfsHash);
       
-      // Verify the upload by trying to fetch it
-      try {
-        console.log('🔍 Verifying upload...');
-        const gatewayUrl = await pinata.gateways.public.convert(ipfsHash);
-        console.log('✅ Upload verification successful, Gateway URL:', gatewayUrl);
-      } catch (verifyError) {
-        console.warn('⚠️ Could not verify upload, but upload seems successful');
-      }
-      
       return ipfsHash;
 
     } catch (error) {
       console.error('❌ Failed to upload metadata to Pinata:', error);
-      
-      // Provide more specific error messages
-      if (error instanceof Error) {
-        if (error.message.includes('PINATA_JWT')) {
-          throw new Error('Pinata JWT token not configured. Please add NEXT_PUBLIC_PINATA_JWT to your environment variables.');
-        } else if (error.message.includes('PINATA_GATEWAY')) {
-          throw new Error('Pinata Gateway not configured. Please add NEXT_PUBLIC_PINATA_GATEWAY to your environment variables.');
-        } else if (error.message.includes('401') || error.message.includes('unauthorized')) {
-          throw new Error('Pinata authentication failed. Please check your JWT token.');
-        } else if (error.message.includes('403') || error.message.includes('forbidden')) {
-          throw new Error('Pinata access forbidden. Check your account permissions and quota.');
-        } else if (error.message.includes('429')) {
-          throw new Error('Pinata rate limit exceeded. Please try again later.');
-        }
-      }
-      
       throw error;
     }
   }
 
   /**
-   * Test Pinata SDK connection
+   * Get pet image URL for display - Works with enums or strings
    */
-  static async testPinataConnection(): Promise<boolean> {
-    try {
-      console.log('🔍 Testing Pinata SDK connection...');
-      
-      // Initialize Pinata SDK
-      const pinata = initializePinata();
-      
-      // Test with a simple JSON upload
-      const testData = {
-        message: "Hello from PatPet!",
-        timestamp: Date.now()
-      };
-
-      const upload = await pinata.upload.public
-        .json(testData)
-        .name('pinata-connection-test.json')
-        .keyvalues({
-          type: 'connection_test'
-        });
-
-      if (upload.cid) {
-        console.log('✅ Pinata SDK connection test successful:', upload.cid);
-        return true;
-      } else {
-        console.error('❌ Pinata SDK connection test failed: No CID returned');
-        return false;
-      }
-    } catch (error) {
-      console.error('❌ Pinata SDK connection test error:', error);
-      return false;
-    }
+  static getPetImageUrl(petType: any, stage: any): string {
+    const petTypeKey = convertPetTypeToString(petType);
+    const stageKey = convertEvolutionStageToString(stage);
+    
+    return PET_ASSETS[petTypeKey].images[stageKey];
   }
 
   /**
-   * Get pet image URL for display
+   * Get pet sprite URL for animations - Works with enums or strings
    */
-  static getPetImageUrl(petType: PetType, stage: EvolutionStage): string {
-    const petTypeKey = PET_TYPE_NAMES[petType]
-    const stageKey = EVOLUTION_STAGE_NAMES[stage]
-
-    console.log("test", PET_ASSETS[petTypeKey].images[stageKey])
-
-    return PET_ASSETS[petTypeKey].images[stageKey]
-  }
-
-  /**
-   * Get pet sprite URL for animations
-   */
-  static getPetSpriteUrl(petType: PetType): string {
-    const petTypeKey = PET_TYPE_NAMES[petType]
-    return PET_ASSETS[petTypeKey].sprite
+  static getPetSpriteUrl(petType: any): string {
+    const petTypeKey = convertPetTypeToString(petType);
+    return PET_ASSETS[petTypeKey].sprite;
   }
 
   /**
    * Get pet type metadata
    */
-  static getPetTypeMetadata(petType: PetType) {
-    const petTypeKey = PET_TYPE_NAMES[petType]
-    return PET_ASSETS[petTypeKey].metadata
+  static getPetTypeMetadata(petType: any) {
+    const petTypeKey = convertPetTypeToString(petType);
+    return PET_ASSETS[petTypeKey].metadata;
   }
 
   /**
    * Calculate rarity based on evolution stage and progress
    */
   private static calculateRarity(
-    stage: EvolutionStage, 
+    stage: EvolutionStageString, 
     milestonesCompleted: number, 
     totalMilestones: number
   ): string {
-    // Base rarity on evolution stage
-    if (stage === EvolutionStage.ADULT) {
-      return "Legendary" // Completed goal
-    } else if (stage === EvolutionStage.BABY) {
-      return "Rare" // Halfway evolved
+    if (stage === 'ADULT') {
+      return "Legendary";
+    } else if (stage === 'BABY') {
+      return "Rare";
     } else {
-      // EGG stage - check progress
-      const progress = totalMilestones > 0 ? milestonesCompleted / totalMilestones : 0
-      if (progress >= 0.25) return "Uncommon" // Some progress
-      return "Common" // Just started
+      const progress = totalMilestones > 0 ? milestonesCompleted / totalMilestones : 0;
+      if (progress >= 0.25) return "Uncommon";
+      return "Common";
     }
   }
 
@@ -461,7 +397,6 @@ export class PetMetadataHelper {
    */
   static async fetchMetadataFromIPFS(ipfsHash: string) {
     try {
-      // Try Pinata SDK first if available
       try {
         const pinata = initializePinata();
         const data = await pinata.gateways.public.get(ipfsHash);
@@ -470,7 +405,6 @@ export class PetMetadataHelper {
         console.warn('⚠️ Pinata SDK fetch failed, falling back to direct gateway');
       }
 
-      // Fallback to direct gateway fetch
       const response = await fetch(`https://gateway.pinata.cloud/ipfs/${ipfsHash}`)
       if (!response.ok) {
         throw new Error(`Failed to fetch metadata: ${response.statusText}`)
@@ -510,5 +444,4 @@ export const {
   getPetTypeMetadata,
   fetchMetadataFromIPFS,
   validateMetadata,
-  testPinataConnection
 } = PetMetadataHelper

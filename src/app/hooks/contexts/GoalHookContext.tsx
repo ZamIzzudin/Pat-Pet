@@ -2,10 +2,24 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react'
 import { useAccount, useReadContract } from 'wagmi'
 import { Address, formatUnits, parseUnits } from 'viem'
-import {PAT_GOAL_MANAGER_ABI, PAT_GOAL_MANAGER_ADDRESS} from '../../contracts/PatGoalManager'
+import { useQuery, useMutation } from '@apollo/client'
+import { PAT_GOAL_MANAGER_ABI, PAT_GOAL_MANAGER_ADDRESS } from '../../contracts/PatGoalManager'
 import { TransactionState, TransactionType, useTransactions } from '../useTransactions'
 import { PATNFT_ABI, PATNFT_ADDRESS } from '@/app/contracts/PatNFT'
 import { PATTOKEN_ADDRESS } from '@/app/contracts/PATToken'
+import { 
+  GET_USER_DASHBOARD, 
+  GET_GOAL_PROGRESS,
+  GET_VALIDATION_REQUESTS,
+  GET_USER_PENDING_MILESTONES,
+  formatGoalData, 
+  formatPetData,
+  Goal,
+  Pet,
+  Milestone,
+  UserStats,
+  ValidationRequest
+} from '@/lib/graphql'
 
 // Pet types enum
 export enum PetType {
@@ -38,73 +52,63 @@ export interface CreateGoalParams {
   milestoneDescriptions: string[]
 }
 
-export interface GoalBasicInfo {
-  owner: Address
-  stakeAmount: bigint
-  endTime: number
-  status: GoalStatus
-  milestonesCompleted: number
-  totalMilestones: number
-}
-
-export interface FormattedGoalInfo {
-  goalId: number
-  owner: Address
-  stakeAmount: string
-  endTime: Date
-  status: GoalStatus
-  statusText: string
-  milestonesCompleted: number
-  totalMilestones: number
+export interface FormattedGoalInfo extends Goal {
+  stakeAmountFormatted: string
+  endDate: Date
+  createdDate: Date
   progressPercentage: number
-  isActive: boolean
   isExpired: boolean
+  daysRemaining: number
+  statusText: string
 }
 
-export interface PetBasicInfo {
-  owner: Address
-  experience: bigint
-  level: number
-  petType: PetType
-  stage: EvolutionStage
-  goalId: number
-  milestonesCompleted: number
-}
-
-export interface FormattedPetInfo {
-  tokenId: number
-  owner: Address
-  experience: string
-  level: number
-  petType: PetType
+export interface FormattedPetInfo extends Pet {
+  experienceFormatted: string
+  evolutionProgress: {
+    current: string
+    next: string | null
+    progress: number
+    milestonesUntilNext: number
+  }
+  imageUrl: string
+  spriteUrl: string
   petTypeName: string
   petTypeEmoji: string
-  stage: EvolutionStage
   stageName: string
   stageEmoji: string
-  goalId: number
-  milestonesCompleted: number
-  evolutionProgress: {
-    current: EvolutionStage
-    next: EvolutionStage | null
-    milestonesUntilNext: number
-    progressPercentage: number
-  }
+}
+
+export interface SubmitMilestoneParams {
+  milestoneId: string
+  evidenceFile: File
 }
 
 interface GoalContextValue {
   // Goal creation
   createGoalWithMilestones: (params: CreateGoalParams) => Promise<void>
   
-  // Goal data
-  goalInfo: FormattedGoalInfo | null
-  petInfo: FormattedPetInfo | null
-  isLoadingGoal: boolean
-  isLoadingPet: boolean
-  errorGoal: Error | null
-  errorPet: Error | null
-  refetchGoalData: () => void
-  refetchPetData: () => void
+  // Milestone submission  
+  submitMilestone: (params: SubmitMilestoneParams) => Promise<void>
+  
+  // Dashboard data
+  userGoals: FormattedGoalInfo[]
+  userPets: FormattedPetInfo[]
+  userStats: UserStats | null
+  isLoadingDashboard: boolean
+  errorDashboard: any
+  refetchDashboard: () => void
+  
+  // Current goal/pet (for detailed view)
+  currentGoal: FormattedGoalInfo | null
+  currentPet: FormattedPetInfo | null
+  currentMilestones: Milestone[]
+  setCurrentGoalId: (goalId: string | null) => void
+  
+  // Validation data (for admin/validators)
+  validationRequests: ValidationRequest[]
+  userPendingMilestones: Milestone[]
+  isLoadingValidations: boolean
+  refetchValidations: () => void
   
   // Transaction state
   transactionState: TransactionState
@@ -118,6 +122,9 @@ interface GoalContextValue {
     progressPercentage: number
     milestonesUntilNext: number
   }
+  
+  // System data
+  nextGoalId: number
   
   // Constants
   MAX_MILESTONES: number
@@ -137,9 +144,21 @@ export function GoalProvider({ children }: { children: React.ReactNode }) {
   const { address: userAddress } = useAccount()
   const { execute, transactionState, reset } = useTransactions()
   
-  // State for tracking the latest created goal
-  const [latestGoalId, setLatestGoalId] = useState<number | null>(0)
-  const [latestPetTokenId, setLatestPetTokenId] = useState<number | null>(0)
+  // State for current goal view
+  const [currentGoalId, setCurrentGoalId] = useState<string | null>(null)
+  
+  // Read nextGoalId from contract
+  const { 
+    data: nextGoalIdData,
+    refetch: refetchNextGoalId 
+  } = useReadContract({
+    address: PAT_GOAL_MANAGER_ADDRESS,
+    abi: PAT_GOAL_MANAGER_ABI,
+    functionName: 'getSystemStats',
+    query: {
+      enabled: true,
+    }
+  })
   
   // Constants from contracts
   const MAX_MILESTONES = 4
@@ -152,153 +171,160 @@ export function GoalProvider({ children }: { children: React.ReactNode }) {
     COMPLETION_BONUS: 100
   }
   
-  // Read goal basic info
+  // ============ GRAPHQL QUERIES ============
+  
+  // User Dashboard Query
   const { 
-    data: goalBasicInfo, 
-    isLoading: isLoadingGoal, 
-    error: errorGoal, 
-    refetch: refetchGoal 
-  } = useReadContract({
-    address: PAT_GOAL_MANAGER_ADDRESS,
-    abi: PAT_GOAL_MANAGER_ABI,
-    functionName: 'getGoalBasicInfo',
-    args: latestGoalId !== null ? [BigInt(latestGoalId)] : undefined,
-    query: {
-      enabled: latestGoalId !== null,
-    }
+    data: dashboardData, 
+    loading: isLoadingDashboard, 
+    error: errorDashboard,
+    refetch: refetchDashboard 
+  } = useQuery(GET_USER_DASHBOARD, {
+    variables: { userAddress: userAddress || '' },
+    skip: !userAddress,
+    pollInterval: 5000, // Poll every 5 seconds for real-time updates
   })
   
-  // Read pet basic info
+  // Current Goal Progress Query
   const { 
-    data: petBasicInfo, 
-    isLoading: isLoadingPet, 
-    error: errorPet, 
-    refetch: refetchPet 
-  } = useReadContract({
-    address: PATNFT_ADDRESS,
-    abi: PATNFT_ABI,
-    functionName: 'getPetBasicInfo',
-    args: latestPetTokenId !== null ? [BigInt(latestPetTokenId)] : undefined,
-    query: {
-      enabled: latestPetTokenId !== null,
-    }
+    data: goalProgressData,
+    refetch: refetchGoalProgress 
+  } = useQuery(GET_GOAL_PROGRESS, {
+    variables: { goalId: currentGoalId || '' },
+    skip: !currentGoalId,
+    pollInterval: 3000, // More frequent updates for active goal
   })
   
-  // Helper functions
-  const getPetTypeName = (petType: PetType): string => {
-    const types = ["Dragon", "Cat", "Plant"]
-    return types[petType] || "Unknown"
-  }
+  // Validation Requests Query (for admin/validators)
+  const { 
+    data: validationData,
+    loading: isLoadingValidations,
+    refetch: refetchValidations
+  } = useQuery(GET_VALIDATION_REQUESTS, {
+    variables: { status: 'PENDING', first: 20, skip: 0 },
+    pollInterval: 10000, // Poll every 10 seconds for validation updates
+  })
   
-  const getPetTypeEmoji = (petType: PetType): string => {
-    const emojis = ["🐉", "🐱", "🌱"]
-    return emojis[petType] || "❓"
-  }
+  // User Pending Milestones Query
+  const { 
+    data: pendingMilestonesData 
+  } = useQuery(GET_USER_PENDING_MILESTONES, {
+    variables: { userAddress: userAddress || '' },
+    skip: !userAddress,
+    pollInterval: 10000,
+  })
   
-  const getStageName = (stage: EvolutionStage): string => {
-    const stages = ["Egg", "Baby", "Adult"]
-    return stages[stage] || "Unknown"
-  }
-  
-  const getStageEmoji = (stage: EvolutionStage): string => {
-    const emojis = ["🥚", "👶", "🦸"]
-    return emojis[stage] || "❓"
-  }
-  
-  const getStatusText = (status: GoalStatus): string => {
-    switch (status) {
-      case GoalStatus.ACTIVE: return "Active"
-      case GoalStatus.COMPLETED: return "Completed"
-      case GoalStatus.FAILED: return "Failed"
-      default: return "Unknown"
-    }
-  }
-  
-  // Format pet info - FIXED VERSION with BigInt conversion
-const formattedPetInfo = useMemo((): FormattedPetInfo | null => {
-    if (!petBasicInfo || latestPetTokenId === null) return null
-    
-    const [owner, experience, level, petType, stage, goalId, milestonesCompleted] = petBasicInfo as any[]
-    
-    // Convert BigInt values to numbers for calculations
-    const milestonesNum = Number(milestonesCompleted) // Convert BigInt to number
-    const levelNum = Number(level) // Convert BigInt to number (if it's also BigInt)
-    const goalIdNum = Number(goalId) // Convert BigInt to number (if it's also BigInt)
-    
-    // Calculate evolution progress
-    const getEvolutionProgress = (milestones: number) => {
-      if (milestones >= EVOLUTION_THRESHOLDS.ADULT_THRESHOLD) {
-        return {
-          current: EvolutionStage.ADULT,
-          next: null,
-          milestonesUntilNext: 0,
-          progressPercentage: 100
-        }
-      } else if (milestones >= EVOLUTION_THRESHOLDS.BABY_THRESHOLD) {
-        return {
-          current: EvolutionStage.BABY,
-          next: EvolutionStage.ADULT,
-          milestonesUntilNext: EVOLUTION_THRESHOLDS.ADULT_THRESHOLD - milestones,
-          progressPercentage: 50 + ((milestones - EVOLUTION_THRESHOLDS.BABY_THRESHOLD) * 25)
-        }
-      } else {
-        return {
-          current: EvolutionStage.EGG,
-          next: EvolutionStage.BABY,
-          milestonesUntilNext: EVOLUTION_THRESHOLDS.BABY_THRESHOLD - milestones,
-          progressPercentage: milestones * 25
-        }
+
+
+    // ============ HELPER FUNCTIONS ============
+    const getStatusText = (status: string): string => {
+      const statusTexts: Record<string, string> = {
+        'ACTIVE': 'Active',
+        'COMPLETED': 'Completed',
+        'FAILED': 'Failed'
       }
+      return statusTexts[status] || 'Unknown'
+    }
+    const getPetTypeName = (petType: string): string => {
+      const types: Record<string, string> = {
+        'DRAGON': 'Dragon',
+        'CAT': 'Cat', 
+        'PLANT': 'Plant'
+      }
+      return types[petType] || 'Unknown'
     }
     
-    return {
-      tokenId: latestPetTokenId,
-      owner,
-      experience: formatUnits(experience, 0), // Experience is stored as integer
-      level: levelNum, // Use converted number
-      petType,
-      petTypeName: getPetTypeName(petType),
-      petTypeEmoji: getPetTypeEmoji(petType),
-      stage,
-      stageName: getStageName(stage),
-      stageEmoji: getStageEmoji(stage),
-      goalId: goalIdNum, // Use converted number
-      milestonesCompleted: milestonesNum, // Use converted number
-      evolutionProgress: getEvolutionProgress(milestonesNum) // Use converted number
+    const getPetTypeEmoji = (petType: string): string => {
+      const emojis: Record<string, string> = {
+        'DRAGON': '🐉',
+        'CAT': '🐱',
+        'PLANT': '🌱'
+      }
+      return emojis[petType] || '❓'
     }
-  }, [petBasicInfo, latestPetTokenId])
+    
+    const getStageName = (stage: string): string => {
+      const stages: Record<string, string> = {
+        'EGG': 'Egg',
+        'BABY': 'Baby',
+        'ADULT': 'Adult'
+      }
+      return stages[stage] || 'Unknown'
+    }
+    
+    const getStageEmoji = (stage: string): string => {
+      const emojis: Record<string, string> = {
+        'EGG': '🥚',
+        'BABY': '👶', 
+        'ADULT': '🦸'
+      }
+      return emojis[stage] || '❓'
+    }
+    
+    // ============ FORMAT DATA ============
+ 
+  // Get next goal ID from contract
+  const nextGoalId = useMemo(() => {
+    if (nextGoalIdData) {
+      return Number(nextGoalIdData); // totalGoals = nextGoalId
+    }
+    return 0;
+  }, [nextGoalIdData]);
   
-  // Also fix the formattedGoalInfo to handle BigInt properly
-  const formattedGoalInfo = useMemo((): FormattedGoalInfo | null => {
-    if (!goalBasicInfo || latestGoalId === null) return null
+  // Format user goals
+  const userGoals = useMemo((): FormattedGoalInfo[] => {
+    if (!dashboardData?.goals?.items) return []
+
+    console.log("USER GOALS", dashboardData.goals.items)
     
-    const [owner, stakeAmount, endTime, status, milestonesCompleted, totalMilestones] = goalBasicInfo as any[]
-    
-    // Convert BigInt values to numbers for calculations
-    const milestonesCompletedNum = Number(milestonesCompleted)
-    const totalMilestonesNum = Number(totalMilestones)
-    const endTimeNum = Number(endTime)
-    
-    const progressPercentage = totalMilestonesNum > 0 ? (milestonesCompletedNum * 100) / totalMilestonesNum : 0
-    const endDate = new Date(endTimeNum * 1000)
-    const isExpired = Date.now() > endDate.getTime()
-    const isActive = status === GoalStatus.ACTIVE
-    
-    return {
-      goalId: latestGoalId,
-      owner,
-      stakeAmount: formatUnits(stakeAmount, 18),
-      endTime: endDate,
-      status,
-      statusText: getStatusText(status),
-      milestonesCompleted: milestonesCompletedNum, // Use converted number
-      totalMilestones: totalMilestonesNum, // Use converted number
-      progressPercentage,
-      isActive,
-      isExpired
-    }
-  }, [goalBasicInfo, latestGoalId])
+    return dashboardData.goals.items.map((goal: Goal) => ({
+      ...formatGoalData(goal),
+      statusText: getStatusText(goal.status as any),
+    }))
+  }, [dashboardData?.goals])
   
+  // Format user pets
+  const userPets = useMemo((): FormattedPetInfo[] => {
+    if (!dashboardData?.pets?.items) return []
+
+    console.log("USER PETS", dashboardData.pets.items)
+    
+    return dashboardData.pets.items.map((pet: Pet) => ({
+      ...formatPetData(pet),
+      petTypeName: getPetTypeName(pet.petType),
+      petTypeEmoji: getPetTypeEmoji(pet.petType),
+      stageName: getStageName(pet.evolutionStage),
+      stageEmoji: getStageEmoji(pet.evolutionStage),
+    }))
+  }, [dashboardData?.pets])
+  
+  // Format current goal
+  const currentGoal = useMemo((): FormattedGoalInfo | null => {
+    if (!goalProgressData?.goals?.items?.[0]) return null
+    
+    const goal = goalProgressData.goals.items[0]
+    return {
+      ...formatGoalData(goal),
+      statusText: getStatusText(goal.status as any),
+    }
+  }, [goalProgressData?.goals])
+  
+  // Format current pet
+  const currentPet = useMemo((): FormattedPetInfo | null => {
+    if (!goalProgressData?.pets?.items?.[0]) return null
+    
+    const pet = goalProgressData.pets.items[0]
+    return {
+      ...formatPetData(pet),
+      petTypeName: getPetTypeName(pet.petType),
+      petTypeEmoji: getPetTypeEmoji(pet.petType),
+      stageName: getStageName(pet.evolutionStage),
+      stageEmoji: getStageEmoji(pet.evolutionStage),
+    }
+  }, [goalProgressData?.pets])
+  
+
+
   // Validation function
   const validateGoalCreation = (params: CreateGoalParams): string[] => {
     const errors: string[] = []
@@ -382,6 +408,8 @@ const formattedPetInfo = useMemo((): FormattedPetInfo | null => {
     }
   }
   
+  // ============ TRANSACTION FUNCTIONS ============
+  
   // Create goal with milestones function
   const createGoalWithMilestones = async (params: CreateGoalParams) => {
     if (!userAddress) {
@@ -426,7 +454,7 @@ const formattedPetInfo = useMemo((): FormattedPetInfo | null => {
       approval: {
         tokenAddress: PATTOKEN_ADDRESS,
         tokenAmount: stakeAmountInWei,
-        spenderAddress: PAT_GOAL_MANAGER_ADDRESS, // Goal manager needs approval to transfer tokens
+        spenderAddress: PAT_GOAL_MANAGER_ADDRESS,
       },
       metadata: {
         asset: 'PAT',
@@ -438,48 +466,90 @@ const formattedPetInfo = useMemo((): FormattedPetInfo | null => {
       }
     }
     
-    // Execute transaction (handles approval + execution automatically)
+    // Execute transaction
     await execute(transactionRequest)
   }
   
-  // Listen for successful transaction completion and extract goal/pet IDs
-  useEffect(() => {
-    if (transactionState.isCompleted && transactionState.transactionType === 'createGoal') {
-      console.log('🎉 Goal creation completed! Extracting goal and pet IDs...')
-      
-      // In a real implementation, you would parse the transaction receipt
-      // to extract the goalId and petTokenId from the GoalCreated event
-      // For now, we'll simulate this by setting placeholder values
-      
-      // TODO: Parse transaction receipt to get actual IDs
-      // const receipt = await provider.getTransactionReceipt(transactionState.txHash)
-      // const goalCreatedEvent = parseGoalCreatedEvent(receipt.logs)
-      // setLatestGoalId(goalCreatedEvent.args.goalId)
-      // setLatestPetTokenId(goalCreatedEvent.args.petTokenId)
-      
-      // Temporary simulation - in real app, extract from transaction events
-      setTimeout(() => {
-        console.log('📋 Simulating goal/pet ID extraction...')
-        // These would come from parsing the transaction receipt
-        setLatestGoalId(1) // Placeholder
-        setLatestPetTokenId(1) // Placeholder
-      }, 1000)
+  // Submit milestone evidence function
+  const submitMilestone = async (params: SubmitMilestoneParams) => {
+    if (!userAddress) {
+      throw new Error('User not connected')
     }
-  }, [transactionState.isCompleted, transactionState.transactionType])
+    
+    console.log('🚀 Starting milestone submission', params)
+    
+    // TODO: Upload evidence to IPFS using Pinata
+    // For now, use placeholder IPFS hash
+    const evidenceIPFS = "QmPlaceholderEvidenceHash" // This should be actual upload result
+    
+    // Create transaction request
+    const transactionRequest = {
+      type: 'submitMilestone' as TransactionType,
+      writeContract: {
+        address: PAT_GOAL_MANAGER_ADDRESS,
+        abi: PAT_GOAL_MANAGER_ABI,
+        functionName: 'submitMilestone',
+        args: [
+          params.milestoneId,
+          evidenceIPFS
+        ],
+      },
+      metadata: {
+        milestoneId: params.milestoneId,
+        evidenceType: params.evidenceFile.type,
+        evidenceSize: params.evidenceFile.size,
+      }
+    }
+    
+    // Execute transaction
+    await execute(transactionRequest)
+  }
+  
+  // ============ EFFECTS ============
+  
+  // Listen for successful transaction completion and refetch data
+  useEffect(() => {
+    if (transactionState.isCompleted) {
+      console.log('🎉 Transaction completed! Refetching data...')
+      
+      if (transactionState.transactionType === 'createGoal') {
+        // Refetch dashboard data and system stats after goal creation
+        refetchDashboard()
+        refetchNextGoalId()
+      } else if (transactionState.transactionType === 'submitMilestone') {
+        // Refetch goal progress and validations after milestone submission
+        refetchGoalProgress()
+        refetchValidations()
+      }
+    }
+  }, [transactionState.isCompleted, transactionState.transactionType, refetchDashboard, refetchGoalProgress, refetchValidations, refetchNextGoalId])
   
   const contextValue: GoalContextValue = {
     // Goal creation
     createGoalWithMilestones,
     
-    // Goal data
-    goalInfo: formattedGoalInfo,
-    petInfo: formattedPetInfo,
-    isLoadingGoal,
-    isLoadingPet,
-    errorGoal: errorGoal || null,
-    errorPet: errorPet || null,
-    refetchGoalData: refetchGoal,
-    refetchPetData: refetchPet,
+    // Milestone submission
+    submitMilestone,
+    
+    // Dashboard data
+    userGoals,
+    userPets,
+    userStats: dashboardData?.userStats || null,
+    isLoadingDashboard,
+    errorDashboard,
+    refetchDashboard,
+    
+    // Current goal/pet
+    currentGoal,
+    currentPet,
+    currentMilestones: goalProgressData?.milestones?.items || [],
+    setCurrentGoalId,
+    
+    // Validation data
+    validationRequests: validationData?.validationRequests?.items || [],
+    userPendingMilestones: pendingMilestonesData?.milestones?.items || [],
+    isLoadingValidations,
+    refetchValidations,
     
     // Transaction state
     transactionState,
@@ -488,6 +558,9 @@ const formattedPetInfo = useMemo((): FormattedPetInfo | null => {
     // Helper functions
     validateGoalCreation,
     getEvolutionPrediction,
+    
+    // System data
+    nextGoalId,
     
     // Constants
     MAX_MILESTONES,
