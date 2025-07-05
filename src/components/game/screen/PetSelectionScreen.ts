@@ -56,7 +56,7 @@ export default class PetSelectionScreen extends Phaser.Scene {
     // Instructions
     this.instructionText = this.add.text(
       176,
-      175,
+      165,
       "Arrow Keys: Navigate | Enter: Select Pet | ESC: Close",
       {
         fontSize: "10px",
@@ -82,11 +82,11 @@ export default class PetSelectionScreen extends Phaser.Scene {
   }
 
   createPetSlots() {
-    const startX = -120;
-    const startY = -20;
+    const startX = (this.gameState.getAllPets().length - 1) * -50;
+    const startY = 0;
     const slotWidth = 80;
     const slotHeight = 100;
-    const spacingX = 120;
+    const spacingX = 100;
 
     this.gameState.getAllPets().forEach((pet, i) => {
       const x = startX + i * spacingX;
@@ -115,12 +115,12 @@ export default class PetSelectionScreen extends Phaser.Scene {
       );
 
       // Pet sprite preview
-      const petSprite = this.add.sprite(0, -15, pet.sprite);
+      const petSprite = this.add.sprite(0, -5, pet.sprite);
       petSprite.setOrigin(0.5);
       petSprite.setScale(1.5);
 
       // Pet name
-      const petName = this.add.text(0, 15, pet.name, {
+      const petName = this.add.text(0, 23, pet.name, {
         fontSize: "12px",
         color: "#ffffff",
         fontFamily: "CustomFont, Arial",
@@ -131,7 +131,7 @@ export default class PetSelectionScreen extends Phaser.Scene {
       petName.setOrigin(0.5);
 
       // Pet stage indicator
-      const stageText = this.add.text(0, 28, pet.stage.toUpperCase(), {
+      const stageText = this.add.text(0, 37, pet.stage.toUpperCase(), {
         fontSize: "8px",
         color: pet.stage === "adult" ? "#4caf50" : "#ffa502",
         fontFamily: "CustomFont, Arial",
