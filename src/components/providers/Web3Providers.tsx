@@ -9,6 +9,7 @@ import { Toaster } from 'react-hot-toast';
 import { config } from '@/lib/wagmi';
 
 import '@rainbow-me/rainbowkit/styles.css';
+import { GoalProvider } from '@/app/hooks/contexts/GoalHookContext';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ export default function Web3Providers({ children }: Web3ProvidersProps) {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
+          <GoalProvider>
           {children}
           <Toaster
             position="top-right"
@@ -47,6 +49,7 @@ export default function Web3Providers({ children }: Web3ProvidersProps) {
               },
             }}
           />
+          </GoalProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
