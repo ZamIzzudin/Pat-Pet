@@ -55,7 +55,7 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
   const getMockPetsData = (walletAddress: string): PetData[] => [
     {
       id: 1,
-      name: "Cat",
+      name: "FitBuddy2",
       sprite: "Egg",
       stage: "egg",
       stats: { happiness: 80, hunger: 60, thirst: 70 },
@@ -67,7 +67,7 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
     },
     {
       id: 2,
-      name: "Dragon",
+      name: "FitBuddy3",
       sprite: "Egg2",
       stage: "egg",
       stats: { happiness: 75, hunger: 55, thirst: 65 },
@@ -79,7 +79,7 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
     },
     {
       id: 3,
-      name: "Leaf",
+      name: "FitBuddy5",
       sprite: "Egg3",
       stage: "egg",
       stats: { happiness: 75, hunger: 55, thirst: 65 },

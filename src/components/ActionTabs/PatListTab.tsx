@@ -1,6 +1,19 @@
+/** @format */
+
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { useGoal, FormattedGoalInfo } from "@/app/hooks/contexts/GoalHookContext";
+import {
+  useGoal,
+  FormattedGoalInfo,
+} from "@/app/hooks/contexts/GoalHookContext";
+
+import { useReadContract, useAccount } from "wagmi";
+import {
+  PAT_GOAL_MANAGER_ABI,
+  PAT_GOAL_MANAGER_ADDRESS,
+} from "@/app/contracts/PatGoalManager";
+
+import { PATNFT_ABI, PATNFT_ADDRESS } from "@/app/contracts/PatNFT";
 
 interface PetListTabProps {
   handler: (tab: string) => void;
@@ -17,7 +30,13 @@ export function PatListTab({ handler }: PetListTabProps) {
     nextGoalId,
   } = useGoal();
 
-  const [selectedGoal, setSelectedGoal] = useState<FormattedGoalInfo | null>(null);
+  const [selectedGoal, setSelectedGoal] = useState<FormattedGoalInfo | null>(
+    null
+  );
+
+  // const { address } = useAccount();
+  // const [petID, setPetID] = useState<number | null>();
+  // const [petList, setPetList] = useState<any[]>([]);
 
   const handleGoalSelect = (goal: FormattedGoalInfo) => {
     setSelectedGoal(goal);
@@ -25,19 +44,88 @@ export function PatListTab({ handler }: PetListTabProps) {
     console.log("Selected goal:", goal);
   };
 
+  // const { data: petListID, refetch: listRefetch } = useReadContract({
+  //   address: PAT_GOAL_MANAGER_ADDRESS,
+  //   abi: PAT_GOAL_MANAGER_ABI,
+  //   functionName: "getUserGoals",
+  //   args: address ? [address] : undefined,
+  //   query: {
+  //     enabled: address ? true : false,
+  //   },
+  // });
+
+  // const { data: petDetail, refetch: detailRefecth } = useReadContract({
+  //   address: PATNFT_ADDRESS,
+  //   abi: PATNFT_ABI,
+  //   functionName: "getPetFullInfo",
+  //   args: petID ? [petID] : undefined,
+  //   query: {
+  //     enabled: petID ? true : false,
+  //   },
+  // });
+
+  // useEffect(() => {
+  //   if (petListID && Array.isArray(petListID)) {
+  //     setPetID(parseInt(petListID[0]));
+  //     detailRefecth();
+  //   }
+  // }, [petListID, address]);
+
+  // useEffect(() => {
+  //   if (petDetail) {
+  //     setPetList([
+  //       ...petList,
+  //       {
+  //         id: Math.random(),
+  //         name: petDetail.name,
+  //         url: "https://emerald-quiet-bobcat-167.mypinata.cloud/ipfs/bafkreif4umwprhu3jkkhqcrzccr42hyfuz6bis7ztgcszctufdclsyi73a",
+  //         type: "???",
+  //       },
+  //     ]);
+  //   }
+  // }, [petDetail, address]);
+
   return (
     <div className="flex p-3 w-full h-full relative flex-col items-start justify-start gap-3 overflow-y-auto">
-      <h1 className="text-[24px] flex items-center gap-2">
-        🐾 PAT LIST
-      </h1>
-
+      <h1 className="text-[24px] flex items-center gap-2">🐾 PAT LIST</h1>
       {/* Loading State */}
       {isLoadingDashboard && (
         <div className="flex items-center justify-center w-full h-32">
           <p className="text-[#eeff82]">Loading your pets and goals...</p>
         </div>
       )}
+      {/* {petList.length > 0 ? (
+        <>
+          {petList.map((pet) => (
+            <div className="bg-[#6b4b5b] flex items-center flex-col justify-center p-4 gap-5">
+              <Image
+                src={pet.url}
+                alt={pet.name}
+                width={60}
+                height={60}
+                className="rounded"
+                onError={(e) => {
+                  e.currentTarget.src = "/placeholder-pet.png";
+                }}
+              />
+              <div className="text-center">
+                <h2>{pet.name}</h2>
+                <span>{pet.type}</span>
+              </div>
+            </div>
+          ))}
+        </>
+      ) : (
+        <div className="flex flex-col items-center justify-center w-full h-32 text-center">
+          <p className="text-[#eeff82] mb-2">No pets or goals yet!</p>
+          <p className="text-sm">Create your first goal to get started.</p>
+          <p className="text-xs mt-1">
+            Your first goal will be ID #{nextGoalId}
+          </p>
+        </div>
+      )}
 
+      <pre>{JSON.stringify(petList, undefined, 2)}</pre> */}
       {/* User Stats */}
       {userStats && (
         <div className="bg-[#6b4b5b] p-3 rounded w-full">
@@ -46,14 +134,15 @@ export function PatListTab({ handler }: PetListTabProps) {
             <p>Total Goals: {userStats.totalGoals}</p>
             <p>Completed: {userStats.completedGoals}</p>
             <p>Active Goals: {userStats.activeGoals}</p>
-            <p>Rewards: {parseFloat(userStats.totalRewardsEarned).toFixed(2)} PAT</p>
+            <p>
+              Rewards: {parseFloat(userStats.totalRewardsEarned).toFixed(2)} PAT
+            </p>
           </div>
           <p className="text-xs text-[#eeff82] mt-1">
             Next Goal ID: #{nextGoalId}
           </p>
         </div>
       )}
-
       {/* Goals List */}
       {userGoals.length > 0 && (
         <div className="bg-[#6b4b5b] p-3 rounded w-full">
@@ -71,16 +160,20 @@ export function PatListTab({ handler }: PetListTabProps) {
                   <div>
                     <p className="font-semibold">{goal.title}</p>
                     <p className="text-sm text-[#eeff82]">
-                      Progress: {goal.milestonesCompleted}/{goal.totalMilestones} milestones
+                      Progress: {goal.milestonesCompleted}/
+                      {goal.totalMilestones} milestones
                     </p>
                     <p className="text-xs">
-                      Status: {goal.statusText} | Stake: {goal.stakeAmountFormatted} PAT
+                      Status: {goal.statusText} | Stake:{" "}
+                      {goal.stakeAmountFormatted} PAT
                     </p>
                     <p className="text-xs">Goal ID: #{goal.id}</p>
                   </div>
                   <div className="text-right">
                     <div className="w-12 h-12 bg-[#6b4b5b] rounded flex items-center justify-center">
-                      <span className="text-xs">{goal.progressPercentage}%</span>
+                      <span className="text-xs">
+                        {goal.progressPercentage}%
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -89,11 +182,12 @@ export function PatListTab({ handler }: PetListTabProps) {
           </div>
         </div>
       )}
-
       {/* Pets Collection */}
       {userPets.length > 0 && (
         <div className="bg-[#6b4b5b] p-3 rounded w-full">
-          <h3 className="text-[18px] mb-2">Your Pet Collection ({userPets.length}):</h3>
+          <h3 className="text-[18px] mb-2">
+            Your Pet Collection ({userPets.length}):
+          </h3>
           <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto">
             {userPets.map((pet) => (
               <div key={pet.id} className="bg-[#92848b] p-3 rounded">
@@ -120,7 +214,6 @@ export function PatListTab({ handler }: PetListTabProps) {
                   </div>
                 </div>
 
-                {/* Evolution Progress */}
                 <div className="bg-[#6b4b5b] rounded-full h-2 mb-1">
                   <div
                     className="bg-[#eeff82] h-2 rounded-full transition-all duration-300"
@@ -131,29 +224,33 @@ export function PatListTab({ handler }: PetListTabProps) {
                   Evolution: {pet.evolutionProgress.progress.toFixed(1)}%
                   {pet.evolutionProgress.next && (
                     <span className="text-[#eeff82]">
-                      {" "}→ {pet.evolutionProgress.next}
+                      {" "}
+                      → {pet.evolutionProgress.next}
                     </span>
                   )}
                 </p>
 
                 <p className="text-xs mt-1">
-                  Milestones: {pet.milestonesCompleted}/4 | XP: {pet.experienceFormatted}
+                  Milestones: {pet.milestonesCompleted}/4 | XP:{" "}
+                  {pet.experienceFormatted}
                 </p>
               </div>
             ))}
           </div>
         </div>
       )}
-
       {/* Empty State */}
-      {!isLoadingDashboard && userGoals.length === 0 && userPets.length === 0 && (
-        <div className="flex flex-col items-center justify-center w-full h-32 text-center">
-          <p className="text-[#eeff82] mb-2">No pets or goals yet!</p>
-          <p className="text-sm">Create your first goal to get started.</p>
-          <p className="text-xs mt-1">Your first goal will be ID #{nextGoalId}</p>
-        </div>
-      )}
-
+      {!isLoadingDashboard &&
+        userGoals.length === 0 &&
+        userPets.length === 0 && (
+          <div className="flex flex-col items-center justify-center w-full h-32 text-center">
+            <p className="text-[#eeff82] mb-2">No pets or goals yet!</p>
+            <p className="text-sm">Create your first goal to get started.</p>
+            <p className="text-xs mt-1">
+              Your first goal will be ID #{nextGoalId}
+            </p>
+          </div>
+        )}
       <button
         className="absolute bottom-5 right-5 bg-[#6b4b5b] px-5 py-2 disabled:opacity-50 hover:bg-[#5a3f4a] transition-colors"
         onClick={() => handler("MINT")}
