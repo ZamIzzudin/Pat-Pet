@@ -34,8 +34,8 @@ export default class PetSelectionScreen extends Phaser.Scene {
     this.add.rectangle(176, 96, 352, 192, 0x000000, 0.8);
 
     // Create pet selection UI background
-    const bg = this.add.rectangle(176, 96, 330, 170, 0x2a2a2a);
-    bg.setStrokeStyle(2, 0xffffff);
+    const bg = this.add.rectangle(176, 96, 330, 170, 0xc49a6c);
+    bg.setStrokeStyle(2, 0x6b4b5b);
 
     // Title with custom font
     this.titleText = this.add.text(176, 25, "SELECT PET", {
@@ -134,7 +134,7 @@ export default class PetSelectionScreen extends Phaser.Scene {
       // Pet stage indicator
       const stageText = this.add.text(0, 37, pet.stage.toUpperCase(), {
         fontSize: "8px",
-        color: pet.stage === "adult" ? "#4caf50" : "#ffa502",
+        color: pet.stage === "baby" ? "#4caf50" : "#ffa502",
         fontFamily: "CustomFont, Arial",
         resolution: 2,
         padding: { x: 1, y: 1 },
@@ -258,15 +258,15 @@ export default class PetSelectionScreen extends Phaser.Scene {
 
       if (index === this.selectedPet && pet.unlocked) {
         element.slot.clear();
-        element.slot.fillStyle(0x555555, 1);
+        element.slot.fillStyle(0xf7cc9c, 1);
         element.slot.fillRoundedRect(-40, -50, 80, 100, 8);
-        element.slot.lineStyle(3, 0xffff00); // Yellow highlight for selected
+        element.slot.lineStyle(3, 0x009907); // Yellow highlight for selected
         element.slot.strokeRoundedRect(-40, -50, 80, 100, 8);
       } else {
         element.slot.clear();
-        element.slot.fillStyle(0x444444, 1);
+        element.slot.fillStyle(0xf7cc9c, 1);
         element.slot.fillRoundedRect(-40, -50, 80, 100, 8);
-        element.slot.lineStyle(2, pet.unlocked ? 0x666666 : 0x333333);
+        element.slot.lineStyle(2, 0x6b4b5b);
         element.slot.strokeRoundedRect(-40, -50, 80, 100, 8);
       }
 

@@ -31,7 +31,7 @@ export interface PetData {
   id: number;
   name: string;
   sprite: string;
-  stage: "egg" | "adult";
+  stage: "egg" | "baby";
   stats: PlayerStats;
   unlocked: boolean;
 }
@@ -224,7 +224,7 @@ export default class GameState {
     }
   }
 
-  public updateSelectedPetStage(stage: "egg" | "adult") {
+  public updateSelectedPetStage(stage: "egg" | "baby") {
     const selectedPet = this.getSelectedPet();
     selectedPet.stage = stage;
   }
@@ -316,7 +316,7 @@ export default class GameState {
     this.updateSelectedPetStats(effects);
   }
 
-  public updateCurrentPetStage(stage: "egg" | "adult") {
+  public updateCurrentPetStage(stage: "egg" | "baby") {
     console.warn(
       "updateCurrentPetStage() is deprecated, use updateSelectedPetStage() instead"
     );

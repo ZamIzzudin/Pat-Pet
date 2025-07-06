@@ -15,7 +15,6 @@ export default class PetScreen extends Phaser.Scene {
   pet: Pet;
   petSelectionButton: Button;
   goalsButton: Button;
-  // statusBars: StatusBars;
   feedingUI: FeedingUI;
   gameState: Web3GameState;
   eventBus: EventBus;
@@ -131,7 +130,7 @@ export default class PetScreen extends Phaser.Scene {
   update() {
     // Update Pet Sprite
     if (this.pet) {
-      this.pet.updatePetSprite();
+      this.pet.updatePetSprite(this.feedingUI);
     }
 
     // Update status bars

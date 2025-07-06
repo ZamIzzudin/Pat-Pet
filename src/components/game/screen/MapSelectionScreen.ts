@@ -32,8 +32,8 @@ export default class MapSelectionScreen extends Phaser.Scene {
     this.add.rectangle(176, 96, 352, 192, 0x000000, 0.9);
 
     // Create map selection UI background
-    const bg = this.add.rectangle(176, 96, 330, 170, 0x2a2a2a);
-    bg.setStrokeStyle(2, 0xffffff);
+    const bg = this.add.rectangle(176, 96, 330, 170, 0xc49a6c);
+    bg.setStrokeStyle(2, 0x6b4b5b);
 
     // Title with custom font
     this.titleText = this.add.text(176, 25, "SELECT MAP", {
@@ -105,7 +105,7 @@ export default class MapSelectionScreen extends Phaser.Scene {
   setupMultiplayerEvents() {
     this.wsClient.on("connected", () => {
       this.connectionStatus.setText("Connected to server");
-      this.connectionStatus.setColor("#4caf50");
+      this.connectionStatus.setColor("#ffffff");
       this.refreshRoomData();
     });
 
@@ -172,7 +172,7 @@ export default class MapSelectionScreen extends Phaser.Scene {
 
       // Create slot background
       const slot = this.add.graphics();
-      slot.fillStyle(0x444444, 1);
+      slot.fillStyle(0xc49a6c, 1);
       slot.fillRoundedRect(
         -slotWidth / 2,
         -slotHeight / 2,
@@ -207,7 +207,7 @@ export default class MapSelectionScreen extends Phaser.Scene {
         `Players: ${map.playerCount}`,
         {
           fontSize: "8px",
-          color: "#4caf50",
+          color: "#ffffff",
           fontFamily: "CustomFont, Arial",
           resolution: 2,
           padding: { x: 1, y: 1 },
@@ -239,7 +239,7 @@ export default class MapSelectionScreen extends Phaser.Scene {
 
       if (index === this.selectedMap) {
         element.slot.clear();
-        element.slot.fillStyle(0x555555, 1);
+        element.slot.fillStyle(0xf7cc9c, 1);
         element.slot.fillRoundedRect(
           -slotWidth / 2,
           -slotHeight / 2,
@@ -247,7 +247,7 @@ export default class MapSelectionScreen extends Phaser.Scene {
           slotHeight,
           8
         );
-        element.slot.lineStyle(3, 0x4caf50); // Green highlight for selected
+        element.slot.lineStyle(3, 0x009907); // Green highlight for selected
         element.slot.strokeRoundedRect(
           -slotWidth / 2,
           -slotHeight / 2,
@@ -257,7 +257,7 @@ export default class MapSelectionScreen extends Phaser.Scene {
         );
       } else {
         element.slot.clear();
-        element.slot.fillStyle(0x444444, 1);
+        element.slot.fillStyle(0xf7cc9c, 1);
         element.slot.fillRoundedRect(
           -slotWidth / 2,
           -slotHeight / 2,
@@ -265,7 +265,7 @@ export default class MapSelectionScreen extends Phaser.Scene {
           slotHeight,
           8
         );
-        element.slot.lineStyle(2, 0x666666);
+        element.slot.lineStyle(2, 0x6b4b5b);
         element.slot.strokeRoundedRect(
           -slotWidth / 2,
           -slotHeight / 2,
@@ -282,7 +282,7 @@ export default class MapSelectionScreen extends Phaser.Scene {
     if (this.wsClient.isConnected()) {
       if (this.connectionStatus.text !== "Connected to server") {
         this.connectionStatus.setText("Connected to server");
-        this.connectionStatus.setColor("#4caf50");
+        this.connectionStatus.setColor("#009907");
       }
     } else {
       if (this.connectionStatus.text !== "Connecting...") {
@@ -321,7 +321,7 @@ export default class MapSelectionScreen extends Phaser.Scene {
 
   joinMap(mapSceneKey: string) {
     // Show joining feedback
-    this.showMessage("Joining map...", "#4caf50");
+    this.showMessage("Joining map...", "#009907");
 
     // Small delay to show the message
     this.time.delayedCall(500, () => {

@@ -58,17 +58,21 @@ export default class Pet {
       this.sprite.destroy();
     }
 
-    // Create new sprite with selected pet's sprite
-    this.sprite = this.scene.add.sprite(this.x, this.y, selectedPet.sprite);
-    this.sprite.setOrigin(0.5);
-    this.sprite.setScale(2);
+    if (selectedPet?.sprite) {
+      // Create new sprite with selected pet's sprite
+      this.sprite = this.scene.add.sprite(this.x, this.y, selectedPet.sprite);
+      this.sprite.setOrigin(0.5);
+      this.sprite.setScale(2);
 
-    // Update current sprite key
-    this.currentSpriteKey = selectedPet.sprite;
+      // Update current sprite key
+      this.currentSpriteKey = selectedPet.sprite;
+    }
   }
 
-  updatePetSprite() {
-    const newSpriteKey = this.gameState.getSelectedPet().sprite;
+  updatePetSprite(feedingUI?: FeedingUI) {
+    if (this.currentSpriteKey === "") return;
+    const newSpriteKey = this.gameState.getSelectedPet()?.sprite;
+
     // Only update if sprite actually changed
     if (this.currentSpriteKey !== newSpriteKey) {
       console.log(
@@ -83,23 +87,30 @@ export default class Pet {
         this.sprite.anims.stop();
       }
 
-      // Create new sprite
-      this.createPetSprite();
+      if (newSpriteKey) {
+        // Create new sprite
+        this.createPetSprite();
 
-      // Create animations for new sprite
-      this.createAllAnimations();
+        // Create animations for new sprite
+        this.createAllAnimations();
 
-      // Start appropriate idle animation
-      this.startIdleAnimation();
+        // Start appropriate idle animation
+        this.startIdleAnimation();
+      }
+
+      if (feedingUI) {
+        console.log("Feeding UI Updated");
+        feedingUI.createActionButtons();
+      }
     }
   }
 
-  getSelectedPetStage(): "egg" | "adult" {
-    return this.gameState.getSelectedPet().stage;
+  getSelectedPetStage(): "egg" | "baby" {
+    return this.gameState.getSelectedPet()?.stage || "egg";
   }
 
   getSelectedPetSprite(): string {
-    return this.gameState.getSelectedPet().sprite;
+    return this.gameState.getSelectedPet()?.sprite || "";
   }
 
   createAllAnimations() {
@@ -131,7 +142,7 @@ export default class Pet {
       });
     }
 
-    // Create adult animations
+    // Create baby animations
     if (!this.scene.anims.exists(`${spriteKey}-idle`)) {
       this.scene.anims.create({
         key: `${spriteKey}-idle`,
@@ -185,7 +196,9 @@ export default class Pet {
   }
 
   playHatchAnimation(scene: FeedingUI) {
-    if (this.isAnimating || this.getSelectedPetStage() === "adult") return;
+    if (this.isAnimating || this.getSelectedPetStage() === "baby") return;
+
+    if (!this.sprite) return;
 
     this.isAnimating = true;
     const spriteKey = this.getSelectedPetSprite();
@@ -203,17 +216,17 @@ export default class Pet {
       yoyo: true,
       repeat: 2,
       onComplete: () => {
-        // Change to adult stage after hatching
-        this.gameState.updateSelectedPetStage("adult");
+        // Change to baby stage after hatching
+        this.gameState.updateSelectedPetStage("baby");
 
-        // Start adult idle animation
+        // Start baby idle animation
         this.sprite.anims.play(`${spriteKey}-idle`, true);
         this.isAnimating = false;
 
         // Emit Web3 event for hatching
         this.gameState.performPetAction("hatch", {
           spriteKey,
-          newStage: "adult",
+          newStage: "baby",
         });
 
         scene.selectedAction = "food";
@@ -223,6 +236,8 @@ export default class Pet {
   }
 
   startIdleAnimation() {
+    if (!this.sprite) return;
+
     const spriteKey = this.getSelectedPetSprite();
     const stage = this.getSelectedPetStage();
 
@@ -237,6 +252,7 @@ export default class Pet {
   }
 
   playFeedAnimation() {
+    if (!this.sprite) return;
     if (this.isAnimating) return;
 
     const spriteKey = this.getSelectedPetSprite();
@@ -272,6 +288,7 @@ export default class Pet {
   }
 
   playDrinkAnimation() {
+    if (!this.sprite) return;
     if (this.isAnimating) return;
 
     const spriteKey = this.getSelectedPetSprite();
@@ -306,6 +323,7 @@ export default class Pet {
   }
 
   playHappyAnimation() {
+    if (!this.sprite) return;
     if (this.isAnimating) return;
 
     const spriteKey = this.getSelectedPetSprite();

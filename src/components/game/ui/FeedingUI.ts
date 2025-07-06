@@ -24,17 +24,6 @@ export default class FeedingUI {
   }
 
   create() {
-    // Create container for feeding UI
-    this.container = this.scene.add.container(176, 160);
-
-    // Create background panel with better sizing for 5 items
-    const bg = this.scene.add.graphics();
-    bg.fillStyle(0x2a2a2a, 0.9);
-    bg.fillRoundedRect(-170, -25, 340, 50, 8); // Increased width for 5 items
-    bg.lineStyle(2, 0xffffff, 0.8);
-    bg.strokeRoundedRect(-170, -25, 340, 50, 8);
-    this.container.add(bg);
-
     // Create action buttons
     this.createActionButtons();
 
@@ -46,16 +35,24 @@ export default class FeedingUI {
   }
 
   createActionButtons() {
-    // Clear Style
-    if (this.actionButtons.length > 0) {
-      this.actionButtons.forEach((button) => {
-        button.background.clear();
-        button.background.fillStyle(0x444444, 0);
-        button.background.fillRoundedRect(-22, -20, 44, 40, 6);
-        button.background.lineStyle(0, 0x666666);
-        button.background.strokeRoundedRect(-22, -20, 44, 40, 6);
-      });
+    // Clear
+    if (this.container) {
+      this.container.destroy();
     }
+
+    // Check if pet exist
+    if (this.pet.gameState.pets.length === 0) return;
+
+    // Create container for feeding UI
+    this.container = this.scene.add.container(176, 160);
+
+    // Create background panel with better sizing for 5 items
+    const bg = this.scene.add.graphics();
+    bg.fillStyle(0xc49a6c, 0.9);
+    bg.fillRoundedRect(-170, -25, 340, 50, 8); // Increased width for 5 items
+    bg.lineStyle(2, 0x6b4b5b, 0.8);
+    bg.strokeRoundedRect(-170, -25, 340, 50, 8);
+    this.container.add(bg);
 
     const stage = this.pet.getSelectedPetStage();
     this.selectedAction = stage === "egg" ? "hatch" : "food";
@@ -171,15 +168,15 @@ export default class FeedingUI {
     this.actionButtons.forEach((button, index) => {
       if (button.type === this.selectedAction) {
         button.background.clear();
-        button.background.fillStyle(0x555555, 1);
+        button.background.fillStyle(0xf7cc9c, 1);
         button.background.fillRoundedRect(-22, -20, 44, 40, 6);
         button.background.lineStyle(2, button.action.color);
         button.background.strokeRoundedRect(-22, -20, 44, 40, 6);
       } else {
         button.background.clear();
-        button.background.fillStyle(0x444444, 1);
+        button.background.fillStyle(0xf7cc9c, 1);
         button.background.fillRoundedRect(-22, -20, 44, 40, 6);
-        button.background.lineStyle(1, 0x666666);
+        button.background.lineStyle(2, 0x6b4b5b);
         button.background.strokeRoundedRect(-22, -20, 44, 40, 6);
       }
     });

@@ -91,6 +91,8 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
     },
   ];
 
+  // const getMockPetsData = (walletAddress: string): PetData[] => [];
+
   // Handle wallet connection changes
   useEffect(() => {
     if (isConnected && address) {

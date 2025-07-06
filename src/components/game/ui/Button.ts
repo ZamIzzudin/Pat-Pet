@@ -30,7 +30,7 @@ export default class Button {
   create() {
     // Create button graphics for pet screen
     const graph = this.screen.add.graphics();
-    graph.fillStyle(0x000000, 0);
+    graph.fillStyle(0xf7cc9c, 1);
     graph.fillRoundedRect(
       this.pos[0] - 22,
       this.pos[1] - 23,
@@ -38,7 +38,7 @@ export default class Button {
       this.size[1],
       6
     );
-    graph.lineStyle(2, 0xffffff, 1);
+    graph.lineStyle(2, 0x6b4b5b, 1);
     graph.strokeRoundedRect(
       this.pos[0] - 22,
       this.pos[1] - 23,
@@ -88,7 +88,7 @@ export default class Button {
     // Add hover effect
     area.on("pointerover", () => {
       graph.clear();
-      graph.fillStyle(0xffa1a1, 1);
+      graph.fillStyle(0xf7cc9c, 1);
       graph.fillRoundedRect(
         this.pos[0] - 22,
         this.pos[1] - 23,
@@ -96,7 +96,7 @@ export default class Button {
         this.size[1],
         6
       );
-      graph.lineStyle(2, 0xff6b6b, 1); // Pink/red tint for pet
+      graph.lineStyle(2, 0x009907, 1); // Pink/red tint for pet
       graph.strokeRoundedRect(
         this.pos[0] - 22,
         this.pos[1] - 23,
@@ -108,7 +108,7 @@ export default class Button {
 
     area.on("pointerout", () => {
       graph.clear();
-      graph.fillStyle(0x4a4a4a, 0);
+      graph.fillStyle(0xf7cc9c, 1);
       graph.fillRoundedRect(
         this.pos[0] - 22,
         this.pos[1] - 23,
@@ -116,7 +116,7 @@ export default class Button {
         this.size[1],
         6
       );
-      graph.lineStyle(2, 0xffffff, 1);
+      graph.lineStyle(2, 0x6b4b5b, 1);
       graph.strokeRoundedRect(
         this.pos[0] - 22,
         this.pos[1] - 23,

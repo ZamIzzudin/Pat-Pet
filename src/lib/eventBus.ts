@@ -15,7 +15,7 @@ export interface PetData {
   id: number;
   name: string;
   sprite: string;
-  stage: "egg" | "adult";
+  stage: "egg" | "baby";
   stats: {
     happiness: number;
     hunger: number;

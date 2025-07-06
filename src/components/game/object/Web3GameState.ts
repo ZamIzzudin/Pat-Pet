@@ -189,7 +189,7 @@ export default class Web3GameState extends GameState {
   }
 
   // Enhanced methods with Web3 integration
-  public(stage: "egg" | "adult") {
+  public(stage: "egg" | "baby") {
     super.updateSelectedPetStage(stage);
 
     // Emit stage change to Web3
